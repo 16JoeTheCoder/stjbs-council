@@ -1,0 +1,97 @@
+rules_version = '2';
+// The real permission layer. Member ids are lowercased school emails; every *Uid field holds one.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function me() { return request.auth.token.email.lower(); }
+    function member() { return get(/databases/$(db)/documents/members/$(me())).data; }
+    function active() {
+      return request.auth != null && request.auth.token.email_verified == true
+        && exists(/databases/$(db)/documents/members/$(me())) && member().active == true;
+    }
+    function role() { return member().role; }
+    function isAdvisor() { return role() == 'advisor'; }
+    function isBoss() { return role() in ['advisor', 'president', 'vp', 'treasurer', 'secretary']; }
+    function termOk() { return request.resource.data.termId == get(/databases/$(db)/documents/settings/current).data.termId; }
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    match /members/{email} {
+      allow read: if active();
+      allow create: if active() && (isAdvisor() || role() == 'president') && termOk()
+        && email == email.lower() && email.matches('^[^@]+@stjbs[.]sch[.]id$')
+        && request.resource.data.active == true
+        && (isAdvisor() || request.resource.data.role != 'advisor');
+      allow update: if active() && termOk() && (isAdvisor() || (role() == 'president'
+        && resource.data.role != 'advisor' && request.resource.data.role != 'advisor'
+        && !changed().hasAny(['active'])));
+    }
+
+    // Items: projects, subteams and tasks. leadUids must always equal the parent's leadUids plus this item's lead,
+    // read after the batch, so a lead change is valid only when the whole subtree is rewritten consistently.
+    function parentAfter(d) { return getAfter(/databases/$(db)/documents/items/$(d.parentId)).data; }
+    function leadsOk(d) {
+      let own = d.get('leadUid', null) == null ? [] : [d.leadUid];
+      return d.parentId == null
+        ? d.leadUids == own && d.ancestors == []
+        : d.leadUids == parentAfter(d).leadUids.concat(own) && d.ancestors == parentAfter(d).ancestors.concat([d.parentId]);
+    }
+    function manages(d) {
+      return role() != 'teacher' && (isBoss() || (d.parentId != null && me() in parentAfter(d).leadUids) || me() in d.leadUids);
+    }
+    match /items/{id} {
+      allow read: if active();
+      allow create: if active() && termOk() && request.resource.data.createdByUid == me()
+        && request.resource.data.archived == false && leadsOk(request.resource.data)
+        && (request.resource.data.parentId == null ? isBoss() : manages(request.resource.data));
+      allow update: if active() && termOk() && leadsOk(request.resource.data)
+        && !changed().hasAny(['parentId', 'ancestors', 'createdByUid', 'createdAt'])
+        && ((role() != 'teacher' && (isBoss() || me() in resource.data.leadUids))
+          || (role() != 'teacher' && me() in resource.data.assigneeUids && changed().hasOnly(
+            ['status', 'blocked', 'blockedReason', 'blockedOnUid', 'notes', 'link', 'completedAt', 'updatedAt']
+            .concat(resource.data.isDeal == true ? ['dealStage', 'pledgedIdr', 'receivedIdr'] : []))));
+    }
+
+    match /comments/{id} {
+      allow read: if active();
+      allow create: if active() && termOk() && request.resource.data.authorUid == me()
+        && request.resource.data.text is string && request.resource.data.text.size() <= 500;
+      allow delete: if active() && resource.data.authorUid == me();
+    }
+
+    match /checkins/{id} {
+      allow read: if active();
+      allow create, update: if active() && termOk() && request.resource.data.uid == me()
+        && id == request.resource.data.termId + '_' + request.resource.data.weekId + '_' + me();
+    }
+
+    match /activity/{id} {
+      allow read: if active();
+      allow create: if active() && termOk() && request.resource.data.actorUid == me();
+    }
+
+    match /notifications/{uid}/items/{id} {
+      allow read, delete: if active() && uid == me();
+      allow update: if active() && uid == me() && changed().hasOnly(['read']);
+      allow create: if active() && termOk() && request.resource.data.fromUid == me()
+        && request.resource.data.toUid == uid && request.resource.data.read == false;
+    }
+
+    match /templates/{id} {
+      allow read: if active();
+      allow create, update: if active() && termOk() && isBoss() && role() != 'teacher';
+    }
+
+    match /settings/current {
+      allow read: if active();
+      allow write: if active() && isAdvisor() && request.resource.data.termId is string;
+    }
+    match /settings/digest {
+      allow read: if active();
+      allow create, update: if active() && termOk() && isBoss();
+    }
+
+    match /stats/{id} {
+      allow read: if active() && role() in ['advisor', 'president', 'vp'];
+      allow create: if active() && role() in ['advisor', 'president', 'vp'] && termOk();
+    }
+  }
+}

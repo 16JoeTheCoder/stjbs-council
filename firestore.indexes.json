@@ -1,0 +1,7 @@
+{
+  "indexes": [
+    { "collectionGroup": "activity", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "termId", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] }
+  ],
+  "fieldOverrides": []
+}
