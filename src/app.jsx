@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { S, loaded, set, useStore } from './store.js';
-import { canSeeStats, isBoss } from './model.js';
+import { roleLinks } from './model.js';
 import { Chip, Icon, Title } from './ui.jsx';
 import { Login, Verify } from './routes/auth.jsx';
 import { MyWeek } from './routes/my-week.jsx';
@@ -40,8 +40,7 @@ export function App() {
 
   const unread = S.unread >= 100 ? '99+' : S.unread;
   const tabs = [['week', 'My week'], ['projects', 'Projects'], ['people', 'People'], ['feed', 'Feed']];
-  const extra = [canSeeStats() && ['workload', 'Workload'], isBoss() && ['templates', 'Templates'],
-    ['advisor', 'president'].includes(S.me.role) && ['admin', 'Admin']].filter(Boolean);
+  const extra = roleLinks();
   const active = (k) => route.name === k || (k === 'projects' && ['p', 'meeting'].includes(route.name));
   const link = ([k, label], icon) => (
     <a key={k} href={`#/${k}`} aria-current={active(k) ? 'page' : undefined}>{icon && <Icon n={k} />}<span>{label}</span></a>
@@ -60,10 +59,12 @@ export function App() {
           <a href={`#/people/${S.me.id}`} class="jy-me" aria-label="Your profile"><Chip email={S.me.id} big /></a>
         </div>
       </header>
+      <div class="jy-toast" role="status" aria-live="polite">{S.toast}{S.undo && <>
+        <button class="jy-link" onClick={() => { S.undo.fn(); set({ undo: null, toast: '' }); }}>{S.undo.label}</button>
+        <button class="jy-link" onClick={() => set({ undo: null, toast: '' })}>Dismiss</button></>}</div>
       {S.error && <p class="jy-alert" role="alert">{S.error}</p>}
       <main id="main" tabIndex={-1} class="jy-page"><Page key={`${route.name}/${route.id}`} id={route.id} q={route.q} /></main>
       <nav class="jy-tabbar" aria-label="Tabs">{tabs.map((t) => link(t, true))}</nav>
-      <div class="jy-toast" role="status" aria-live="polite">{S.toast}{S.undo && <button class="jy-link" onClick={() => { S.undo.fn(); set({ undo: null, toast: '' }); }}>{S.undo.label}</button>}</div>
     </>
   );
 }

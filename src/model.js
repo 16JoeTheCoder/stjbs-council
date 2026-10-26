@@ -71,6 +71,9 @@ export function personStatus(email, w = week()) {
   return { cls, word, line, ci, blocked, overdue, done };
 }
 
+// Extra destinations by role: top nav on laptop, profile page at every width.
+export const roleLinks = () => [canSeeStats() && ['workload', 'Workload'], isBoss() && S.me.role !== 'teacher' && ['templates', 'Templates'],
+  ['advisor', 'president'].includes(S.me?.role) && ['admin', 'Admin'], ['digest', 'Digest']].filter(Boolean);
 export const checksIn = (m) => !['teacher', 'advisor'].includes(m?.role);
 export const activeMembers = () => S.members.filter((m) => m.active).sort((a, b) => a.name.localeCompare(b.name));
 export const initials = (name = '') => (name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2) || '?').toUpperCase();

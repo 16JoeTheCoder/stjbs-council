@@ -5,7 +5,7 @@ import { S, memberName } from '../store.js';
 import { initials } from '../model.js';
 import { putDoc } from '../actions.js';
 import { isoDay, monday, weekId } from '../time.js';
-import { Title } from '../ui.jsx';
+import { Title, useAutofocus, useReturnFocus } from '../ui.jsx';
 import { roleName } from './people.jsx';
 import { download } from './views.jsx';
 
@@ -15,30 +15,34 @@ const SCHOOL = /^[^@\s]+@stjbs\.sch\.id$/;
 function MemberForm({ m, done }) {
   const advisor = S.me.role === 'advisor';
   const [v, setV] = useState(m || { id: '', name: '', role: 'officer', section: '', reportsTo: '' });
-  const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
+  const [err, setErr] = useState({}), [busy, setBusy] = useState(false), ref = useAutofocus();
+  const bad = (field, msg) => { setErr({ field, msg }); ref.current.querySelector(`[name=${field}]`)?.focus(); };
   const on = (k) => (e) => setV({ ...v, [k]: e.target.value });
   const submit = async (e) => {
     e.preventDefault();
     const email = v.id.trim().toLowerCase();
-    if (!SCHOOL.test(email)) return setErr('Use a school email ending in @stjbs.sch.id.');
-    if (!v.name.trim()) return setErr('Add a name, then save.');
+    if (!SCHOOL.test(email)) return bad('id', 'Use a school email ending in @stjbs.sch.id.');
+    if (!v.name.trim()) return bad('name', 'Add a name, then save.');
     const data = { name: v.name.trim(), initials: initials(v.name), role: v.role, section: v.section.trim(), reportsTo: v.reportsTo || null };
     if (!m) Object.assign(data, { active: true, createdAt: Date.now() });
     setBusy(true);
     if (await putDoc(`members/${email}`, data, `${data.name} saved.`)) done(); else setBusy(false);
   };
-  const field = (k, label, extra) => <label class="jy-field"><span class="jy-field__label">{label}</span><input class="jy-field__input" value={v[k]} onInput={on(k)} {...extra} /></label>;
+  const field = (k, label, extra) => (
+    <label class={`jy-field${err.field === k ? ' jy-field--error' : ''}`}><span class="jy-field__label">{label}</span>
+      <input class="jy-field__input" name={k} value={v[k]} onInput={on(k)} {...extra} aria-invalid={err.field === k || undefined} aria-describedby={err.field === k ? 'm-err' : undefined} /></label>
+  );
   return (
-    <form class="jy-form jy-panel" onSubmit={submit}>
+    <form class="jy-form jy-panel" onSubmit={submit} ref={ref} noValidate>
       <h2 class="jy-h2">{m ? `Edit ${m.name}` : 'Add member'}</h2>
-      {field('id', 'School email', { type: 'email', disabled: !!m, 'aria-describedby': 'm-err' })}
+      {field('id', 'School email', { type: 'email', disabled: !!m })}
       {field('name', 'Name', { maxLength: 60 })}
       <label class="jy-field"><span class="jy-field__label">Role</span><select class="jy-field__input" value={v.role} onChange={on('role')} disabled={(m?.role === 'advisor' && !advisor) || m?.id === S.me.id}>
         {ROLES.filter((r) => advisor || r !== 'advisor').map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
       {field('section', 'Section', { maxLength: 60, placeholder: 'For example sec 1 to sec 3' })}
       <label class="jy-field"><span class="jy-field__label">Reports to</span><select class="jy-field__input" value={v.reportsTo || ''} onChange={on('reportsTo')}>
         <option value="">Nobody</option>{S.members.filter((x) => x.active && x.id !== v.id).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
-      <p id="m-err" class="jy-error" role="alert">{err}</p>
+      <p id="m-err" class="jy-error" role="alert">{err.msg}</p>
       <div class="jy-actions"><button class="jy-btn" disabled={busy}>Save member</button><button type="button" class="jy-btn jy-btn--ghost" onClick={done}>Cancel</button></div>
     </form>
   );
@@ -87,14 +91,14 @@ function CloseTerm() {
 }
 
 export function Admin() {
-  const [edit, setEdit] = useState(null), advisor = S.me.role === 'advisor';
+  const [edit, setEdit] = useState(null), advisor = S.me.role === 'advisor', back = useReturnFocus(!!edit);
   if (!advisor && S.me.role !== 'president') return <><Title light="Not for you." bold="Admin" /><p>Only the advisor and the president manage the roster.</p></>;
   const members = [...S.members].sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name));
   return (
     <>
       <Title light="The roster." bold="Admin." title="Admin" />
       {edit ? <MemberForm m={edit === 'new' ? null : edit} done={() => setEdit(null)} /> :
-        <div class="jy-actions"><button class="jy-btn jy-btn--ghost" onClick={() => setEdit('new')}>Add member</button></div>}
+        <div class="jy-actions" ref={back}><button class="jy-btn jy-btn--ghost" onClick={() => setEdit('new')}>Add member</button></div>}
       <div class="jy-section jy-scroll"><table class="jy-table">
         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Section</th><th>Reports to</th><th>Status</th><th><span class="jy-sr">Actions</span></th></tr></thead>
         <tbody>{members.map((m) => (

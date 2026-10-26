@@ -23,10 +23,10 @@ addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredIns
 
 export function Login() {
   const [mode, setMode] = useState('in'), [email, setEmail] = useState(''), [pw, setPw] = useState('');
-  const [error, setError] = useState(''), [note, setNote] = useState(''), [busy, setBusy] = useState(false);
+  const [error, setError] = useState({}), [note, setNote] = useState(''), [busy, setBusy] = useState(false);
   const titles = { in: ['Council.', 'Sign in'], up: ['New here.', 'Create account'], reset: ['Forgot it.', 'Reset password'] };
   const submit = async (e) => {
-    e.preventDefault(); setError(''); setNote(''); setBusy(true);
+    e.preventDefault(); setError({}); setNote(''); setBusy(true);
     const addr = email.trim().toLowerCase();
     try {
       if (mode === 'in') await signInWithEmailAndPassword(auth, addr, pw);
@@ -36,7 +36,7 @@ export function Login() {
         await sendEmailVerification(cred.user);
       }
       if (mode === 'reset') { await sendPasswordResetEmail(auth, addr); setNote(`If ${addr} has an account, a reset link is on its way. Check spam too.`); }
-    } catch (err) { setError(say(err)); }
+    } catch (err) { setError({ msg: say(err), field: err.code === 'auth/invalid-email' || mode === 'reset' ? 'email' : 'password' }); }
     setBusy(false);
   };
   return (
@@ -44,14 +44,16 @@ export function Login() {
       <Title light={titles[mode][0]} bold={titles[mode][1]} />
       {S.phase === 'no-roster' && <p class="jy-alert" role="alert">Your email isn't on the council roster. Ask the president to add it.</p>}
       <form class="jy-form" onSubmit={submit} noValidate>
-        <label class="jy-field"><span class="jy-field__label">School email</span>
-          <input class="jy-field__input" type="email" autocomplete="username" required value={email} onInput={(e) => setEmail(e.target.value)} placeholder="name@stjbs.sch.id" /></label>
+        <label class={`jy-field${error.field === 'email' ? ' jy-field--error' : ''}`}><span class="jy-field__label">School email</span>
+          <input class="jy-field__input" type="email" autocomplete="username" required value={email} onInput={(e) => setEmail(e.target.value)} placeholder="name@stjbs.sch.id"
+            aria-invalid={error.field === 'email' || undefined} aria-describedby={error.field === 'email' ? 'auth-error' : undefined} /></label>
         {mode !== 'reset' && (
-          <label class={`jy-field${error ? ' jy-field--error' : ''}`}><span class="jy-field__label">Password</span>
+          <label class={`jy-field${error.field === 'password' ? ' jy-field--error' : ''}`}><span class="jy-field__label">Password</span>
             <input class="jy-field__input" type="password" required minLength={8} autocomplete={mode === 'up' ? 'new-password' : 'current-password'}
-              value={pw} onInput={(e) => setPw(e.target.value)} aria-describedby="auth-error" /></label>
+              value={pw} onInput={(e) => setPw(e.target.value)} aria-invalid={error.field === 'password' || undefined}
+              aria-describedby={error.field === 'password' ? 'auth-error' : undefined} /></label>
         )}
-        <p id="auth-error" class="jy-error" role="alert">{error}</p>
+        <p id="auth-error" class="jy-error" role="alert">{error.msg}</p>
         {note && <p class="jy-caption" role="status">{note}</p>}
         <button class="jy-btn jy-btn--accent" disabled={busy}>{titles[mode][1]}</button>
       </form>

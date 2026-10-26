@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { S, memberName } from '../store.js';
 import { activeMembers, applyFilter, checksIn, canManage, personStatus, progress, taskState, tree } from '../model.js';
 import { createItem, saveCheckin } from '../actions.js';
@@ -28,15 +28,18 @@ export function Checkin() {
         {box('done', 'Done', 'What you finished this week.')}
         {box('doing', 'Doing', 'What you work on next.')}
         {box('blocked', 'Blocked', 'What stops you. Leave empty if nothing does.')}
-        <div class="jy-actions"><button class="jy-btn jy-btn--accent" disabled={busy}>Submit check-in</button><a href="#/week">Cancel</a></div>
+        <div class="jy-actions"><button class="jy-btn jy-btn--accent" disabled={busy}>Submit check-in</button><a class="jy-btn jy-btn--ghost" href="#/week">Cancel</a></div>
       </form>
     </>
   );
 }
 
-function LaneAdd({ lane, open, setOpen }) {
+// The first lane's trigger is the view's one accent while no lane form is open; an open form carries it instead.
+function LaneAdd({ lane, open, setOpen, accent }) {
   const [title, setTitle] = useState(''), [who, setWho] = useState(''), [due, setDue] = useState(''), [busy, setBusy] = useState(false);
-  if (!open) return <button class="jy-btn jy-btn--ghost jy-btn--s" onClick={() => setOpen(lane.id)}>Add task</button>;
+  const ref = useRef(), was = useRef(open);
+  useEffect(() => { if (open || was.current) ref.current?.querySelector('input, button')?.focus(); was.current = open; }, [open]);
+  if (!open) return <div ref={ref}><button class={`jy-btn ${accent ? 'jy-btn--accent' : 'jy-btn--ghost'}`} onClick={() => setOpen(lane.id)}>Add task</button></div>;
   const submit = async (e) => {
     e.preventDefault();
     if (!title.trim() || busy) return;
@@ -45,13 +48,13 @@ function LaneAdd({ lane, open, setOpen }) {
     setBusy(false);
   };
   return (
-    <form class="jy-form jy-panel" onSubmit={submit}>
+    <form class="jy-form jy-panel" onSubmit={submit} ref={ref}>
       <label class="jy-field"><span class="jy-field__label">Task</span><input class="jy-field__input" maxLength={80} value={title} onInput={(e) => setTitle(e.target.value)} /></label>
       <label class="jy-field"><span class="jy-field__label">Who</span><select class="jy-field__input" value={who} onChange={(e) => setWho(e.target.value)}>
         <option value="">Nobody yet</option>{activeMembers().filter((m) => m.role !== 'teacher').map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
       <label class="jy-field"><span class="jy-field__label">Due</span><input class="jy-field__input" type="date" value={due} onInput={(e) => setDue(e.target.value)} /></label>
       <div class="jy-actions"><button class="jy-btn jy-btn--accent" disabled={busy || !title.trim()}>Add task</button>
-        <button type="button" class="jy-btn jy-btn--ghost jy-btn--s" onClick={() => setOpen(null)}>Done adding</button></div>
+        <button type="button" class="jy-btn jy-btn--ghost" onClick={() => setOpen(null)}>Close form</button></div>
     </form>
   );
 }
@@ -80,7 +83,7 @@ export function Meeting({ id }) {
       <FilterBar list={all} f={f} set={setF} hideList />
       <p class="jy-wide-note jy-caption">The meeting view is built for a wide screen. Scroll sideways to see every lane.</p>
       <div class="jy-lanes" role="list" aria-label="Subteams">
-        {lanes.map((lane) => {
+        {lanes.map((lane, i) => {
           const tasks = lane === root ? (kids[id] || []).filter((x) => x.kind === 'task') : under(lane.id), p = progress(tasks);
           return (
             <section key={lane.id} class="jy-lane" role="listitem" aria-label={lane.title}>
@@ -88,7 +91,7 @@ export function Meeting({ id }) {
                 {lane.leadUid && <span class="jy-person-named"><Chip email={lane.leadUid} lead /><span>{memberName(lane.leadUid)}</span></span>}
                 <Bar done={p.done} total={p.total} label={`${lane.title} progress`} /><span class="jy-mono">{p.done} of {p.total} tasks</span></div>
               <ul class="jy-list">{tasks.filter((t) => visible.has(t.id)).map((t) => <TaskRow key={t.id} t={t} />)}</ul>
-              {canManage(lane) && <LaneAdd lane={lane} open={open === lane.id} setOpen={setOpen} />}
+              {canManage(lane) && <LaneAdd lane={lane} open={open === lane.id} setOpen={setOpen} accent={open == null && lane === lanes.find(canManage)} />}
             </section>
           );
         })}

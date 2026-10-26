@@ -37,10 +37,23 @@ export const Bar = ({ done, total, label }) => (
 );
 export const Badge = ({ s }) => <span class={`jy-badge jy-badge--${s.cls}`}>{s.word}</span>;
 
+// Focus the first field when a form opens; return focus to the trigger row when it closes.
+export function useAutofocus() {
+  const ref = useRef();
+  useEffect(() => ref.current?.querySelector('input:not([type=checkbox]), select, textarea')?.focus(), []);
+  return ref;
+}
+export function useReturnFocus(open) {
+  const ref = useRef(), was = useRef(open);
+  useEffect(() => { if (was.current && !open) ref.current?.querySelector('button, a')?.focus(); was.current = open; }, [open]);
+  return ref;
+}
+
 // Page heading: sets the document title and takes focus on route change.
 export function Title({ light, bold, title }) {
   const ref = useRef();
-  useEffect(() => { document.title = `${title || `${light} ${bold}`.trim()} · Council`; ref.current?.focus({ preventScroll: false }); }, [title, light, bold]);
+  useEffect(() => { document.title = `${title || `${light} ${bold}`.trim()} · Council`; }, [title, light, bold]);
+  useEffect(() => ref.current?.focus(), []); // once per route: pages remount per route, live counts must not steal focus
   return <h1 ref={ref} tabIndex={-1} class="jy-title">{light && <span>{light} </span>}<b>{bold}</b></h1>;
 }
 
@@ -99,8 +112,8 @@ export function FilterBar({ list, f, set, teams = [], hideList }) {
         {CHIPS.map(([k, label]) => (
           <button key={k} class="jy-filter" aria-pressed={f.chip === k} onClick={() => set({ chip: k })}>{label} <span class="jy-mono">{counts[k]}</span></button>
         ))}
-        <button class="jy-filter" aria-pressed={f.hideDone} onClick={() => set({ hideDone: !f.hideDone })}>{f.hideDone ? `Show done (${doneHidden})` : 'Hide done'}</button>
-        <button class="jy-filter" aria-expanded={open} onClick={() => setOpen(!open)}>People and teams</button>
+        <button class="jy-filter" onClick={() => set({ hideDone: !f.hideDone })}>{f.hideDone ? `Show done (${doneHidden})` : 'Hide done'}</button>
+        <button class="jy-filter" aria-expanded={open} onClick={() => setOpen(!open)}>Filter by person or team</button>
       </div>
       {scope && <p class="jy-scope">Showing {scope} only. <button class="jy-link" onClick={() => set({ person: null, team: null })}>Show everyone</button></p>}
       {open && (
@@ -120,7 +133,7 @@ export function FilterBar({ list, f, set, teams = [], hideList }) {
 
 export function Comments({ it }) {
   const [list, setList] = useState(null), [all, setAll] = useState(false), [open, setOpen] = useState(false);
-  const [text, setText] = useState(''), [busy, setBusy] = useState(false);
+  const [text, setText] = useState(''), [busy, setBusy] = useState(false), box = useRef();
   useEffect(() => onSnapshot(query(collection(db, 'comments'), where('itemId', '==', it.id), where('termId', '==', S.term.termId)),
     (s) => setList(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.createdAt - b.createdAt)), () => setList(false)), [it.id]);
   if (list === false) return <p class="jy-error" role="alert">Comments did not load. Reload the page to try again.</p>;
@@ -131,6 +144,7 @@ export function Comments({ it }) {
     if (!text.trim() || busy) return;
     setBusy(true);
     if (await addComment(it, text.trim())) setText('');
+    box.current?.focus();
     setBusy(false);
   };
   return (
@@ -141,10 +155,10 @@ export function Comments({ it }) {
         <li key={c.id}><Chip email={c.authorUid} /><div><p class="jy-caption">{memberName(c.authorUid)} <span class="jy-mono">{stamp(c.createdAt)}</span></p><p class="jy-pre">{c.text}</p>
           {c.authorUid === S.me.id && <button class="jy-link" onClick={() => deleteComment(c)}>Delete comment</button>}</div></li>
       ))}</ul>
-      {!list.length && !open ? <button class="jy-link" aria-expanded="false" onClick={() => setOpen(true)}>Add comment</button> : (
+      {!list.length && !open ? <button class="jy-link" onClick={() => { setOpen(true); setTimeout(() => box.current?.focus()); }}>Add comment</button> : (
         <form onSubmit={post} class="jy-form">
           <label class="jy-field jy-field--wide"><span class="jy-field__label">Comment</span>
-            <textarea class="jy-field__input" maxLength={500} rows={3} value={text} onInput={(e) => setText(e.target.value)} /></label>
+            <textarea ref={box} class="jy-field__input" maxLength={500} rows={3} value={text} onInput={(e) => setText(e.target.value)} /></label>
           <button class="jy-btn jy-btn--ghost" disabled={busy || !text.trim()}>Post comment</button>
         </form>
       )}

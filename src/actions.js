@@ -54,7 +54,8 @@ export function updateItem(it, patch, verb = 'updated') {
   });
 }
 
-export const toggleDone = (t) => updateItem(t, { status: t.status === 'done' ? 'todo' : 'done' }, t.status === 'done' ? 'reopened' : 'completed');
+export const toggleDone = (t) => updateItem(t, { status: t.status === 'done' ? 'todo' : 'done' }, t.status === 'done' ? 'reopened' : 'completed')
+  .then((ok) => ok && toast(`${t.status === 'done' ? 'Reopened' : 'Done'}: "${t.title}".`));
 
 // Writes many items while keeping each batch under 450 writes and 15 distinct parents (rules access-call limit).
 async function commitChunked(ops) {

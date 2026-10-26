@@ -19,3 +19,13 @@ One line per defect class: the pattern that went wrong, then the rule that preve
 - Every listener, including single-document ones, has an error callback.
 - Absolutely positioned helpers (`.jy-sr`) escape non-positioned scroll boxes; `.jy-scroll` is `position: relative`.
 - Every write path goes through an awaited try/catch so synchronous SDK throws reach `fail()`.
+- Focus effects keyed on live text (a headline count) steal focus on every data change; move focus to the h1 once per route mount only.
+- Swapping a trigger for a form loses focus to body; forms use `useAutofocus`, and the trigger row uses `useReturnFocus`.
+- A sticky header and fixed tab bar hide focused controls unless `html` has matching `scroll-padding`.
+- Role-gated destinations that live only in the laptop nav vanish on phones and at 200% zoom; every destination is also on the profile page.
+- Errors are tied to the field they are about (`aria-invalid`, `aria-describedby`, error style, focus), never to a neighbouring field.
+- Information in `title` attributes only (timeline dates) is invisible to touch and screen readers; mirror it as text.
+- A primary `jy-btn` carries an orange cap; on a screen that already has its orange point, secondary submits are ghost buttons.
+- Undo toasts never auto-expire and offer Dismiss; a timer would make undo unreachable by keyboard.
+- Links acting as controls (task titles, lane heads, table links) need the 44px minimum; the system's `jy-btn--s` is raised to 44px in app.css.
+- SVG charts scaled by `width="100%"` shrink their text below 12px on phones; draw at fixed pixel size inside a scroll box.

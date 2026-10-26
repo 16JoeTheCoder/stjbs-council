@@ -1,6 +1,6 @@
 /* App components the design system does not ship. Tokens only; radii 10 (surfaces) and 4 (chips, tags). */
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 72px; scroll-padding-bottom: calc(72px + var(--space-4) + env(safe-area-inset-bottom)); }
 body { margin: 0; min-height: 100vh; overflow-x: clip; background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-wrap: anywhere; }
 a { color: var(--ink); text-underline-offset: 3px; }
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: var(--border-strong) solid var(--focus); outline-offset: 2px; }
@@ -13,8 +13,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-icon { width: 20px; height: 20px; flex: none; }
 
 /* Shell */
-.jy-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--space-5); padding: var(--space-2) var(--space-4); background: var(--surface); border-bottom: var(--border-hair) solid var(--line); }
-.jy-brand { font: 300 18px/26px var(--font-sans); text-decoration: none; white-space: nowrap; }
+.jy-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--space-5); padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-4) var(--space-2); background: var(--surface); border-bottom: var(--border-hair) solid var(--line); }
+.jy-brand { display: inline-flex; align-items: center; min-height: var(--hit-min); font: 300 18px/26px var(--font-sans); text-decoration: none; white-space: nowrap; }
 .jy-brand b { font-weight: 700; }
 .jy-topnav { display: none; gap: var(--space-1); flex: 1; }
 .jy-topnav a { position: relative; display: inline-flex; align-items: center; min-height: var(--hit-min); padding: 0 var(--space-3); color: var(--ink-muted); font: 500 14px/20px var(--font-sans); text-decoration: none; border-radius: var(--radius-sm); }
@@ -62,9 +62,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-scroll { position: relative; overflow-x: auto; }
 .jy-scroll > .jy-table { min-width: 640px; overflow-wrap: normal; }
 .jy-crumbs { margin-bottom: var(--space-3); font-size: 13px; color: var(--ink-muted); }
-.jy-crumbs a { display: inline-flex; min-height: var(--hit-min); align-items: center; }
+.jy-crumbs { line-height: 20px; }
+.jy-crumbs a { display: inline-block; padding: 12px 0; }
 .jy-views { margin: var(--space-5) 0; border-bottom: var(--border-hair) solid var(--line); gap: 0 var(--space-4); }
-.jy-views a { position: relative; display: inline-flex; align-items: center; min-height: var(--hit-min); color: var(--ink-muted); text-decoration: none; font-weight: 500; }
+.jy-views a { position: relative; display: inline-flex; align-items: center; min-height: var(--hit-min); min-width: var(--hit-min); color: var(--ink-muted); text-decoration: none; font-weight: 500; }
 .jy-views a[aria-current] { color: var(--ink); }
 .jy-views a[aria-current]::after { content: ""; position: absolute; left: 0; bottom: 0; width: 28px; height: var(--cap-h); background: var(--ink); border-radius: var(--radius-sm); }
 
@@ -85,7 +86,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-chips { display: inline-flex; flex-wrap: wrap; gap: var(--space-1); }
 
 /* Progress: a flat determinate bar. Deal steps: four segments. */
-.jy-bar { height: var(--cap-h); background: var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+.jy-bar { height: var(--cap-h); background: var(--line); box-shadow: inset 0 0 0 1px var(--line-strong); border-radius: var(--radius-sm); overflow: hidden; }
 .jy-bar i { display: block; height: 100%; background: var(--inverse); transition: width var(--dur-slow) var(--ease-out); }
 .jy-stagebar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
 .jy-steps { display: grid; grid-template-columns: repeat(4, 40px); gap: var(--space-1); }
@@ -96,6 +97,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-stats { display: flex; flex-wrap: wrap; gap: var(--space-5) var(--space-6); }
 .jy-stats .jy-stat { min-width: 120px; }
 .jy-stats .jy-stat__value { font-size: 44px; line-height: 48px; }
+.jy-stats .jy-stat::before { border-radius: var(--radius-sm); }
 .jy-stat--quiet::before { background: var(--line-strong); }
 
 /* Filter chip: single-select, ink when pressed */
@@ -116,7 +118,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-task.is-mine::before, .jy-card.is-mine::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: var(--cap-h); background: var(--ink); }
 .jy-task { overflow: hidden; }
 .jy-task__body { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; min-width: 0; }
-.jy-task__title { color: inherit; font-weight: 400; text-decoration: none; }
+.jy-task__title { display: flex; align-items: center; min-height: var(--hit-min); margin: calc(-1 * var(--space-2)) 0; color: inherit; font-weight: 400; text-decoration: none; }
 .jy-task__title:hover { text-decoration: underline; }
 .is-mine .jy-task__title, .jy-task.is-mine b { color: var(--ink); font-weight: 500; }
 .jy-check { display: inline-flex; align-items: center; justify-content: center; width: var(--hit-min); height: var(--hit-min); margin: calc(-1 * var(--space-2)) 0 calc(-1 * var(--space-2)) calc(-1 * var(--space-2)); flex: none; }
@@ -153,7 +155,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Timeline */
 .jy-tl { min-width: 720px; display: grid; gap: var(--space-1); }
 .jy-tl__row { display: grid; grid-template-columns: 220px 1fr; gap: var(--space-3); align-items: center; min-height: 32px; }
-.jy-tl__name { font-size: 13px; text-decoration: none; }
+.jy-tl__name { display: flex; align-items: center; min-height: var(--hit-min); font-size: 13px; text-decoration: none; }
 .jy-tl__track { position: relative; height: 32px; border-bottom: var(--border-hair) solid var(--line); }
 .jy-tl__track i { position: absolute; top: 12px; height: 8px; min-width: 4px; background: var(--line-strong); border-radius: var(--radius-sm); }
 .jy-tl__track i.is-mine { background: var(--inverse); }
@@ -165,6 +167,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-col { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); border: var(--border-hair) solid var(--line); border-radius: var(--radius-md); }
 .jy-org, .jy-org ul { display: grid; gap: var(--space-1); }
 .jy-org ul { margin-left: var(--space-5); padding-left: var(--space-4); border-left: var(--border-hair) solid var(--line-strong); }
+
+/* Touch targets: links that act as controls get the 44px minimum; the system's small button is too short for touch. */
+.jy-btn--s { min-height: var(--hit-min); }
+.jy-lane h3 a, .jy-col > a.jy-h3, .jy-table td a { display: inline-flex; align-items: center; min-height: var(--hit-min); }
+.jy-digest { font: 400 14px/22px var(--font-mono); }
+.jy-figure { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .jy-card:hover { transform: none; } }
 
 /* About */
 .jy-signature img { height: 48px; width: auto; display: block; }

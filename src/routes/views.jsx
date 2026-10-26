@@ -19,7 +19,8 @@ const walk = (id, depth = 0, out = []) => {
 
 export function Timeline({ root }) {
   const rows = walk(root.id), today = isoDay();
-  const start = (x) => x.startDate || isoDay(x.createdAt);
+  // A bar starts at its start date, or at its due date when that comes first (overdue work).
+  const start = (x) => [x.startDate || isoDay(x.createdAt), x.dueDate].sort()[0];
   const dated = rows.filter(([x]) => x.dueDate);
   if (!dated.length) return <p class="jy-empty">No due dates yet. Add due dates to tasks to see the timeline.</p>;
   const from = monday([today, ...dated.map(([x]) => start(x))].sort()[0]);
@@ -32,13 +33,14 @@ export function Timeline({ root }) {
       <div class="jy-tl">
         <div class="jy-tl__row jy-tl__axis" aria-hidden="true"><span /><span class="jy-tl__track">{weeks.map((d) => <span key={d} style={{ left: pct(d) }}>{weekId(d).slice(5)}</span>)}</span></div>
         {rows.map(([x, depth]) => {
-          const s = start(x) < (x.dueDate || '') ? start(x) : x.dueDate;
+          const s = start(x);
           return (
             <div key={x.id} class="jy-tl__row">
               <a href={`#/p/${x.id}`} class="jy-tl__name" style={{ paddingLeft: `${depth * 12}px` }}>{x.title}</a>
               <span class="jy-tl__track">
                 {x.dueDate ? <i class={x.kind === 'task' && isMine(x) ? 'is-mine' : ''} style={{ left: pct(s), width: `${(100 * (daysBetween(s, x.dueDate) + 1)) / span}%` }}
                   title={`${s} to ${x.dueDate}`} /> : <span class="jy-caption">No due date</span>}
+                {x.dueDate && <span class="jy-sr">{s} to {x.dueDate}</span>}
                 <b class="jy-tl__today" style={{ left: pct(today) }} aria-hidden="true" />
               </span>
             </div>

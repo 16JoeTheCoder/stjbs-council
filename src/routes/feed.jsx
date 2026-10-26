@@ -13,10 +13,10 @@ export function Feed({ compact }) {
   const list = compact ? S.activity.slice(0, 12) : S.activity;
   return (
     <>
-      {compact ? <h2 class="jy-h2">Activity</h2> : <Title light="What changed." bold="Feed" />}
+      {compact ? <h2 class="jy-h2">Activity</h2> : <Title light="What changed." bold="Feed" title="Feed" />}
       {!compact && (
         <section class="jy-section" aria-labelledby="fy-h">
-          <h2 id="fy-h" class="jy-h2">For you <span class="jy-caption">{unread.length} unread</span></h2>
+          <h2 id="fy-h" class="jy-h2">For you <span class="jy-caption">{S.unread} unread</span></h2>
           {unread.length > 1 && <button class="jy-link" onClick={() => unread.forEach(markRead)}>Mark all as read</button>}
           {S.notes.length ? <ul class="jy-feed">{S.notes.map((n) => (
             <Entry key={n.id} who={n.fromUid} text={n.text} at={n.createdAt} itemId={n.itemId}>

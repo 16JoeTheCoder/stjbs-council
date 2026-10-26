@@ -20,7 +20,7 @@ let toastTimer;
 export function toast(msg, undo = null) {
   set({ toast: msg, undo });
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => set({ toast: '', undo: null }), undo ? 10000 : 4000);
+  if (!undo) toastTimer = setTimeout(() => set({ toast: '', undo: null }), 4000); // an undo stays until used or dismissed
 }
 export const fail = (e) => toast(`That did not save (${e.code || e.message}). Check your connection and try again.`);
 

@@ -3,18 +3,18 @@ import { S, memberName } from '../store.js';
 import { STAGES, activeMembers, canManage, canWork, isBoss, progress, safeUrl, taskState, tree } from '../model.js';
 import { archiveItem, changeLead, createItem, updateItem } from '../actions.js';
 import { idr } from '../time.js';
-import { Badge, Bar, Chips, Comments, FilterBar, ItemCard, Title, useFilter } from '../ui.jsx';
+import { Badge, Bar, Chips, Comments, FilterBar, ItemCard, Title, useAutofocus, useFilter, useReturnFocus } from '../ui.jsx';
 import { Feed } from './feed.jsx';
 import { TeamChart, Timeline, exportProject } from './views.jsx';
 
 export function Projects() {
   const roots = tree().kids.root || [];
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState(false), back = useReturnFocus(adding);
   return (
     <>
       <Title light="All projects." bold={`${roots.length} running.`} title="Projects" />
       {isBoss() && S.me.role !== 'teacher' && (adding ? <ItemForm kind="project" done={() => setAdding(false)} /> :
-        <div class="jy-actions"><button class="jy-btn jy-btn--ghost" onClick={() => setAdding(true)}>New project</button><a class="jy-btn jy-btn--ghost" href="#/templates">Start from template</a></div>)}
+        <div class="jy-actions" ref={back}><button class="jy-btn jy-btn--ghost" onClick={() => setAdding(true)}>New project</button><a class="jy-btn jy-btn--ghost" href="#/templates">Start from template</a></div>)}
       <div class="jy-split">
         <div class="jy-grid">{roots.length ? roots.map((it) => <ItemCard key={it.id} it={it} />) : <p class="jy-empty">No projects yet. An exec or the advisor can start one.</p>}</div>
         <aside class="jy-well" aria-label="Recent activity"><Feed compact /></aside>
@@ -27,14 +27,14 @@ function Crumbs({ it }) {
   const { byId } = tree();
   return (
     <nav aria-label="Breadcrumb" class="jy-crumbs"><a href="#/projects">Projects</a>
-      {it.ancestors.map((a) => byId[a] && <span key={a}> / <a href={`#/p/${a}`}>{byId[a].title}</a></span>)}<span> / {it.title}</span></nav>
+      {it.ancestors.map((a) => byId[a] && <span key={a}> / <a href={`#/p/${a}`}>{byId[a].title}</a></span>)}<span aria-current="page"> / {it.title}</span></nav>
   );
 }
 
 export function Item({ id, q }) {
   const { byId, kids, under } = tree(), it = byId[id];
   const [f, setF] = useFilter('project');
-  const [form, setForm] = useState(null);
+  const [form, setForm] = useState(null), back = useReturnFocus(!!form);
   if (!it) return <><Title light="Not found." bold="This item is gone" /><p>It may be archived or from another term. <a href="#/projects">Go to Projects</a></p></>;
   if (it.kind === 'task') return <Task it={it} />;
   const list = under(it.id), p = progress(list), pct = p.total ? Math.round((100 * p.done) / p.total) : 0;
@@ -57,7 +57,7 @@ export function Item({ id, q }) {
         {!it.parentId && <button class="jy-link" onClick={() => exportProject(it)}>Export as template</button>}
       </nav>
       {canManage(it) && (form ? <ItemForm parent={it} kind={form} done={() => setForm(null)} /> : (
-        <div class="jy-actions">
+        <div class="jy-actions" ref={back}>
           <button class="jy-btn jy-btn--ghost" onClick={() => setForm('task')}>Add task</button>
           {it.ancestors.length < 2 && <button class="jy-btn jy-btn--ghost" onClick={() => setForm('team')}>Add subteam</button>}
           <button class="jy-btn jy-btn--ghost" onClick={() => setForm('edit')}>Edit {it.kind === 'project' ? 'project' : 'subteam'}</button>
@@ -97,7 +97,7 @@ export const StageBar = ({ stage }) => {
 };
 
 function Task({ it }) {
-  const [edit, setEdit] = useState(false);
+  const [edit, setEdit] = useState(false), back = useReturnFocus(edit);
   const url = safeUrl(it.link), s = taskState(it);
   return (
     <>
@@ -110,7 +110,7 @@ function Task({ it }) {
       {url && <p><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></p>}
       {it.isDeal && <section class="jy-section" aria-label="Deal"><StageBar stage={it.dealStage} />
         <p class="jy-mono">Pledged {idr(it.pledgedIdr)} · received {idr(it.receivedIdr)}</p></section>}
-      {canWork(it) && (edit ? <ItemForm item={it} done={() => setEdit(false)} /> : <div class="jy-actions"><button class="jy-btn" onClick={() => setEdit(true)}>Update task</button></div>)}
+      {canWork(it) && (edit ? <ItemForm item={it} done={() => setEdit(false)} /> : <div class="jy-actions" ref={back}><button class="jy-btn" onClick={() => setEdit(true)}>Update task</button></div>)}
       <Comments it={it} />
     </>
   );
@@ -124,17 +124,19 @@ function ItemForm({ item, parent, kind, done }) {
   const editing = kind === 'edit' ? parent : item, manage = editing ? canManage(editing) : true;
   const k = editing?.kind || kind;
   const [v, setV] = useState(editing ? { ...editing } : { title: '', dueDate: '', startDate: '', notes: '', link: '', assigneeUids: [], leadUid: '', isDeal: false });
-  const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
+  const [err, setErr] = useState({}), [busy, setBusy] = useState(false), ref = useAutofocus();
+  const bad = (field, msg) => { setErr({ field, msg }); ref.current.querySelector(`[name=${field}]`)?.focus(); };
   const on = (key, num) => (e) => setV({ ...v, [key]: e.target.type === 'checkbox' ? e.target.checked : num ? Number(e.target.value) || 0 : e.target.value });
   const field = (key, label, type = 'text', extra = {}) => (
-    <label class="jy-field"><span class="jy-field__label">{label}</span>
-      <input class="jy-field__input" type={type} value={v[key] ?? ''} onInput={on(key, type === 'number')} {...extra} /></label>
+    <label class={`jy-field${err.field === key ? ' jy-field--error' : ''}`}><span class="jy-field__label">{label}</span>
+      <input class="jy-field__input" name={key} type={type} value={v[key] ?? ''} onInput={on(key, type === 'number')} {...extra}
+        aria-invalid={err.field === key || undefined} aria-describedby={err.field === key ? 'item-err' : undefined} /></label>
   );
   const submit = async (e) => {
     e.preventDefault();
-    if (manage && !v.title.trim()) return setErr('Add a title, then save.');
-    if (v.link && !safeUrl(v.link)) return setErr('The link must start with http:// or https://.');
-    setErr(''); setBusy(true);
+    if (manage && !v.title.trim()) return bad('title', 'Add a title, then save.');
+    if (v.link && !safeUrl(v.link)) return bad('link', 'The link must start with http:// or https://.');
+    setErr({}); setBusy(true);
     const data = manage ? pick(v, ['title', 'dueDate', 'startDate', 'notes', 'link', ...(k === 'task' ? ['assigneeUids', 'isDeal', ...WORK, ...DEAL] : [])])
       : pick(v, [...WORK, ...(editing.isDeal ? DEAL : [])]);
     for (const key of ['dueDate', 'startDate', 'blockedOnUid']) if (data[key] === '') data[key] = null;
@@ -150,7 +152,7 @@ function ItemForm({ item, parent, kind, done }) {
   };
   const people = activeMembers().filter((m) => m.role !== 'teacher');
   return (
-    <form class="jy-form jy-panel" onSubmit={submit}>
+    <form class="jy-form jy-panel" onSubmit={submit} ref={ref} noValidate>
       <h2 class="jy-h2">{editing ? `Edit ${k}` : `New ${k}`}</h2>
       {manage && field('title', 'Title', 'text', { maxLength: 80, required: true })}
       {manage && <div class="jy-row">{field('startDate', 'Start date', 'date')}{field('dueDate', 'Due date', 'date')}</div>}
@@ -180,9 +182,9 @@ function ItemForm({ item, parent, kind, done }) {
         <label class="jy-field"><span class="jy-field__label">Deal stage</span>
           <select class="jy-field__input" value={v.dealStage} onChange={on('dealStage')}>{STAGES.map((s) => <option key={s}>{s}</option>)}</select></label>
         {field('pledgedIdr', 'Pledged (IDR)', 'number', { min: 0 })}{field('receivedIdr', 'Received (IDR)', 'number', { min: 0 })}</div>)}
-      <p class="jy-error" role="alert">{err}</p>
+      <p id="item-err" class="jy-error" role="alert">{err.msg}</p>
       <div class="jy-actions">
-        <button class="jy-btn" disabled={busy}>{editing ? 'Save changes' : `Add ${k}`}</button>
+        <button class="jy-btn jy-btn--ghost" disabled={busy}>{editing ? 'Save changes' : `Add ${k}`}</button>
         <button type="button" class="jy-btn jy-btn--ghost" onClick={done}>Cancel</button>
         {editing && manage && <button type="button" class="jy-btn jy-btn--ghost" onClick={() => archiveItem(editing).then((ok) => ok && (location.hash = editing.parentId ? `#/p/${editing.parentId}` : '#/projects'))}>Archive {k}</button>}
       </div>

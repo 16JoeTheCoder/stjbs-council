@@ -26,8 +26,8 @@ function Chart({ snaps }) {
   const W = 600, H = 160, P = 32, max = Math.max(1, ...snaps.map((s) => s.totalOpen));
   const x = (i) => P + (i * (W - 2 * P)) / (snaps.length - 1), y = (v) => H - P - (v * (H - 2 * P)) / max;
   return (
-    <figure class="jy-scroll">
-      <svg class="jy-chart" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Open tasks per week, from ${snaps[0].totalOpen} to ${snaps.at(-1).totalOpen}`}>
+    <figure class="jy-scroll jy-figure">
+      <svg class="jy-chart" viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Open tasks per week, from ${snaps[0].totalOpen} to ${snaps.at(-1).totalOpen}`}>
         <line class="grid" x1={P} x2={W - P} y1={y(max)} y2={y(max)} /><line class="axis" x1={P} x2={W - P} y1={y(0)} y2={y(0)} />
         <text x={4} y={y(max) + 4}>{max}</text><text x={4} y={y(0) + 4}>0</text>
         <polyline class="ser s1" points={snaps.map((s, i) => `${x(i)},${y(s.totalOpen)}`).join(' ')} />
