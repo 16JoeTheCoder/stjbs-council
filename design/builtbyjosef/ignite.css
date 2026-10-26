@@ -1,0 +1,73 @@
+/* builtbyjosef ignition layer v1.1. Additive to tokens.css + bundle.css (load after both).
+   Fire is contrast and speed, not area: flat fills, hard edges, no gradients, no blur, no loops (one live-dot exception). */
+
+:root{
+  --display-hero:clamp(64px,11vw,160px);
+  --flare-pad:clamp(var(--space-7),8vw,var(--space-9));
+}
+
+/* Stage: force a dark (or any themed) section regardless of the OS. Use with data-theme="dark". */
+.jy-stage{background:var(--surface);color:var(--ink)}
+
+/* Hero: a light phrase, a bold phrase, lots of ma */
+.jy-hero{max-width:var(--page-max);margin-inline:auto;padding:var(--flare-pad) var(--space-5)}
+.jy-hero__title{margin:var(--space-4) 0 0;font:300 var(--display-hero)/.9 var(--font-sans);letter-spacing:-.045em;text-wrap:balance}
+.jy-hero__title b{font-weight:700}
+.jy-hero__lead{max-width:var(--measure);margin:var(--space-6) 0 0;font:400 18px/28px var(--font-sans);color:var(--ink-muted)}
+.jy-hero__actions{display:flex;flex-wrap:wrap;gap:var(--space-4);margin-top:var(--space-6)}
+
+/* Burn: an orange bar drawn under ONE key word. The word stays ink (contrast stays legal). */
+.jy-burn{position:relative;display:inline-block}
+.jy-burn::after{content:"";position:absolute;left:0;right:0;bottom:-.04em;height:max(6px,.09em);background:var(--accent);transform-origin:left;animation:jy-cap-sweep var(--dur-sweep) var(--ease-out) var(--jy-delay,160ms) both}
+
+/* Flare: one full-bleed orange field per page. Ink only inside it. */
+.jy-flare{--ink:var(--brand-ink);--ink-muted:var(--brand-ink);--ink-subtle:var(--brand-ink);--focus:var(--brand-ink);background:var(--accent);color:var(--on-accent)}
+.jy-flare a{color:var(--on-accent);text-decoration-thickness:2px;text-underline-offset:4px}
+.jy-flare .jy-eyebrow{color:var(--on-accent)}
+.jy-flare .jy-burn::after{background:var(--on-accent)}
+.jy-flare .jy-btn{background:var(--brand-ink);color:var(--brand-paper)}
+.jy-flare .jy-btn::before{background:var(--brand-paper)}
+.jy-flare .jy-btn:hover{box-shadow:4px 4px 0 0 var(--brand-paper)}
+.jy-flare .jy-btn--ghost{background:transparent;color:var(--on-accent);border-color:var(--on-accent)}
+.jy-flare .jy-btn--ghost:hover{background:var(--brand-ink);color:var(--brand-paper);box-shadow:none}
+
+/* Tab card (9:16) and the Stair: cards stepping down the grid */
+.jy-panel--tab{aspect-ratio:9/16;display:flex;flex-direction:column;justify-content:space-between}
+.jy-stair{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:var(--space-5);align-items:start}
+.jy-stair>:nth-child(4n+2){margin-top:var(--space-5)}
+.jy-stair>:nth-child(4n+3){margin-top:var(--space-7)}
+.jy-stair>:nth-child(4n+4){margin-top:var(--space-8)}
+
+/* Fuse: hairline with a spark (cap fragment) at its head. Use as <hr class="jy-rule">. */
+.jy-rule{position:relative;height:var(--border-hair);margin:var(--space-7) 0;border:0;background:var(--line)}
+.jy-rule::before{content:"";position:absolute;left:0;top:calc(var(--cap-h) / -2);width:28px;height:var(--cap-h);background:var(--accent);border-radius:var(--radius-xs)}
+
+/* Heat legend for seq ramps: <div class="jy-heat"><i></i><i></i><i></i><i></i><i></i></div> */
+.jy-heat{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;height:var(--space-2);border-radius:var(--radius-xs);overflow:hidden}
+.jy-heat i:nth-child(1){background:var(--seq-1)}
+.jy-heat i:nth-child(2){background:var(--seq-2)}
+.jy-heat i:nth-child(3){background:var(--seq-3)}
+.jy-heat i:nth-child(4){background:var(--seq-4)}
+.jy-heat i:nth-child(5){background:var(--seq-5)}
+
+/* Ignite: the primary button's cap lands on first paint (ease-snap is allowed for the cap landing) */
+@keyframes jy-cap-drop{from{transform:translateY(-100%)}to{transform:none}}
+.jy-btn.jy-ignite::before{animation:jy-cap-drop var(--dur-base) var(--ease-snap) both}
+
+/* Pulse: one-shot ring on a successful state change. Use on badges and stats, not on panels. */
+@keyframes jy-pulse{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.6)}}
+.jy-pulse{position:relative}
+.jy-pulse::after{content:"";position:absolute;inset:-2px;border:var(--border-strong) solid var(--accent);border-radius:inherit;pointer-events:none;animation:jy-pulse var(--dur-sweep) var(--ease-out) both}
+
+/* Live: the one looping indicator. Real live data only, always with the word, one per view. */
+@keyframes jy-live{50%{opacity:.35}}
+.jy-live{display:inline-flex;align-items:center;gap:var(--space-2);font:500 12px/16px var(--font-sans);letter-spacing:.08em;text-transform:uppercase}
+.jy-live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);animation:jy-live 1600ms var(--ease-inout) infinite}
+
+/* Reveal on scroll (jy.js adds .is-in). Content stays visible without JS because .jy-js is added by script. */
+.jy-js [data-jy-reveal]{opacity:0}
+.jy-js [data-jy-reveal].is-in{animation:jy-rise var(--dur-slow) var(--ease-out) calc(var(--i,0) * 60ms) both}
+@media (prefers-reduced-motion:reduce){
+  .jy-js [data-jy-reveal],.jy-js [data-jy-reveal].is-in{opacity:1;animation:none}
+  .jy-burn::after{animation:none}
+}
