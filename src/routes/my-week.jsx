@@ -1,5 +1,5 @@
 import { S } from '../store.js';
-import { isMine, tree } from '../model.js';
+import { checksIn, isMine, tree } from '../model.js';
 import { isoDay, week } from '../time.js';
 import { FilterBar, TaskList, Title, useFilter } from '../ui.jsx';
 
@@ -16,11 +16,11 @@ export function MyWeek() {
   return (
     <>
       <Title light="Your week." bold={count(open, 'task')} title="My week" />
-      {ci ? (
+      {!checksIn(S.me) ? null : ci ? (
         <p class="jy-caption">Checked in for <span class="jy-mono">{w.id}</span>. <a href="#/checkin">Edit check-in</a></p>
       ) : (
         <section class="jy-banner" aria-labelledby="ci-h">
-          <p class="jy-eyebrow">Check-in due Friday <span class="jy-mono">{w.due}</span> 23:59</p>
+          <p class="jy-eyebrow">{isoDay() > w.due ? 'Check-in was due Friday' : 'Check-in due Friday'} <span class="jy-mono">{w.due}</span> 23:59{isoDay() > w.due ? '. Submit it now.' : ''}</p>
           <h2 id="ci-h" class="jy-h2">Three answers. Under a minute.</h2>
           <a class="jy-btn jy-btn--accent" href="#/checkin">Start check-in</a>
         </section>

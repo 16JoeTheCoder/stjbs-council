@@ -30,7 +30,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-tabbar a[aria-current] { color: var(--ink); }
 .jy-tabbar a[aria-current]::before { top: 0; bottom: auto; left: calc(50% - 14px); }
 .jy-toast { position: fixed; left: var(--space-4); right: var(--space-4); bottom: calc(72px + var(--space-4) + env(safe-area-inset-bottom)); z-index: 30; max-width: 480px; pointer-events: none; }
-.jy-toast:not(:empty) { padding: var(--space-3) var(--space-4); background: var(--inverse); color: var(--on-inverse); border-radius: var(--radius-md); animation: jy-rise var(--dur-base) var(--ease-out) both; }
+.jy-toast button { pointer-events: auto; color: var(--on-inverse); margin-left: var(--space-3); }
+.jy-toast:not(:empty) { display: flex; align-items: center; flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--inverse); color: var(--on-inverse); border-radius: var(--radius-md); animation: jy-rise var(--dur-base) var(--ease-out) both; }
 .jy-auth { max-width: 480px; padding: var(--space-8) var(--space-4); display: flex; flex-direction: column; gap: var(--space-5); outline: none; }
 @media (min-width: 900px) {
   .jy-topnav { display: flex; }
@@ -58,7 +59,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .jy-actions { margin: var(--space-4) 0; gap: var(--space-3); }
 .jy-meta { gap: var(--space-2) var(--space-3); color: var(--ink-muted); font-size: 13px; }
 .jy-section { margin-top: var(--space-7); }
-.jy-scroll { overflow-x: auto; }
+.jy-scroll { position: relative; overflow-x: auto; }
 .jy-scroll > .jy-table { min-width: 640px; overflow-wrap: normal; }
 .jy-crumbs { margin-bottom: var(--space-3); font-size: 13px; color: var(--ink-muted); }
 .jy-crumbs a { display: inline-flex; min-height: var(--hit-min); align-items: center; }

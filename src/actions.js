@@ -17,7 +17,7 @@ function notify(b, to, type, item, text) {
     b.set(newRef(`notifications/${uid}/items`), { termId: T(), toUid: uid, fromUid: S.me.id, type, itemId: item.id, text, read: false, createdAt: now() });
 }
 // Assignees, creator and the nearest lead, minus the author (notify removes the author).
-export const audience = (it) => [...(it.assigneeUids || []), it.createdByUid, it.leadUids?.at(-1)];
+export const audience = (it) => [...(it.assigneeUids || []), it.createdByUid, it.leadUids?.at(-1), it.blocked && it.blockedOnUid];
 
 async function run(fn, done) {
   const b = writeBatch(db);
@@ -43,7 +43,7 @@ export function createItem(parent, data) {
 
 export function updateItem(it, patch, verb = 'updated') {
   const p = { ...patch, updatedAt: now() };
-  if (patch.status) p.completedAt = patch.status === 'done' ? now() : null;
+  if (patch.status && (patch.status === 'done') !== (it.status === 'done')) p.completedAt = patch.status === 'done' ? now() : null;
   const added = (patch.assigneeUids || []).filter((u) => !it.assigneeUids.includes(u));
   if (added.length) p.assignedAt = now();
   return run((b) => {
@@ -102,11 +102,17 @@ export async function createTree(nodes) {
   catch (e) { fail(e); return null; }
 }
 
+// Archives a subtree after a confirm naming its size; the toast offers to restore exactly those items.
 export async function archiveItem(it) {
-  const ops = S.items.filter((x) => x.id === it.id || x.ancestors.includes(it.id))
-    .map((x) => ({ ref: doc(db, 'items', x.id), depth: x.ancestors.length, parentId: x.parentId, patch: { archived: true, updatedAt: now() } }));
-  try { await commitChunked(ops); return run((b) => log(b, 'archived', it.id, `archived "${it.title}"`), `Archived "${it.title}".`); }
-  catch (e) { fail(e); return false; }
+  const list = S.items.filter((x) => x.id === it.id || x.ancestors.includes(it.id));
+  if (!confirm(`Archive "${it.title}"${list.length > 1 ? ` and the ${list.length - 1} items inside it` : ''}? It disappears from every screen.`)) return false;
+  const flag = (archived) => commitChunked(list.map((x) => ({ ref: doc(db, 'items', x.id), depth: x.ancestors.length, parentId: x.parentId, patch: { archived, updatedAt: now() } })));
+  try {
+    await flag(true);
+    await run((b) => log(b, 'archived', it.id, `archived "${it.title}"`));
+    toast(`Archived "${it.title}".`, { label: 'Undo', fn: () => flag(false).then(() => run((b) => log(b, 'restored', it.id, `restored "${it.title}"`), 'Restored.')).catch(fail) });
+    return true;
+  } catch (e) { fail(e); return false; }
 }
 
 export function addComment(it, text) {
@@ -128,5 +134,7 @@ export function saveCheckin(answers) {
 }
 
 export const markRead = (n) => updateDoc(doc(db, `notifications/${S.me.id}/items`, n.id), { read: true }).catch(fail);
-export const putDoc = (path, data, msg) => setDoc(doc(db, path), { ...data, termId: data.termId || T(), updatedAt: now() }, { merge: true })
-  .then(() => (msg && toast(msg), true)).catch((e) => (fail(e), false));
+export async function putDoc(path, data, msg) {
+  try { await setDoc(doc(db, path), { ...data, termId: data.termId || T(), updatedAt: now() }, { merge: true }); if (msg) toast(msg); return true; }
+  catch (e) { fail(e); return false; }
+}

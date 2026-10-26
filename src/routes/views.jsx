@@ -1,5 +1,5 @@
 // Project views computed from data: timeline, team chart, export to the template schema.
-import { memberName } from '../store.js';
+import { memberName, toast } from '../store.js';
 import { isMine, tree } from '../model.js';
 import { addDays, daysBetween, isoDay, monday, weekId } from '../time.js';
 import { Chip } from '../ui.jsx';
@@ -70,6 +70,7 @@ export function TeamChart({ root }) {
 
 export function exportProject(root) {
   const { byId } = tree(), event = root.dueDate;
+  if (!event) return toast('Set the project due date (the event day) first; offsets are counted from it.');
   const nodes = [root, ...walk(root.id).map(([x]) => x)];
   const items = nodes.map((x) => ({
     key: x.id, parentKey: x.id === root.id ? null : x.parentId, title: x.title.slice(0, 80), notes: (x.notes || '').slice(0, 200),

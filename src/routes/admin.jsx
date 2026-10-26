@@ -4,7 +4,7 @@ import { db } from '../firebase.js';
 import { S, memberName } from '../store.js';
 import { initials } from '../model.js';
 import { putDoc } from '../actions.js';
-import { isoDay, week } from '../time.js';
+import { isoDay, monday, weekId } from '../time.js';
 import { Title } from '../ui.jsx';
 import { roleName } from './people.jsx';
 import { download } from './views.jsx';
@@ -15,7 +15,7 @@ const SCHOOL = /^[^@\s]+@stjbs\.sch\.id$/;
 function MemberForm({ m, done }) {
   const advisor = S.me.role === 'advisor';
   const [v, setV] = useState(m || { id: '', name: '', role: 'officer', section: '', reportsTo: '' });
-  const [err, setErr] = useState('');
+  const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   const on = (k) => (e) => setV({ ...v, [k]: e.target.value });
   const submit = async (e) => {
     e.preventDefault();
@@ -23,8 +23,9 @@ function MemberForm({ m, done }) {
     if (!SCHOOL.test(email)) return setErr('Use a school email ending in @stjbs.sch.id.');
     if (!v.name.trim()) return setErr('Add a name, then save.');
     const data = { name: v.name.trim(), initials: initials(v.name), role: v.role, section: v.section.trim(), reportsTo: v.reportsTo || null };
-    if (!m) data.active = true;
-    if (await putDoc(`members/${email}`, data, `${data.name} saved.`)) done();
+    if (!m) Object.assign(data, { active: true, createdAt: Date.now() });
+    setBusy(true);
+    if (await putDoc(`members/${email}`, data, `${data.name} saved.`)) done(); else setBusy(false);
   };
   const field = (k, label, extra) => <label class="jy-field"><span class="jy-field__label">{label}</span><input class="jy-field__input" value={v[k]} onInput={on(k)} {...extra} /></label>;
   return (
@@ -32,13 +33,13 @@ function MemberForm({ m, done }) {
       <h2 class="jy-h2">{m ? `Edit ${m.name}` : 'Add member'}</h2>
       {field('id', 'School email', { type: 'email', disabled: !!m, 'aria-describedby': 'm-err' })}
       {field('name', 'Name', { maxLength: 60 })}
-      <label class="jy-field"><span class="jy-field__label">Role</span><select class="jy-field__input" value={v.role} onChange={on('role')} disabled={m?.role === 'advisor' && !advisor}>
+      <label class="jy-field"><span class="jy-field__label">Role</span><select class="jy-field__input" value={v.role} onChange={on('role')} disabled={(m?.role === 'advisor' && !advisor) || m?.id === S.me.id}>
         {ROLES.filter((r) => advisor || r !== 'advisor').map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
       {field('section', 'Section', { maxLength: 60, placeholder: 'For example sec 1 to sec 3' })}
       <label class="jy-field"><span class="jy-field__label">Reports to</span><select class="jy-field__input" value={v.reportsTo || ''} onChange={on('reportsTo')}>
         <option value="">Nobody</option>{S.members.filter((x) => x.active && x.id !== v.id).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
       <p id="m-err" class="jy-error" role="alert">{err}</p>
-      <div class="jy-actions"><button class="jy-btn">Save member</button><button type="button" class="jy-btn jy-btn--ghost" onClick={done}>Cancel</button></div>
+      <div class="jy-actions"><button class="jy-btn" disabled={busy}>Save member</button><button type="button" class="jy-btn jy-btn--ghost" onClick={done}>Cancel</button></div>
     </form>
   );
 }
@@ -66,7 +67,9 @@ function CloseTerm() {
   const close = async () => {
     setBusy(true);
     const day = isoDay();
-    if (await putDoc('settings/current', { termId: name.trim(), termName: name.trim(), startDate: day, startWeekId: week().id }, `Term ${name.trim()} started.`)) setName('');
+    // Remember each term's start so setting an old name back (the undo) restores its history.
+    const starts = { ...S.term.starts, [S.term.termId]: S.term.startDate || null }, id = name.trim(), startDate = starts[id] || day;
+    if (await putDoc('settings/current', { termId: id, termName: id, startDate, startWeekId: weekId(monday(startDate)), starts }, `Term ${id} started.`)) setName('');
     setBusy(false);
   };
   return (

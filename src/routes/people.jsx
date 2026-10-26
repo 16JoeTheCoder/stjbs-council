@@ -16,7 +16,10 @@ function Org() {
         {reports.length > 0 && <ul>{reports.map((r) => node(r, new Set([...seen, m.id])))}</ul>}</li>
     );
   };
-  return <ul class="jy-org">{members.filter((m) => !m.reportsTo || !ids.has(m.reportsTo) || m.reportsTo === m.id).map((m) => node(m, new Set([m.id])))}</ul>;
+  // A root has no active manager, or sits in a reportsTo loop (walking up returns to itself).
+  const loops = (m) => { let x = m; for (let i = 0; i < members.length; i++) { x = members.find((y) => y.id === x.reportsTo); if (!x) return false; if (x.id === m.id) return true; } return false; };
+  const roots = members.filter((m) => !m.reportsTo || !ids.has(m.reportsTo) || loops(m));
+  return <ul class="jy-org">{roots.map((m) => node(m, new Set(roots.map((r) => r.id))))}</ul>;
 }
 
 export function People({ id }) {

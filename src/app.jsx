@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { S, useStore } from './store.js';
+import { S, loaded, set, useStore } from './store.js';
 import { canSeeStats, isBoss } from './model.js';
 import { Chip, Icon, Title } from './ui.jsx';
 import { Login, Verify } from './routes/auth.jsx';
@@ -35,10 +35,10 @@ export function App() {
   useEffect(() => { const f = () => setRoute(parse()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   if (S.phase === 'signed-out' || S.phase === 'no-roster') return <Login />;
   if (S.phase === 'verify') return <Verify />;
-  if (S.phase !== 'ready' || S.term === null) return <main id="main" class="jy-auth"><p class="jy-caption" role="status">Loading the council, step 1 of 1.</p></main>;
+  if (S.phase !== 'ready' || S.term === null || (S.term && !loaded())) return <main id="main" class="jy-auth"><p class="jy-caption" role="status">Loading the council, step 1 of 1.</p></main>;
   if (S.term === false) return <main id="main" class="jy-auth"><p role="alert">No term is set. Ask the advisor to create settings/current.</p></main>;
 
-  const unread = S.notes.filter((n) => !n.read).length;
+  const unread = S.unread >= 100 ? '99+' : S.unread;
   const tabs = [['week', 'My week'], ['projects', 'Projects'], ['people', 'People'], ['feed', 'Feed']];
   const extra = [canSeeStats() && ['workload', 'Workload'], isBoss() && ['templates', 'Templates'],
     ['advisor', 'president'].includes(S.me.role) && ['admin', 'Admin']].filter(Boolean);
@@ -63,7 +63,7 @@ export function App() {
       {S.error && <p class="jy-alert" role="alert">{S.error}</p>}
       <main id="main" tabIndex={-1} class="jy-page"><Page key={`${route.name}/${route.id}`} id={route.id} q={route.q} /></main>
       <nav class="jy-tabbar" aria-label="Tabs">{tabs.map((t) => link(t, true))}</nav>
-      <div class="jy-toast" role="status" aria-live="polite">{S.toast}</div>
+      <div class="jy-toast" role="status" aria-live="polite">{S.toast}{S.undo && <button class="jy-link" onClick={() => { S.undo.fn(); set({ undo: null, toast: '' }); }}>{S.undo.label}</button>}</div>
     </>
   );
 }

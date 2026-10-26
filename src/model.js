@@ -1,6 +1,6 @@
 // Pure logic over store data: tree indexes, rollups, task state, filters, person status, permissions.
 import { S, memberName } from './store.js';
-import { addDays, isoDay, week, dayStartMs } from './time.js';
+import { addDays, dayStartMs, isoDay, monday, week, weekId } from './time.js';
 
 export const EXEC = ['president', 'vp', 'treasurer', 'secretary'];
 export const STAGES = ['Lead', 'Contacted', 'Negotiating', 'Signed'];
@@ -62,7 +62,8 @@ export function personStatus(email, w = week()) {
   const mine = S.items.filter((t) => t.kind === 'task' && t.assigneeUids?.includes(email));
   const overdue = mine.filter((t) => taskState(t).word === 'Overdue').length;
   const done = mine.filter((t) => t.status === 'done' && t.completedAt >= dayStartMs(w.start)).length;
-  const missedLast = !last && S.term?.startWeekId && S.term.startWeekId <= w.lastId;
+  const startWeek = S.term?.startWeekId || (S.term?.startDate && weekId(monday(S.term.startDate)));
+  const missedLast = !last && !!startWeek && startWeek <= w.lastId;
   const blocked = ci?.blocked?.trim();
   const cls = blocked || missedLast ? 'bad' : overdue || !ci ? 'warn' : 'ok';
   const word = blocked ? 'Blocked' : missedLast ? 'Missed check-in' : overdue ? 'Overdue' : !ci ? 'No check-in' : 'On track';

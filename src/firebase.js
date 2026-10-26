@@ -3,6 +3,10 @@ import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const env = import.meta.env;
+if (env.PROD && !env.VITE_FB_API_KEY && env.VITE_EMULATORS !== '1') {
+  document.body.textContent = 'Missing Firebase config. Add the values to .env.local, then build again.';
+  throw new Error('Missing Firebase config');
+}
 const app = initializeApp({
   apiKey: env.VITE_FB_API_KEY || 'demo-key', authDomain: env.VITE_FB_AUTH_DOMAIN,
   projectId: env.VITE_FB_PROJECT_ID || 'demo-council', appId: env.VITE_FB_APP_ID,

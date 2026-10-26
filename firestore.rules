@@ -12,15 +12,18 @@ service cloud.firestore {
     function isAdvisor() { return role() == 'advisor'; }
     function isBoss() { return role() in ['advisor', 'president', 'vp', 'treasurer', 'secretary']; }
     function termOk() { return request.resource.data.termId == get(/databases/$(db)/documents/settings/current).data.termId; }
+    function roles() { return ['advisor', 'president', 'vp', 'treasurer', 'secretary', 'officer', 'teacher']; }
     function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
 
     match /members/{email} {
       allow read: if active();
       allow create: if active() && (isAdvisor() || role() == 'president') && termOk()
         && email == email.lower() && email.matches('^[^@]+@stjbs[.]sch[.]id$')
-        && request.resource.data.active == true
+        && request.resource.data.active == true && request.resource.data.role in roles()
         && (isAdvisor() || request.resource.data.role != 'advisor');
-      allow update: if active() && termOk() && (isAdvisor() || (role() == 'president'
+      allow update: if active() && termOk() && request.resource.data.role in roles()
+        && !(email == me() && changed().hasAny(['role', 'active']))
+        && (isAdvisor() || (role() == 'president'
         && resource.data.role != 'advisor' && request.resource.data.role != 'advisor'
         && !changed().hasAny(['active'])));
     }
@@ -34,15 +37,22 @@ service cloud.firestore {
         ? d.leadUids == own && d.ancestors == []
         : d.leadUids == parentAfter(d).leadUids.concat(own) && d.ancestors == parentAfter(d).ancestors.concat([d.parentId]);
     }
+    // Creating inside a subtree needs a lead of the parent or an ancestor; the new item's own lead does not count.
     function manages(d) {
-      return role() != 'teacher' && (isBoss() || (d.parentId != null && me() in parentAfter(d).leadUids) || me() in d.leadUids);
+      return role() != 'teacher' && (isBoss() || (d.parentId != null && me() in parentAfter(d).leadUids));
+    }
+    function valid(d) {
+      return d.title is string && d.title.size() > 0 && d.title.size() <= 80 && d.kind in ['project', 'team', 'task']
+        && d.status in ['todo', 'doing', 'done'] && d.blocked is bool && d.archived is bool && d.isDeal is bool
+        && d.dealStage in ['Lead', 'Contacted', 'Negotiating', 'Signed']
+        && d.pledgedIdr is number && d.pledgedIdr >= 0 && d.receivedIdr is number && d.receivedIdr >= 0;
     }
     match /items/{id} {
       allow read: if active();
       allow create: if active() && termOk() && request.resource.data.createdByUid == me()
-        && request.resource.data.archived == false && leadsOk(request.resource.data)
+        && request.resource.data.archived == false && valid(request.resource.data) && leadsOk(request.resource.data)
         && (request.resource.data.parentId == null ? isBoss() : manages(request.resource.data));
-      allow update: if active() && termOk() && leadsOk(request.resource.data)
+      allow update: if active() && termOk() && valid(request.resource.data) && leadsOk(request.resource.data)
         && !changed().hasAny(['parentId', 'ancestors', 'createdByUid', 'createdAt'])
         && ((role() != 'teacher' && (isBoss() || me() in resource.data.leadUids))
           || (role() != 'teacher' && me() in resource.data.assigneeUids && changed().hasOnly(

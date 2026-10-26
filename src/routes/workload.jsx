@@ -50,7 +50,7 @@ export function Workload() {
       const id = `${T}_${week().id}`, ref = doc(db, 'stats', id);
       if (!(await getDoc(ref)).exists()) {
         const r = rows(all);
-        await setDoc(ref, { termId: T, weekId: week().id, totalOpen: r.reduce((a, x) => a + x.open, 0), members: Object.fromEntries(r.map((x) => [x.id.replace(/\./g, '_'), { open: x.open, overdue: x.overdue, blocked: x.blocked, done: x.done }])), createdAt: Date.now() });
+        await setDoc(ref, { termId: T, weekId: week().id, totalOpen: S.items.filter((t) => t.kind === 'task' && t.status !== 'done').length, members: Object.fromEntries(r.map((x) => [x.id.replace(/\./g, '_'), { open: x.open, overdue: x.overdue, blocked: x.blocked, done: x.done }])), createdAt: Date.now() });
       }
       setSnaps((await getDocs(query(collection(db, 'stats'), where('termId', '==', T)))).docs.map((d) => d.data()).sort((a, b) => a.weekId.localeCompare(b.weekId)));
     })().catch((e) => setErr(`Could not load workload (${e.code || e.message}). Reload to try again.`));

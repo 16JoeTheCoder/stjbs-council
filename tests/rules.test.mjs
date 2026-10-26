@@ -15,7 +15,7 @@ const as = (email, verified = true) =>
 const item = (o) => ({
   termId: T, parentId: null, ancestors: [], leadUids: [], leadUid: null, kind: 'task', title: 't', notes: '', link: '',
   assigneeUids: [], createdByUid: people.advisor, status: 'todo', blocked: false, dueDate: '2026-11-01',
-  archived: false, isDeal: false, createdAt: 1, ...o,
+  archived: false, isDeal: false, dealStage: 'Lead', pledgedIdr: 0, receivedIdr: 0, createdAt: 1, ...o,
 });
 
 before(async () => {
@@ -121,4 +121,18 @@ test('roster: non-school domain rejected, only advisor deactivates or makes advi
   await assertFails(updateDoc(doc(as(people.president), `members/${people.officer}`), { role: 'advisor' }));
   await assertSucceeds(updateDoc(doc(as(people.advisor), `members/${people.officer}`), { active: false }));
   await assertFails(getDoc(doc(as(people.officer), 'items/t1')));
+});
+test('naming yourself lead does not grant create rights (G1-01)', async () => {
+  const db = as(people.officer);
+  await assertFails(setDoc(doc(db, 'items/x1'), item({ kind: 'team', parentId: 'food', ancestors: ['p', 'food'], leadUid: people.officer, leadUids: [people.officer], createdByUid: people.officer })));
+  await assertFails(setDoc(doc(db, 'items/x2'), item({ kind: 'team', parentId: 'p', ancestors: ['p'], leadUid: people.officer, leadUids: [people.officer], createdByUid: people.officer })));
+});
+test('field values are validated (G1-10)', async () => {
+  await assertFails(updateDoc(doc(as(people.officer), 'items/t1'), { status: 'hacked' }));
+  await assertFails(setDoc(doc(as(people.president), 'members/z@stjbs.sch.id'), { name: 'Z', role: 'superuser', active: true, termId: T }));
+  await assertFails(updateDoc(doc(as(people.lead), 'items/t1'), { pledgedIdr: -5 }));
+});
+test('the advisor cannot change their own role or deactivate themselves (G1-11)', async () => {
+  await assertFails(updateDoc(doc(as(people.advisor), `members/${people.advisor}`), { role: 'officer' }));
+  await assertSucceeds(updateDoc(doc(as(people.advisor), `members/${people.advisor}`), { name: 'Mr. Ariel' }));
 });

@@ -27,8 +27,10 @@ export function validate(t) {
   const errs = [], keys = new Map(), name = (it, i) => `Item ${i + 1}${it?.title ? ` ("${String(it.title).slice(0, 30)}")` : ''}`;
   if (!t.templateName || typeof t.templateName !== 'string') errs.push('Add a "templateName" text field.');
   if (t.items.length > 300) errs.push(`The template has ${t.items.length} items; the limit is 300.`);
+  if (t.questions != null && !(Array.isArray(t.questions) && t.questions.every((q) => typeof q === 'string'))) errs.push('"questions" must be a list of text lines.');
   t.items.forEach((it, i) => {
-    if (!it || typeof it.key !== 'string' || !it.key) return errs.push(`${name(it, i)}: "key" must be non-empty text.`);
+    if (!it || typeof it !== 'object') return errs.push(`Item ${i + 1} is not an object with a key and a title.`);
+    if (typeof it.key !== 'string' || !it.key) return errs.push(`${name(it, i)}: "key" must be non-empty text.`);
     if (keys.has(it.key)) errs.push(`${name(it, i)}: key "${it.key}" is used twice.`);
     keys.set(it.key, it);
     if (typeof it.title !== 'string' || !it.title.trim() || it.title.length > 80) errs.push(`${name(it, i)}: "title" must be 1 to 80 characters.`);
@@ -36,10 +38,11 @@ export function validate(t) {
     if (!['task', 'deal'].includes(it.type)) errs.push(`${name(it, i)}: "type" must be "task" or "deal".`);
     if (it.offsetDays != null && !(Number.isInteger(it.offsetDays) && Math.abs(it.offsetDays) <= 3650)) errs.push(`${name(it, i)}: "offsetDays" must be a whole number of days or null.`);
   });
-  const roots = t.items.filter((it) => it?.parentKey == null);
+  const roots = t.items.filter((it) => it && typeof it === 'object' && it.parentKey == null);
   if (roots.length !== 1) errs.push(`There must be exactly one top-level item (parentKey null); found ${roots.length}.`);
   t.items.forEach((it, i) => {
-    if (it?.parentKey != null && !keys.has(it.parentKey)) return errs.push(`${name(it, i)}: parentKey "${it.parentKey}" matches no key.`);
+    if (!it || typeof it !== 'object') return;
+    if (it.parentKey != null && !keys.has(it.parentKey)) return errs.push(`${name(it, i)}: parentKey "${it.parentKey}" matches no key.`);
     let depth = 1, p = it;
     while (p?.parentKey != null && depth <= 5) { p = keys.get(p.parentKey); depth++; }
     if (depth > 4) errs.push(`${name(it, i)}: nested ${depth > 5 ? 'in a loop or ' : ''}deeper than 4 levels.`);
@@ -74,10 +77,10 @@ function Node({ t, it, setT }) {
 }
 
 // Parents before children, so the batch writer can resolve each parent.
-export function toNodes(t, event, title) {
+export function toNodes(t, event) {
   const out = [], visit = (it) => {
     const kids = children(t, it.key), root = it.parentKey == null;
-    out.push({ key: it.key, parentKey: it.parentKey ?? null, title: root ? title : it.title.slice(0, 80), notes: (it.notes || '').slice(0, 200),
+    out.push({ key: it.key, parentKey: it.parentKey ?? null, title: it.title.trim().slice(0, 80), notes: (it.notes || '').slice(0, 200),
       kind: root ? 'project' : kids.length ? 'team' : 'task', isDeal: !kids.length && it.type === 'deal',
       dueDate: root ? event : it.offsetDays == null ? null : addDays(event, it.offsetDays) });
     kids.forEach(visit);
@@ -99,12 +102,15 @@ export function Templates() {
   };
   const check = t && validate(t);
   const save = async () => {
+    if (busy) return;
     const id = docId || doc(collection(db, 'templates')).id;
-    if (await putDoc(`templates/${id}`, { name: t.templateName, template: t, archived: false }, 'Template saved.')) setDocId(id);
+    setBusy(true);
+    if (await putDoc(`templates/${id}`, { name: t.templateName, template: t, archived: false, ...(docId ? {} : { createdAt: Date.now() }) }, 'Template saved.')) setDocId(id);
+    setBusy(false);
   };
   const start = async () => {
     setBusy(true);
-    const rootId = await createTree(toNodes(t, event, t.templateName));
+    const rootId = await createTree(toNodes(t, event));
     setBusy(false);
     if (rootId) location.hash = `#/p/${rootId}`;
   };
@@ -136,7 +142,7 @@ export function Templates() {
           <ul class="jy-org">{t.items.filter((x) => x.parentKey == null).map((it) => <Node key={it.key} t={t} it={it} setT={setT} />)}</ul>
           <ul class="jy-error" role="alert">{check.map((e) => <li key={e}>{e}</li>)}</ul>
           <div class="jy-actions">
-            <button class="jy-btn jy-btn--ghost" disabled={check.length > 0} onClick={save}>Save template</button>
+            <button class="jy-btn jy-btn--ghost" disabled={busy || check.length > 0} onClick={save}>Save template</button>
             <button class="jy-btn jy-btn--ghost" onClick={() => download(`${t.templateName.replace(/\W+/g, '-').toLowerCase()}.json`, JSON.stringify(t, null, 2))}>Export JSON</button>
             {docId && <button class="jy-btn jy-btn--ghost" onClick={() => putDoc(`templates/${docId}`, { archived: true }, 'Template archived.').then(() => setT(null))}>Archive template</button>}
           </div>

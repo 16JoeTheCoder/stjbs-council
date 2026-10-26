@@ -8,6 +8,8 @@ import { Title } from '../ui.jsx';
 
 const MESSAGES = {
   'auth/invalid-credential': 'Email or password is wrong. Check both, or reset your password.',
+  'auth/user-not-found': 'Email or password is wrong. Check both, or create an account.',
+  'auth/wrong-password': 'Email or password is wrong. Check both, or reset your password.',
   'auth/invalid-email': 'That email address is not valid. Use your school email.',
   'auth/email-already-in-use': 'That email already has an account. Sign in or reset your password.',
   'auth/weak-password': 'That password is too short. Use at least 8 characters.',

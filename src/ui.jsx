@@ -122,7 +122,8 @@ export function Comments({ it }) {
   const [list, setList] = useState(null), [all, setAll] = useState(false), [open, setOpen] = useState(false);
   const [text, setText] = useState(''), [busy, setBusy] = useState(false);
   useEffect(() => onSnapshot(query(collection(db, 'comments'), where('itemId', '==', it.id), where('termId', '==', S.term.termId)),
-    (s) => setList(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.createdAt - b.createdAt)), () => setList([])), [it.id]);
+    (s) => setList(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.createdAt - b.createdAt)), () => setList(false)), [it.id]);
+  if (list === false) return <p class="jy-error" role="alert">Comments did not load. Reload the page to try again.</p>;
   if (!list) return <p class="jy-caption">Loading comments, step 1 of 1.</p>;
   const shown = all ? list : list.slice(-2);
   const post = async (e) => {
