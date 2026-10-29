@@ -10,7 +10,7 @@ Revision 2 adds Josef's decisions (section 1), the read-quota fix he approved (s
 |---|---|---|
 | Q1 | `public/feed.updatedByUid` would publish a student admin's email (the whole document is world-readable). | **Dropped.** The feed holds only `json`, `hash` and `updatedAt`. Who published goes into `activity` ("published the public site"), which only members can read. |
 | Q2 | The VP outranks the president on the roster (can demote or deactivate them). | **Intended.** Josef wants it for setup and handover. Built exactly as the roles table says. The advisor can always repair it, and no one changes their own role or active flag. |
-| Q3 | Persistent cache: re-reads are avoided only within about 30 minutes, and data stays on shared computers. | **Do it.** `initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) })`. The explicit Sign out button runs `terminate`, then `clearIndexedDbPersistence`, then reloads. The automatic no-roster sign-out does **not** clear or reload, so the "not on the roster" message survives (L1-07). |
+| Q3 | Persistent cache: re-reads are avoided only within about 30 minutes, and data stays on shared computers. | **Do it.** `initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) })`. The explicit Sign out button signs out first, then `terminate` and `clearIndexedDbPersistence` inside `try/catch`, then reloads whatever happened. The clear fails if another tab is open, so sign-out must never wait on it (L1-34). The README notes that a session ending by token expiry leaves the cache, so on shared computers members should use Sign out. The automatic no-roster sign-out does **not** clear or reload, so the "not on the roster" message survives (L1-07). |
 | Q4 | May the president edit the name, section and reports-to of a VP, a president or the advisor? | **Yes, for everyone except the advisor's document.** |
 | Q5 | Read quota is over the free 50 000 a day. Pay for Blaze? | **No paid plan** (hard to get approved). Fix the reads instead with **one snapshot document** (section 6), plus two small cuts (lazy activity, no separate unread query) and a clear "free daily limit used up" message. |
 | Q6 | Drop iPhone support to save reads? | **No.** The 30-minute re-read rule hits every platform. Dropping iOS removes people, not reads per person. |
@@ -58,12 +58,12 @@ Revision 2 adds Josef's decisions (section 1), the read-quota fix he approved (s
 | `designsystem/` | move | `git mv designsystem design/fiatlux` (M3). |
 | `scripts/jy-check.sh` | delete | Replaced by `design/fiatlux/design-check.sh`. |
 | `scripts/make-icons.cjs` | change | Crest centred on `#0A0A0C` at 192, 512 and 180 px; maskable 512 with about 20 % safe padding; `favicon-48.png`. |
-| `scripts/seed-emulator.mjs` | change | Announcements (2 active, 1 expired); events this week and next (one evening event); RSVPs; 5 ideas; 6 doc templates; 3 pending submissions plus 1 filed archive; one public root project with a blurb; projects in each pipeline stage; the item snapshot (some items without `touchedAt`, so the legacy path is exercised); `public/feed`. |
+| `scripts/seed-emulator.mjs` | change | Announcements (2 active, 1 expired); events this week and next (one evening event); RSVPs; 5 ideas; 6 doc templates; 3 pending submissions plus 1 filed archive; one public root project with a blurb; projects in each pipeline stage; the item snapshot (some items without `touchedAt`, so the legacy path is exercised); `public/feed`. The feed and cache documents are written with exactly the keys the rules allow: no `termId` or `createdAt` (L1-36). |
 | `public/manifest.webmanifest` | change | `"id": "/"`, `scope: "/app/"`, `start_url: "/app/#/week"`, colours `#0A0A0C`. |
 | `public/favicon.svg` | delete | Replaced by the generated PNG. |
 | `public/icons/*` | regenerate | From `crest.png`. |
 | `src/main.jsx` | change | Imports `tokens.css`, `components.css`, `app.css` once (F11). |
-| `src/site.jsx` | new | Public page. Imports the same three CSS files. REST fetch with `?key=VITE_FB_API_KEY` (harmless, public; removes the unregistered-caller risk, L1-03). Parses `stringValue`, `integerValue` and `timestampValue`. `localStorage` fallback with an "Updated earlier" note. Jakarta re-filter. "Last change n min ago", clamped to "just now" for future times (L1-22). |
+| `src/site.jsx` | new | Public page. Imports the same three CSS files. REST fetch with `?key=VITE_FB_API_KEY` (harmless, public; removes the unregistered-caller risk, L1-03). With `VITE_EMULATORS === '1'` it uses `http://127.0.0.1:8080/v1/projects/demo-council/databases/(default)/documents/public/feed` (F22). Parses `stringValue`, `integerValue` and `timestampValue`. `localStorage` fallback with an "Updated earlier" note. Jakarta re-filter. "Last change n min ago", clamped to "just now" for future times (L1-22). |
 | `src/shared.jsx` | new | Firebase-free: `Sheet`, `Announcements`, `PublicProject`, `Icon`, Jakarta date and feed-filter helpers, the string hash. |
 | `src/firebase.js` | change (allowed) | `initializeFirestore` as in Q3. Nothing else. |
 | `src/store.js` | change | Item snapshot plus delta (section 6). Optional listeners with their own error state (section 6.3). Day-rollover restart in the existing 60 s interval. Activity loaded only on `#/activity`. Unread count taken from the loaded notifications. Quota message. Sign-out helper (Q3). |
@@ -113,21 +113,21 @@ Revision 2 adds Josef's decisions (section 1), the read-quota fix he approved (s
 
 Helpers: `isAdmin() = role() in ['advisor','president','vp']`. `day(d)` matches `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`. `hhmm(t)` matches `^([01][0-9]|2[0-3]):[0-5][0-9]$`. No backslashes (L1-17).
 
-`google(u)` is a string of at most 500 characters matching `^https://docs[.]google[.]com/(document|spreadsheets|presentation|forms)/d/[A-Za-z0-9_-]+([/?#].*)?$` or `^https://drive[.]google[.]com/(file/d/|drive/folders/|open[?])[^ ]*$`. This rejects `docs.google.com.evil.com` and the `docs.google.com/url?q=` redirector.
+`google(u)` is a string of at most 500 characters matching `^https://docs[.]google[.]com/(document|spreadsheets|presentation|forms|drawings)/[^ ]*$` or `^https://drive[.]google[.]com/(file/|drive/|open[?]|uc[?])[^ ]*$`. This rejects `docs.google.com.evil.com` and the `docs.google.com/url?q=` open redirector. It is narrower than the prompt's "starts with", a declared deviation for safety (F18).
 
 Every new create or update requires `active()` and `role() != 'teacher'`. On update, `termId`, `createdByUid` (or the author field) and `createdAt` never change (L1-19). Nothing new can be deleted. Every new document carries `createdAt` and `archived: false`, except `public/feed` and `cache/*`, which are single documents overwritten in place.
 
 | Path | Read | Create | Update |
 |---|---|---|---|
 | `announcements/{id}` (term) | active | isAdmin; `termOk`; `createdByUid == me`; `archived == false`; title 1 to 80; body ≤ 2 000; audience in [everyone, members]; `day(startDate)`, `day(endDate)`, `endDate >= startDate` | isAdmin; same field checks except `archived is bool` (so archiving works, F14) |
-| `events/{id}` (term) | active | `termOk`; `createdByUid == me`; `archived == false`; title 1 to 80; type in 4; `day(date)`; `hhmm` start and end with `end >= start`; location ≤ 120; notes ≤ 1 000; `public == false \|\| isAdmin`; `itemId` absent or string | `termOk`; creator or isBoss; same checks; `public` changes only if isAdmin; **if `resource.data.public == true`, changing title or location requires isAdmin** (L1-11) |
+| `events/{id}` (term) | active | `termOk`; `createdByUid == me`; `archived == false`; title 1 to 80; type in 4; `day(date)`; `hhmm` start and end with `end >= start`; location ≤ 120; notes ≤ 1 000; `public == false \|\| isAdmin`; `itemId` absent or string | `termOk`; creator or isBoss; same checks; `public` changes only if isAdmin; **if `resource.data.get('public', false) == true`, changing title or location requires isAdmin** (L1-11, L1-27) |
 | `rsvps/{eventId}_{email}` (term) | active | `termOk`; `uid == me`; `id == eventId + '_' + me()`; status in [going, not]; event exists; `archived == false` | same as create |
 | `ideas/{id}` (term) | active | `termOk`; `authorUid == me`; `voters == [me()]`; text 1 to 140; `archived == false` | `termOk` and either (a) `hasOnly(['voters'])` with the vote check below, or (b) isAdmin and `hasOnly(['archived','updatedAt'])` |
 | `docTemplates/{id}` (cross-term) | active | isAdmin; name 1 to 80; kind ≤ 40; `google(url)`; `version == 1`; `archived == false` | isAdmin; same checks; if `url` changes then `version == resource.data.version + 1` |
-| `submissions/{id}` (cross-term) | author or isAdmin (single document and queries) | `byUid == me`; type in [new-template, template-edit, archive]; `google(url)`; name 1 to 80; note ≤ 500; status `filed` for archive, else `pending`; `targetId` and `projectId` absent or string | isAdmin; `hasOnly(['status','updatedAt'])`; status in 4. Written with `updateDoc`, not `putDoc` (L1-06). |
+| `submissions/{id}` (cross-term) | author or isAdmin (single document and queries) | `byUid == me`; type in [new-template, template-edit, archive]; `google(url)`; name 1 to 80; note ≤ 500; status `filed` for archive, else `pending`; `targetId` and `projectId` absent or string | isAdmin; `hasOnly(['status'])`, exactly as the prompt says (F14); status in 4. Written with `updateDoc`, not `putDoc` (L1-06). |
 | `public/feed`, matched exactly with `allow get: if true` (no list, L1-18) | anyone | isAdmin; `keys().hasOnly(['json','hash','updatedAt'])`; `json is string && json.size() <= 200000`; `hash is string`; `updatedAt is number` | same |
-| `cache/{termId}` (item snapshot, section 6) | active | isAdmin; `keys().hasOnly(['json','at','count','updatedAt'])`; `json is string && json.size() <= 700000`; `at is timestamp`; `count is int` | same |
-| `items` (changed) | unchanged | adds: `touchedAt == request.time`; `public`/`publicBlurb` absent, or `public == false` and no blurb, unless isAdmin and `parentId == null`; blurb ≤ 140 (F14) | adds: `touchedAt == request.time`; `public`/`publicBlurb` change only if isAdmin and root; **if `resource.data.public == true`, a title change requires isAdmin** (L1-11). Assignee limits stay. `touchedAt` joins the assignee whitelist. |
+| `cache/{termId}` (item snapshot, section 6) | active | isAdmin; `termId` equals `settings/current.termId`; `keys().hasOnly(['json','at','count','updatedAt'])`; `json is string && json.size() <= 700000`; `at is timestamp && at <= request.time` (L1-29); `count is int` | same |
+| `items` (changed) | unchanged | adds: `touchedAt == request.time`; `public`/`publicBlurb` absent, or `public == false` and no blurb, unless isAdmin and `parentId == null`; blurb ≤ 140 (F14) | adds: `touchedAt == request.time`; `public`/`publicBlurb` change only if isAdmin and root; **if `resource.data.get('public', false) == true`, a title change requires isAdmin** (L1-11). Every read of a new field uses `.get(key, default)`, because legacy items lack `public`, `publicBlurb` and `touchedAt`, and a bare read would deny every update (L1-27). Assignee limits stay. `touchedAt` joins the assignee whitelist. |
 | `comments` (changed) | unchanged | adds: optional `mentionUids` list, ≤ 10 (L1-10) | unchanged |
 | `members` (changed) | unchanged | advisor: any role. VP: any role except advisor. President: only officer, treasurer, secretary or teacher. | Advisor: any. VP: neither the old nor the new role is advisor; may change `active` (today's ban is removed, F7). President: target not advisor and `changed().hasOnly(['name','section','reportsTo','initials','termId','updatedAt'])`. Nobody changes their own role or active flag. |
 
@@ -147,6 +147,9 @@ Every new create or update requires `active()` and `role() != 'teacher'`. On upd
 - Cache: officer write (fail); member read (ok).
 - Items: lead setting `public` (fail); admin on a non-root (fail); missing or forged `touchedAt` (fail); lead retitling a public project (fail); assignee status change with `touchedAt` (ok).
 - Comments: `mentionUids` over 10 (fail).
+- Legacy item with no `public`, `publicBlurb` or `touchedAt`: lead, boss and assignee updates that add `touchedAt` (ok) (L1-27).
+- Cache: `at` in the future (fail); wrong term id (fail).
+- Write shapes: every test writes with the same SDK calls `actions.js` uses (`serverTimestamp()`, `arrayUnion`/`arrayRemove`, exact key sets), not hand-built objects (L1-36).
 
 ## 5. Queries, indexes and first deploy
 
@@ -159,15 +162,17 @@ Every new create or update requires `active()` and `role() != 'teacher'`. On upd
 | submissions pending (admin): `status == 'pending'` | none |
 | submissions archive (admin): `type == 'archive'`, `orderBy createdAt desc`, `limit 50` (L1-21) | `submissions (type, createdAt DESC)` |
 | submissions mine: `byUid ==` (sorted on the client) | none |
-| docTemplates `archived == false`; rsvps `eventId ==` | none |
+| docTemplates `archived == false`; rsvps `eventId ==`; public roots `termId ==`, `public == true` (publish re-read) | none (equality only) |
+| `cache.json`, `public.json` | `fieldOverrides`: not indexed (L1-30) |
 | existing: items `(termId, archived)` full listener (fallback); activity `(termId, createdAt desc)` | kept |
 
 The emulator does not enforce indexes; production is the first real test (flagged in the PR). Hosting must not go live before the indexes are built (L1-08), so the README's **first-deploy order** is:
-1. `npx firebase deploy --only firestore` (VS Code terminal, repo root).
-2. Wait until every index shows "Enabled" (Firebase console, Firestore, Indexes).
-3. `npm run deploy`.
+1. `npx firebase deploy --only firestore:indexes` (VS Code terminal, repo root). This ships indexes only, so old clients keep working under the old rules (L1-31).
+2. Wait until every index shows "Enabled" (Firebase console in the browser, Firestore, Indexes).
+3. `npm run deploy`. Rules and hosting go out together.
+4. Open the dashboard once as an admin. That builds the first snapshot.
 
-Until step 2 finishes, the item delta query fails. The store then falls back to the full items listener, so the app still works.
+From then on, any copy of the old app still open has its item writes refused until it reloads.
 
 ## 6. Read budget and the snapshot fix
 
@@ -193,7 +198,16 @@ A cold open was about 590 reads:
   2. If it exists, listen to `items where termId == T and touchedAt >= at − 60 s`. The 60-second margin covers writes whose request time precedes their commit. That listener also receives archived items, which are removed locally.
   3. If there is no snapshot (new term, first deploy) or the delta query fails, fall back to today's full listener.
   `ready.items` is set when the snapshot and the first delta snapshot have both arrived.
-- **Rebuild.** An admin session rebuilds the snapshot on the 10-minute publish tick when the delta holds more than 50 items or the snapshot is over 24 h old. It writes only if (a) the items listener's latest snapshot is from the server (`!metadata.fromCache && !hasPendingWrites`), (b) there is no core error, and (c) `loaded()` is true. `at` is the maximum server `touchedAt` in the store, never a client clock.
+- **Rebuild, never from the store** (L1-26, L1-28). An admin session rebuilds on open and on the 10-minute tick when any of these holds:
+  - no snapshot exists for the current term (first deploy, Close term, new term);
+  - more than 50 store items have `touchedAt > at`, counted the same way on the snapshot path and the fallback path;
+  - the snapshot is over 24 h old;
+  - the admin's own session just made a bulk change (lead change, template tree, subtree archive).
+
+  The rebuild runs a fresh `getDocsFromServer` of the full items query (about 400 reads, roughly once a day), so a stale or resumed phone can never write old data.
+
+  `at` is the largest `touchedAt` in that server result. If no item has one yet (first deploy), `at` is `Timestamp(0)`, and the delta then returns every touched item. `touchedAt` is stored as milliseconds in the JSON and rehydrated the same way, so snapshot and delta items have one shape (L1-32). Empty default fields are left out of the JSON to save space.
+- **Size** (L1-30). An item is about 600 to 900 characters of JSON, so 700 000 characters holds about 800 to 1 100 items, not 2 000. That is still a full year at today's scale. `valid()` gains generous limits so one member cannot inflate it: notes ≤ 2 000, link ≤ 2 000, blockedReason ≤ 500. These are above every UI limit, so legacy documents stay editable. If a rebuild would exceed the limit, it is not written: admin Overview shows "Item cache is full: archive finished projects", and clients keep the last snapshot plus a growing delta. The `json` fields of `cache` and `public` are exempt from indexing (`fieldOverrides`).
 - **Effect.** Items drop from 400 reads to about 1 plus the day's changes (10 to 30), and the cost no longer grows through the year.
 - **Two small cuts.** Activity loads only on `#/activity` (−50). The unread count is taken from the 50 loaded notifications, so the bell shows "50+" past that (about −10, more for heavy users).
 - **Quota message.** A listener error with `resource-exhausted` shows "The council's free daily limit is used up. It resets at 15:00 Jakarta time." The 15:00 is computed from the Pacific midnight reset. The page does not say "reload".
@@ -227,9 +241,10 @@ Daily estimate:
 | Public site | 500 |
 | Calendar page turns | 300 |
 | Admin submissions (2 visits × about 60) | 120 |
-| Write amplification: each edit costs one read per open client, and lead changes or templates cost more (L1-20) | 4 000 |
+| Write amplification: each edit costs one read per open client. Bulk actions (lead change, template tree) are the main risk: one 300-item change with 10 open clients is about 3 000 reads (L1-20, L1-35) | 4 000 |
+| Snapshot rebuild (about once a day) plus fresh re-reads before real publishes | 500 |
 | Rule `get()` calls on writes: about 500 writes × 3 (F16) | 1 500 |
-| **Total** | **about 27 500 a day** |
+| **Total** | **about 28 000 a day** |
 
 The cache saves some of that on reopens within 30 minutes; the 30 000 trigger for the cache switch was crossed by the before-figure. The 3-opens-a-day figure is a guess. After launch, Josef checks the real number in the Firebase console in the browser (Firestore, Usage) during the first week.
 
@@ -251,7 +266,18 @@ Remaining facts:
 
 There are no names, emails, initials, comments, check-ins, task titles or uids.
 
-**Write.** `json = JSON.stringify({ v: 1, projects, events, announcements })`, `hash` = FNV-1a of `json` (synchronous, L1-24). If the hash differs from `public/feed.hash`, write `{ json, hash, updatedAt: Date.now() }` and log activity "published the public site". "Publish now" does the same and ignores the hash.
+**Write.**
+1. Build the payload from the store. `json = JSON.stringify({ v: 1, projects, events, announcements })`, `hash` = FNV-1a of `json` (synchronous, L1-24).
+2. If the hash equals the stored `public/feed.hash`, stop. This costs no reads.
+3. Otherwise, **re-read every privacy-relevant set from the server** before writing (L1-26):
+   - `getDocsFromServer` for public root items (`termId ==`, `public == true`, about 5 reads);
+   - the events window (about 15 reads);
+   - active announcements (about 3 reads);
+   - `getDocFromServer(public/feed)` (1 read).
+4. Rebuild the payload from those fresh sets, taking only task counts from the store. Counts are not private.
+5. Write `{ json, hash, updatedAt: Date.now() }` only if the fresh hash still differs from the fresh feed hash. Log activity "published the public site".
+
+A phone resumed after days in the background therefore cannot republish something another admin made private. "Publish now" runs steps 3 to 5 and ignores the hash. Cost: about 25 reads per real publish.
 
 **Text admins do not review.** Titles and locations of public items are now admin-only (section 4), so nothing reaches the internet without an admin having flagged or edited it (L1-11).
 
@@ -299,7 +325,9 @@ There are no names, emails, initials, comments, check-ins, task titles or uids.
 - **Length budget:** no stat rows, lists capped at 5, Home at about 1.5 laptop screens and 5 phone screens; checked against screenshots.
 - **All my tasks:** today's FilterBar (chips with counts, Hide done, person and team filters), default chip Mine, key `council-filter-week`.
 - **Calendar, Projects, Committees, Resources, Ideas, Search, Sign-in, Public site:** as the prompt's Screens section. Details already decided are in sections 2, 4 and 6.
-- **Mentions** (L1-10): typing `@` lists active members by first name, adding the last initial when two first names match. Picking one inserts `@Name` and adds that email to the comment's `mentionUids`. `mention` notifications go only to `mentionUids`; no text parsing. `fl-mention` highlights tokens that match a picked name.
+- **Mentions** (L1-10): typing `@` lists active members by first name, adding the last initial when two first names match. Picking one inserts `@Name` and adds that email to the comment's `mentionUids`. On post, only the uids whose `@Name` token is still in the text are kept (L1-33). `mention` notifications go only to `mentionUids`; no text parsing. `fl-mention` highlights tokens that match a picked name.
+- **Announcements** (F23): shown while start ≤ today ≤ end (Jakarta), newest first, at most 3. The audience picker reads "Everyone (also shown on the public website)" and "Members only". Clicking one opens the `fl-sheet`.
+- **Share to WhatsApp:** event sheet, task page and the Overview check-in reminder, all through `https://wa.me/?text=` with encoded text.
 - **Make task:** opens the existing task form with the title from the comment (first 80 characters). The parent is the item, or the item's parent for a task. The assignee is the first `mentionUids` entry, else the comment author.
 
 ## 9. Milestones and checks
@@ -311,7 +339,7 @@ There are no names, emails, initials, comments, check-ins, task titles or uids.
 | M2 | Two entry points, `site.jsx`, `shared.jsx`, bundle check, publish flow, snapshot plus delta, listener isolation, persistent cache, lazy activity, quota message, Hosting check | all four |
 | M3 | `git mv` the design system; `app.css`; shell, nav, sign-in, Home, search, Settings; a **mechanical `jy-` to `fl-` pass over every remaining route** so nothing is unstyled; then delete builtbyjosef (F1) | all four |
 | M4 | Calendar, Projects (progress, pipeline, public), Committees, Resources, Ideas, mentions, Make task, WhatsApp shares, full restyle of the remaining routes | all four |
-| M5 | Admin views, seed, icons, README, brief, CLAUDE.md, screenshots, Lighthouse, final pass | all four plus logic reviewer pass 3 |
+| M5 | Admin views, seed, icons, README, brief, CLAUDE.md, final pass. Gates: build with no new warnings; screenshots of every member screen, every admin screen, sign-in and the public site at 1440 × 900 and 390 × 844 in dark, plus light for Home, sign-in and the public site; Lighthouse mobile (F21) | all four plus logic reviewer pass 3 |
 
 Every milestone ends with small commits and a push.
 
@@ -325,7 +353,7 @@ The final line count is reported in the PR.
 
 ## 10. Risks
 
-- **Read quota.** It is now estimated at about 27 500 a day. The real usage is unknown until the first week; check it then.
+- **Read quota.** It is now estimated at about 28 000 a day. The real usage is unknown until the first week; check it then.
 - **Snapshot correctness.** A wrong `at` or a missed delta would show stale items. Mitigations: server `touchedAt` enforced by the rules, the 60-second margin, the full-listener fallback, and an emulator test that edits, archives and creates items after a snapshot.
 - **Deploy-day writes from old open clients** are refused until they reload.
 - **Production indexes** are untested until the first deploy (first-deploy order in section 5).
