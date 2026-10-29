@@ -17,15 +17,21 @@ service cloud.firestore {
 
     match /members/{email} {
       allow read: if active();
-      allow create: if active() && (isAdvisor() || role() == 'president') && termOk()
+      allow create: if active() && (isAdvisor() || role() in ['president', 'vp']) && termOk()
         && email == email.lower() && email.matches('^[^@]+@stjbs[.]sch[.]id$')
         && request.resource.data.active == true && request.resource.data.role in roles()
-        && (isAdvisor() || request.resource.data.role != 'advisor');
+        && (isAdvisor() || request.resource.data.role != 'advisor')
+        && (role() != 'vp' || !(request.resource.data.role in ['advisor', 'president']));
       allow update: if active() && termOk() && request.resource.data.role in roles()
         && !(email == me() && changed().hasAny(['role', 'active']))
-        && (isAdvisor() || (role() == 'president'
-        && resource.data.role != 'advisor' && request.resource.data.role != 'advisor'
-        && !changed().hasAny(['active'])));
+        && (isAdvisor()
+          || (role() == 'president'
+            && resource.data.role != 'advisor' && request.resource.data.role != 'advisor'
+            && !changed().hasAny(['active']))
+          || (role() == 'vp'
+            && !(resource.data.role in ['advisor', 'president'])
+            && !(request.resource.data.role in ['advisor', 'president'])
+            && !changed().hasAny(['active'])));
     }
 
     // Items: projects, subteams and tasks. leadUids must always equal the parent's leadUids plus this item's lead,
