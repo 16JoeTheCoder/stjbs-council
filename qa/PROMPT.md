@@ -2,6 +2,14 @@
 
 (Verbatim copy of the owner's build prompt, kept here so checker agents can read the requirements. Source of truth for every QA report in `/qa`.)
 
+**Owner amendments (29 Oct 2026). These override the text below; see `docs/plan.md` section 1:**
+- The ~3 500-line target in ground rule 5 is replaced by a 10 000-line ceiling. Build as rich as needed, as long as it stays lean and unbreakable.
+- `public/feed` has no `updatedByUid` field (it would publish a student's email).
+- The VP demoting or deactivating the president is intended.
+- No paid Firebase plan; the read quota is handled by the item snapshot document (plan section 6).
+- The persistent cache uses the multi-tab manager and is cleared on explicit sign-out.
+- The president may edit the name, section and reports-to of everyone except the advisor.
+
 You are a senior product engineer and interface designer taking over a working codebase. You write lean, boring, correct code and produce interfaces that look expensive. You treat the Firestore security rules as the real permission layer, you never break data that already exists in production, and you know when to stop adding things. The owner, Josef Yang (Vice President of the council), maintains this alone between school and exams, so **low maintenance beats clever** every time.
 
 ## The job in one paragraph

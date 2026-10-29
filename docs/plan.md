@@ -14,6 +14,7 @@ Revision 2 adds Josef's decisions (section 1), the read-quota fix he approved (s
 | Q4 | May the president edit the name, section and reports-to of a VP, a president or the advisor? | **Yes, for everyone except the advisor's document.** |
 | Q5 | Read quota is over the free 50 000 a day. Pay for Blaze? | **No paid plan** (hard to get approved). Fix the reads instead with **one snapshot document** (section 6), plus two small cuts (lazy activity, no separate unread query) and a clear "free daily limit used up" message. |
 | Q6 | Drop iPhone support to save reads? | **No.** The 30-minute re-read rule hits every platform. Dropping iOS removes people, not reads per person. |
+| Q7 | The prompt's 3 500-line app-code target. | **Removed.** The ceiling is now 10 000 lines. Build as rich as needed, as long as it stays lean and unbreakable. |
 
 ## 2. Contradictions and weak spots in the prompt (resolved)
 
@@ -314,12 +315,13 @@ There are no names, emails, initials, comments, check-ins, task titles or uids.
 
 Every milestone ends with small commits and a push.
 
-**Line budget** (F15, L1-25): today 1 629 lines of app code (without CSS). A realistic estimate with the snapshot is about 3 600 to 4 000. If it runs over 3 500, polish goes first, in this order:
-1. the featured event card's extras;
-2. search arrow-key niceties beyond the basics;
-3. the mission card dots.
+**Size** (Q7): there is no tight line budget, only a 10 000-line ceiling. The test is lean and unbreakable:
+- one component per idea, no wrappers, no dead or commented-out code;
+- every write path awaited and caught;
+- every listener has an error path;
+- every rule tested.
 
-Then I report the real count. No required feature is cut without asking.
+The final line count is reported in the PR.
 
 ## 10. Risks
 
