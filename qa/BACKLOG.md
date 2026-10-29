@@ -11,3 +11,4 @@ Minor findings and notes for Josef, not fixed immediately. One line each: ID, wh
 
 - L1-12 to L1-25, L1-29 to L1-36 (`docs/qa/logic-check.md`): folded into plan revision 2 or 3 where cheap. The rest are tracked by the M1 to M5 checks.
 - F17, F20, F23 (`qa/m0-spec-recheck.md`): small spec lines. Named in the plan; verified at the milestone that builds them.
+- L1-37 (major, fixed in plan revision 4) and L1-38 (minor, fixed): the last two M0 findings. The fixes were not re-checked by a separate agent because the three-round limit was reached. Logic reviewer pass 2 at M1 covers them against the real rules and code.
