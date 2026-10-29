@@ -1,0 +1,119 @@
+/* Fiat Lux, the STJBS Student Council design system. Tokens only: every colour, size, radius, duration and font
+   in the app comes from here. Dark is the default theme; [data-theme="light"] on <html> switches.
+   Hero, mission card and announcement banners stay dark in both themes (they are "stage" surfaces). */
+
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 200; font-display: swap; src: url("./fonts/plus-jakarta-sans-latin-200-normal.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("./fonts/plus-jakarta-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("./fonts/plus-jakarta-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("./fonts/plus-jakarta-sans-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 800; font-display: swap; src: url("./fonts/plus-jakarta-sans-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("./fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url("./fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2"); }
+
+:root {
+  color-scheme: dark;
+  /* Surfaces */
+  --surface: #0A0A0C;          /* page ground */
+  --surface-raised: #131316;   /* cards, panels, rail */
+  --surface-sunken: #060607;   /* rail, inputs, wells */
+  --surface-high: #1C1C21;     /* hover, selected rows, popovers */
+  --line: #2A2A31;             /* hairlines, card borders (decoration) */
+  --line-strong: #70707B;      /* control borders that must be seen, 3:1 */
+  /* Text */
+  --ink: #F7F4F0;
+  --ink-muted: #B8B5B0;
+  --ink-subtle: #8F8C88;       /* lowest text tier, still 4.5:1 */
+  /* Berchmans red */
+  --red: #E0261D;              /* fills: primary button, active nav, red panels. White on it is 4.7:1 */
+  --red-hover: #F03A30;
+  --red-press: #C41E16;
+  --red-deep: #8F1410;         /* dark end of every red gradient */
+  --red-text: #FF5144;         /* red as text or icon on dark surfaces, 6:1. Never use --red for text */
+  --red-tint: #2A0807;         /* quiet red ground */
+  --on-red: #FFFFFF;
+  --red-glow: rgb(224 38 29 / .3);   /* focus halo, current step, pulse */
+  --red-wash: rgb(224 38 29 / .08);  /* today column */
+  --focus: #F7F4F0;
+  /* Status: always colour + shape + word */
+  --ok: #35D07F;               /* circle */
+  --warn: #FFB020;             /* triangle */
+  --bad: #FF6B9A;              /* diamond. Rose, so status never competes with brand red */
+  --info: #5BB5FF;             /* committee tags, links in data */
+  /* Idea board paper (always light paper, dark ink) */
+  --paper-1: #F7F0E3;
+  --paper-2: #FFD9D4;
+  --paper-3: #EFE3C8;
+  --paper-ink: #1B1B1D;
+  --paper-muted: #4A4540;
+
+  /* Gradients and patterns. Used only by the classes named in DESIGN.md */
+  --grad-red: linear-gradient(135deg, var(--red) 0%, var(--red-deep) 100%);
+  --grad-stage: linear-gradient(115deg, #0A0A0C 0%, #1C0709 52%, #4A0C0E 100%);
+  --grad-mission: linear-gradient(135deg, #7A0F0F 0%, #A8171A 52%, #6B0E0E 100%);
+  --grad-slab: linear-gradient(180deg, #FF3B30 0%, #E0261D 55%, #B01A16 100%);
+  --pattern-sunburst: repeating-conic-gradient(from 195deg at 100% 100%, rgb(255 255 255 / .13) 0 5deg, transparent 5deg 10deg);
+  --scrim-left: linear-gradient(90deg, rgb(10 10 12 / .85) 0%, rgb(10 10 12 / 0) 58%);
+  --scrim-bottom: linear-gradient(0deg, rgb(10 10 12 / .7) 0%, rgb(10 10 12 / 0) 45%);
+
+  /* Type */
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --fs-display: clamp(36px, 4.4vw, 56px);  /* hero greeting, lh 1.02, 800 with a 200 phrase */
+  --fs-title: clamp(30px, 3.2vw, 40px);  /* page title, lh 1.1, 800 */
+  --fs-h2: 22px;                          /* panel heading, lh 30px, 700 */
+  --fs-h3: 17px;                          /* row and card title, lh 24px, 600 via 700 */
+  --fs-body: 15px;                        /* lh 24px, 400 */
+  --fs-small: 13px;                       /* lh 20px, 500 */
+  --fs-caption: 12px;                     /* lh 16px, eyebrow uses 700 + 0.12em tracking */
+
+  /* Space (4px grid) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 40px; --s-9: 48px; --s-10: 64px;
+
+  /* Shape */
+  --r-sm: 6px;     /* tags, badges, chips */
+  --r-md: 12px;    /* buttons, inputs, nav items, icon tiles */
+  --r-lg: 20px;    /* panels, cards, hero */
+  --r-pill: 999px; /* switches, tab bar items only */
+  --border: 1px;
+
+  /* Depth: flat by default. Shadows only on floating things */
+  --shadow-pop: 0 24px 60px rgb(0 0 0 / .6);   /* menus, sheets, floating tab bar */
+  --glow-red: 0 0 0 1px var(--red), 0 12px 40px rgb(224 38 29 / .33); /* primary button hover only */
+
+  /* Motion */
+  --dur-fast: 120ms; --dur: 200ms; --dur-slow: 360ms;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+
+  /* Layout */
+  --rail-w: 232px;
+  --top-h: 72px;
+  --tabbar-h: 68px;
+  --page-max: 1320px;
+  --hit: 44px;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --surface: #F6F3EF; --surface-raised: #FFFFFF; --surface-sunken: #ECE7E1; --surface-high: #FBF9F6;
+  --line: #DDD6CD; --line-strong: #8A8179;
+  --ink: #121214; --ink-muted: #4F4B47; --ink-subtle: #67625D;
+  --red: #C8211A; --red-hover: #B21D17; --red-press: #9C1812; --red-deep: #7A110D; --red-text: #C8211A; --red-tint: #FCE9E7;
+  --focus: #121214;
+  --ok: #0F7A4A; --warn: #8A5A00; --bad: #C2185B; --info: #0B63B8;
+  --red-glow: rgb(200 33 26 / .25); --red-wash: rgb(200 33 26 / .07);
+  --shadow-pop: 0 20px 48px rgb(18 18 20 / .18);
+  --glow-red: 0 0 0 1px var(--red), 0 10px 28px rgb(200 33 26 / .2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; }
+}
+
+/* Stage surfaces (hero, mission card, announcement banner, sign-in photo) are dark in both themes. */
+.fl-stage {
+  color-scheme: dark;
+  --ink: #F7F4F0; --ink-muted: #D8D3CD; --ink-subtle: #B8B5B0;
+  --line: rgb(255 255 255 / .16); --line-strong: rgb(255 255 255 / .55);
+  --red-text: #FF8A80; --focus: #F7F4F0;
+  color: var(--ink);
+}
