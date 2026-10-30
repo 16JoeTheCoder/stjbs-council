@@ -19,8 +19,11 @@ import { Digest } from './routes/digest.jsx';
 import { Templates } from './routes/templates.jsx';
 import { Workload } from './routes/workload.jsx';
 import { Admin } from './routes/admin.jsx';
+import { Announcements, Approvals, Overview, PublicSite } from './routes/admin-views.jsx';
 import { Settings } from './routes/settings.jsx';
 import { Ideas } from './routes/ideas.jsx';
+import { Calendar } from './routes/calendar.jsx';
+import { Resources } from './routes/resources.jsx';
 import crest from '../design/fiatlux/img/crest-256.png';
 import building from '../design/fiatlux/img/building.webp';
 
@@ -32,15 +35,15 @@ const parse = () => {
 
 const Missing = () => <><Title light="Not here." bold="Page not found" /><p><a class="fl-link" href="#/week">Go to Home</a></p></>;
 const NotForYou = () => <><Title light="Not for you." bold="Admin" /><p>Only the advisor, the president and the vice president open the admin view.</p></>;
-const ADMIN_PAGES = { members: Admin, workload: Workload, digest: Digest };
+const ADMIN_PAGES = { overview: Overview, announcements: Announcements, members: Admin, workload: Workload, public: PublicSite, approvals: Approvals, digest: Digest };
 const AdminRoute = ({ id }) => {
   if (!isAdmin()) return <NotForYou />;
-  const Page = ADMIN_PAGES[id || 'members'] || Missing;
-  return <Page />;
+  const Page = ADMIN_PAGES[id || 'overview'] || Missing;
+  return <Page nav={ADMIN_NAV} />;
 };
 const ROUTES = {
   week: Home, tasks: AllTasks, checkin: Checkin, projects: Projects, p: Item, meeting: Meeting, people: People, committees: People,
-  ideas: Ideas, activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
+  ideas: Ideas, calendar: Calendar, resources: Resources, activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
 };
 
 const MEMBER_NAV = [['week', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];

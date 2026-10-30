@@ -32,3 +32,10 @@ export function fmtDay(day, thisYear = isoDay().slice(0, 4)) {
 }
 export const monthName = (day) => `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][Number(day.slice(5, 7)) - 1]} ${day.slice(0, 4)}`;
 export const jktHour = (ms = Date.now()) => new Date(ms + JKT_MS).getUTCHours();
+// Month arithmetic on 'YYYY-MM-DD' strings; the day clamps to the first of the month.
+export const monthStart = (day) => `${day.slice(0, 7)}-01`;
+export function addMonths(day, n) {
+  const y = Number(day.slice(0, 4)), m = Number(day.slice(5, 7)) - 1 + n;
+  return `${y + Math.floor(m / 12)}-${String(((m % 12) + 12) % 12 + 1).padStart(2, '0')}-01`;
+}
+export const toMin = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));

@@ -81,3 +81,10 @@ export const checksIn = (m) => !['teacher', 'advisor'].includes(m?.role);
 export const activeMembers = () => S.members.filter((m) => m.active).sort((a, b) => a.name.localeCompare(b.name));
 export const initials = (name = '') => (name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2) || '?').toUpperCase();
 export const safeUrl = (u) => (/^https?:\/\/\S+$/i.test(u || '') ? u : '');
+
+// Google Docs and Drive links, the same test as google() in firestore.rules.
+export const googleUrl = (u) => typeof u === 'string' && u.length <= 500 && /^[A-Za-z0-9._~:/?#&=%+!$()*,;@-]+$/.test(u) && !/(\.\.|%2[ef]|%5c)/i.test(u)
+  && (/^https:\/\/docs\.google\.com\/(document|spreadsheets|presentation|forms|drawings)\/(u\/\d+\/)?d\/[\w-]+([/?#].*)?$/.test(u)
+    || /^https:\/\/drive\.google\.com\/((u\/\d+\/)?(file\/d|drive\/folders|drive\/u\/\d+\/folders)\/[\w-]+|open\?id=[\w-]+)([/?#&].*)?$/.test(u));
+// "Make a copy" works for Docs, Sheets, Slides and Drawings; other links just open.
+export const copyUrl = (u) => u.match(/^https:\/\/docs\.google\.com\/(?:document|spreadsheets|presentation|drawings)\/(?:u\/\d+\/)?d\/[\w-]+/)?.[0]?.concat('/copy') || null;
