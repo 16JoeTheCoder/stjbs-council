@@ -1,7 +1,7 @@
 // Calendar: a week grid (06:00 to 18:00) and a month view, all dates as Jakarta 'YYYY-MM-DD' strings so month and
 // year boundaries are plain string arithmetic. Events outside 06:00 to 18:00 and root-project due dates sit in the
 // all-day row. The store listens to -7..+60 days; a page turn outside that window reads the visible range once.
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { getDocs, collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase.js';
 import { S, memberName } from '../store.js';
@@ -42,14 +42,16 @@ const Chip = ({ e, q, day }) => (
 const Due = ({ r }) => <a class="fl-ev fl-ev--quiet" href={`#/p/${r.id}`}>Due: {r.title}</a>;
 
 function Week({ start, events, q }) {
-  const today = isoDay(), days = DOW.map((_, i) => addDays(start, i)), end = days[6];
+  const today = isoDay(), days = DOW.map((_, i) => addDays(start, i)), end = days[6], box = useRef();
+  // On a phone the grid scrolls sideways; open it at today rather than Monday.
+  useEffect(() => { const el = box.current?.querySelector('[aria-current="date"]'); if (el) box.current.scrollLeft = el.offsetLeft - 64; }, [start]);
   const allDay = events.filter((e) => !inGrid(e)), dues = dueMarkers(start, end);
   return (
     <>
       {(allDay.length > 0 || dues.length > 0) && (
         <div class="fl-cal__allday" aria-label="All day and evening">{allDay.map((e) => <Chip key={e.id} e={e} q={q} day />)}{dues.map((r) => <Due key={r.id} r={r} />)}</div>
       )}
-      <div class="fl-cal fl-scroll">
+      <div class="fl-cal fl-scroll" ref={box}>
         <div class="fl-cal__grid" role="grid" aria-label={`Week of ${fmtDay(start)}`}>
           {days.map((d, i) => (
             <div key={d} class="fl-cal__day" style={{ gridColumn: i + 2 }} aria-current={d === today ? 'date' : undefined}>{DOW[i]}<b>{Number(d.slice(8))}</b></div>
