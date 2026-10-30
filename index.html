@@ -3,23 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>STJBS Council</title>
-    <meta name="description" content="STJBS student council: projects, weekly check-ins and meetings." />
-    <meta name="theme-color" content="#0D0E10" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Council" />
     <script>
+      // Old dashboard links (/#/week) and home-screen icons saved at / open the dashboard at /app/ before anything renders.
+      (function () {
+        var h = location.hash, app = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+        if (h.indexOf('#/') === 0 || app) location.replace('/app/' + h);
+      })();
       try { document.documentElement.dataset.theme = localStorage.getItem('council-theme') || 'dark'; }
       catch (e) { document.documentElement.dataset.theme = 'dark'; }
     </script>
+    <title>STJBS Student Council</title>
+    <meta name="description" content="The student council of St. Johannes Berchmans School: what we are working on, coming events and how to join." />
+    <meta name="theme-color" content="#0A0A0C" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="site"></div>
+    <script type="module" src="/src/site.jsx"></script>
   </body>
 </html>

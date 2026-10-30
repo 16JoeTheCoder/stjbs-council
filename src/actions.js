@@ -2,7 +2,8 @@
 import { collection, doc, writeBatch, deleteDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { S, fail, toast } from './store.js';
-import { tree } from './model.js';
+import { isAdmin, tree } from './model.js';
+import { refreshCache } from './publish.js';
 import { week } from './time.js';
 
 const T = () => S.term.termId;
@@ -69,6 +70,7 @@ async function commitChunked(ops) {
     parents.add(o.parentId); n++;
   }
   await b.commit();
+  if (ops.length > 20 && isAdmin()) refreshCache(true); // a bulk change would otherwise sit in every member's change listener
 }
 
 export async function changeLead(it, leadUid) {

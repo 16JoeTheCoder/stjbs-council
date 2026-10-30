@@ -2,9 +2,9 @@
 // Both write only from fresh server reads, never from what a possibly stale phone has in memory.
 import { Timestamp, collection, doc, getDocFromServer, getDocsFromServer, query, where, writeBatch } from 'firebase/firestore';
 import { db } from './firebase.js';
-import { S, loaded, set } from './store.js';
+import { S, itemRow, loaded, set, subscribe } from './store.js';
 import { isAdmin, progress, tree } from './model.js';
-import { STAGE_WORD, feedPayload, hash } from './shared.jsx';
+import { STAGE_WORD, feedPayload, hash } from './feed.js';
 import { isoDay } from './time.js';
 import { announcementsQuery, eventsQuery } from './queries.js';
 
@@ -61,16 +61,11 @@ const CACHE_LIMIT = 700000, RETRY_MS = 6 * 3600e3, FULL_RETRY_MS = 24 * 3600e3, 
 const tryKey = (T) => `council-cache-try-${T}`;
 const lastTry = (T) => { try { return Number(localStorage.getItem(tryKey(T))) || 0; } catch { return 0; } };
 const noteTry = (T, wait = 0) => { try { localStorage.setItem(tryKey(T), String(Date.now() + wait)); } catch {} };
-const ms = (t) => (t?.toMillis ? t.toMillis() : t ?? null);
-
-// One shape for items from the snapshot and from listeners: touchedAt as milliseconds.
-export const itemRow = (d) => { const x = { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }; x.touchedAt = ms(x.touchedAt); return x; };
-
 export async function refreshCache(bulk = false) {
   const T = S.term?.termId;
   if (!T || !isAdmin() || !loaded() || S.error) return;
   const due = !S.cacheInfo || S.cacheInfo.delta > 50 || Date.now() - S.cacheInfo.updatedAt > STALE_MS || bulk;
-  if (!due || Date.now() - lastTry(T) < RETRY_MS) return;
+  if (!due || (!bulk && Date.now() - lastTry(T) < RETRY_MS)) return; // a bulk change is a person's action, never a loop
   noteTry(T);
   try {
     const cur = await getDocFromServer(doc(db, 'cache', T));
@@ -87,11 +82,11 @@ export async function refreshCache(bulk = false) {
   } catch (e) { set({ publishError: e.code || e.message }); }
 }
 
-// Runs in admin sessions: once the data is in, then every 10 minutes.
-let timer;
+// Admin sessions: run once as soon as everything the jobs read has arrived from the server, then every 10 minutes.
 export function startAdminJobs() {
-  clearInterval(timer);
+  let first = true;
   const tick = () => { publish(); refreshCache(); };
-  timer = setInterval(tick, 10 * 60e3);
-  return tick;
+  const unsub = subscribe(() => { if (first && canPublish()) { first = false; tick(); } });
+  const timer = setInterval(tick, 10 * 60e3);
+  return () => { unsub(); clearInterval(timer); };
 }

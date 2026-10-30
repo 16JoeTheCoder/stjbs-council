@@ -1,7 +1,7 @@
 // Building blocks shared by the dashboard and the public site. This module must never import Firebase:
 // the public page bundles it, and scripts/check-site-bundle.mjs fails the check if the SDK leaks in.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { addDays, fmtDay, isoDay } from './time.js';
+import { dateRange } from './feed.js';
 
 // Lucide icons (2px stroke), drawn inline.
 const PATHS = {
@@ -70,13 +70,7 @@ export function Sheet({ label, onClose, children }) {
   );
 }
 
-export const dateRange = (a, b) => (a === b ? fmtDay(a) : `${fmtDay(a)} to ${fmtDay(b)}`);
-const paragraphs = (text) => text.split(/\n{2,}|\n/).filter((p) => p.trim()).map((p, i) => <p key={i}>{p}</p>);
-
-// Shown while start <= today <= end (Jakarta), newest first, at most 3. 0 renders nothing, 1 a banner, 2 to 3 cards.
-export const activeAnnouncements = (list, day = isoDay()) =>
-  list.filter((a) => !a.archived && a.startDate <= day && a.endDate >= day)
-    .sort((a, b) => b.startDate.localeCompare(a.startDate) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 3);
+const paragraphs = (text) => text.split(/\n+/).filter((p) => p.trim()).map((p, i) => <p key={i}>{p}</p>);
 
 export function Announcements({ list }) {
   const [open, setOpen] = useState(null);
@@ -119,10 +113,6 @@ export function Mission({ img, extra = '' }) {
   );
 }
 
-// ---- The public feed: one JSON payload of public projects, events and announcements, nothing personal.
-
-export const STAGE_WORD = { todo: 'Planning', doing: 'In progress', done: 'Done' };
-
 export function PublicProject({ p }) {
   return (
     <article class="fl-card fl-pubcard">
@@ -133,39 +123,3 @@ export function PublicProject({ p }) {
     </article>
   );
 }
-
-// The payload carries an explicit whitelist of fields per type. Never add names, emails, comments or task titles.
-export function feedPayload({ projects, events, announcements, day }) {
-  return {
-    v: 1,
-    projects: projects.map((p) => ({ title: p.title, stage: p.stage, pct: p.pct, done: p.done, total: p.total, blurb: p.blurb || '', updatedAt: p.updatedAt || 0 })),
-    events: events.filter((e) => e.public === true && !e.archived && e.date >= day)
-      .sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start))
-      .map((e) => ({ title: e.title, type: e.type, date: e.date, start: e.start, end: e.end, location: e.location || '' })),
-    announcements: announcements.filter((a) => a.audience === 'everyone' && !a.archived && a.endDate >= day)
-      .map((a) => ({ title: a.title, body: a.body || '', startDate: a.startDate, endDate: a.endDate })),
-  };
-}
-// The public page re-filters by Jakarta today, so stale items vanish even if nobody republishes.
-export const feedToday = (feed, day = isoDay()) => ({
-  projects: feed.projects || [],
-  events: (feed.events || []).filter((e) => e.date >= day),
-  announcements: activeAnnouncements(feed.announcements || [], day),
-});
-
-// FNV-1a: a cheap, stable fingerprint of the payload to skip identical writes.
-export function hash(text) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193);
-  return (h >>> 0).toString(16);
-}
-
-export function ago(ms, now = Date.now()) {
-  const min = Math.floor((now - ms) / 60e3);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min} min ago`;
-  if (min < 24 * 60) return `${Math.floor(min / 60)} h ago`;
-  return `on ${fmtDay(isoDay(ms))}`;
-}
-
-export const nextDays = (day, n) => Array.from({ length: n }, (_, i) => addDays(day, i));

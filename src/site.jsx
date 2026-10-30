@@ -7,7 +7,8 @@ import '../design/fiatlux/components.css';
 import './app.css';
 import building from '../design/fiatlux/img/building.webp';
 import crest from '../design/fiatlux/img/crest-256.png';
-import { Announcements, Icon, Mission, PublicProject, ago, feedToday } from './shared.jsx';
+import { Announcements, Icon, Mission, PublicProject } from './shared.jsx';
+import { ago, feedToday } from './feed.js';
 import { fmtDay } from './time.js';
 
 const env = import.meta.env;

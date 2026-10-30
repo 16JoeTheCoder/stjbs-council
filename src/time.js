@@ -22,3 +22,13 @@ export function week(now = Date.now()) {
 }
 
 export const idr = (n) => `${String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} IDR`;
+
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// On screen a date reads "Thu 29 Oct", with the year only when it is not this year. Data keeps ISO.
+export function fmtDay(day, thisYear = isoDay().slice(0, 4)) {
+  const d = new Date(Date.parse(day));
+  return `${DOW[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}${day.slice(0, 4) === thisYear ? '' : ` ${day.slice(0, 4)}`}`;
+}
+export const monthName = (day) => `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][Number(day.slice(5, 7)) - 1]} ${day.slice(0, 4)}`;
+export const jktHour = (ms = Date.now()) => new Date(ms + JKT_MS).getUTCHours();

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
-import { S, loaded, set, useStore } from './store.js';
-import { roleLinks } from './model.js';
+import { S, loaded, set, unreadCount, useStore } from './store.js';
+import { startAdminJobs } from './publish.js';
+import { isAdmin, roleLinks } from './model.js';
 import { Chip, Icon, Title } from './ui.jsx';
 import { Login, Verify } from './routes/auth.jsx';
 import { MyWeek } from './routes/my-week.jsx';
@@ -33,12 +34,14 @@ export function App() {
   const [route, setRoute] = useState(parse);
   const [dark, setDark] = useState(document.documentElement.dataset.theme !== 'light');
   useEffect(() => { const f = () => setRoute(parse()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
+  const admin = S.phase === 'ready' && isAdmin();
+  useEffect(() => (admin ? startAdminJobs() : undefined), [admin]);
   if (S.phase === 'signed-out' || S.phase === 'no-roster') return <Login />;
   if (S.phase === 'verify') return <Verify />;
   if (S.phase !== 'ready' || S.term === null || (S.term && !loaded())) return <main id="main" class="jy-auth"><p class="jy-caption" role="status">Loading the council, step 1 of 1.</p></main>;
   if (S.term === false) return <main id="main" class="jy-auth"><p role="alert">No term is set. Ask the advisor to create settings/current.</p></main>;
 
-  const unread = S.unread >= 100 ? '99+' : S.unread;
+  const n = unreadCount(), unread = n >= 50 ? '50+' : n;
   const tabs = [['week', 'My week'], ['projects', 'Projects'], ['people', 'People'], ['feed', 'Feed']];
   const extra = roleLinks();
   const active = (k) => route.name === k || (k === 'projects' && ['p', 'meeting'].includes(route.name));

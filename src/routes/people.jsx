@@ -1,6 +1,4 @@
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase.js';
-import { S, memberName } from '../store.js';
+import { S, memberName, signOutHere } from '../store.js';
 import { activeMembers, checksIn, personStatus, roleLinks } from '../model.js';
 import { Badge, Chip, TaskList, Title } from '../ui.jsx';
 
@@ -55,7 +53,7 @@ function Person({ email }) {
       {s.ci && <dl class="jy-section">{['done', 'doing', 'blocked'].map((k) => s.ci[k] && <div key={k}><dt class="jy-eyebrow">{k}</dt><dd class="jy-pre">"{s.ci[k]}"</dd></div>)}</dl>}
       <section class="jy-section" aria-labelledby="open-h"><h2 id="open-h" class="jy-h2">Open tasks</h2><TaskList list={open} path empty="No open tasks." /></section>
       <section class="jy-section" aria-labelledby="done-h"><h2 id="done-h" class="jy-h2">Done</h2><TaskList list={done} path empty="Nothing done yet this term." /></section>
-      {email === S.me.id && <div class="jy-actions jy-section">{roleLinks().map(([k, label]) => <a key={k} class="jy-btn jy-btn--ghost" href={`#/${k}`}>Open {label.toLowerCase()}</a>)}<a class="jy-btn jy-btn--ghost" href="#/about">About this app</a><button class="jy-btn jy-btn--ghost" onClick={() => signOut(auth)}>Sign out</button></div>}
+      {email === S.me.id && <div class="jy-actions jy-section">{roleLinks().map(([k, label]) => <a key={k} class="jy-btn jy-btn--ghost" href={`#/${k}`}>Open {label.toLowerCase()}</a>)}<a class="jy-btn jy-btn--ghost" href="#/about">About this app</a><button class="jy-btn jy-btn--ghost" onClick={signOutHere}>Sign out</button></div>}
     </>
   );
 }

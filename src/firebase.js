@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator } from 'firebase/firestore';
 
 const env = import.meta.env;
 if (env.PROD && !env.VITE_FB_API_KEY && env.VITE_EMULATORS !== '1') {
@@ -12,7 +12,8 @@ const app = initializeApp({
   projectId: env.VITE_FB_PROJECT_ID || 'demo-council', appId: env.VITE_FB_APP_ID,
 });
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Cached on the device so a reopen within about 30 minutes reads only what changed (owner decision Q3, docs/plan.md).
+export const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 if (env.VITE_EMULATORS === '1') {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
