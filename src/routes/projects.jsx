@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { S, memberName } from '../store.js';
+import { S, memberName, toast } from '../store.js';
 import { STAGES, activeMembers, canManage, canWork, groupState, isAdmin, isExec, progress, safeUrl, taskState, tree } from '../model.js';
 import { archiveItem, changeLead, createItem, updateItem } from '../actions.js';
 import { fmtDay, idr } from '../time.js';
@@ -20,7 +20,7 @@ function PublicSwitch({ it }) {
   if (!isAdmin()) return null;
   return (
     <label class="fl-checkrow fl-small">
-      <input type="checkbox" class="fl-switch" checked={it.public === true} onChange={() => updateItem(it, { public: !it.public }, it.public ? 'made private' : 'made public')} />
+      <input type="checkbox" class="fl-switch" checked={it.public === true} onChange={() => updateItem(it, { public: !it.public }, it.public ? 'made private' : 'made public').then((ok) => ok && toast(it.public ? `"${it.title}" is off the public site.` : `"${it.title}" goes on the public site at the next publish.`))} />
       Public
     </label>
   );
@@ -58,7 +58,7 @@ function Pipeline({ roots }) {
                   <div class="fl-card__meta"><span class="fl-mono fl-small">{pct(p)}% · {p.done} of {p.total}</span><PublicSwitch it={r} /></div>
                   {canManage(r) && (
                     <label class="fl-field"><span class="fl-sr">Move {r.title} to</span>
-                      <select class="fl-input" value={status} onChange={(e) => updateItem(r, { status: e.target.value }, `moved to ${STAGE_WORD[e.target.value]}:`)}>
+                      <select class="fl-input" value={status} onChange={(e) => { const to = e.target.value; updateItem(r, { status: to }, `moved to ${STAGE_WORD[to]}:`).then((ok) => ok && toast(`Moved "${r.title}" to ${STAGE_WORD[to]}.`)); }}>
                         {COLUMNS.map(([s, l]) => <option key={s} value={s}>{s === status ? l : `Move to ${l}`}</option>)}</select></label>
                   )}
                 </article>
@@ -76,7 +76,7 @@ export function Projects({ q }) {
   const [adding, setAdding] = useState(false), back = useReturnFocus(adding);
   return (
     <>
-      <Title light="All projects." bold={`${roots.length} running.`} title="Projects">
+      <Title light="All projects." bold={`${roots.filter((r) => r.status !== 'done').length} running.`} title="Projects">
         {isExec() && <a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/digest"><Icon n="digest" />Digest</a>}
         {isExec() && <a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/templates">Start from template</a>}
         {isExec() && !adding && <span ref={back}><button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setAdding(true)}><Icon n="plus" />New project</button></span>}

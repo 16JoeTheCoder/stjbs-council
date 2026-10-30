@@ -151,17 +151,19 @@ const readView = () => { try { return localStorage.getItem('council-view') || 'm
 
 export function App() {
   useStore();
-  const [route, setRoute] = useState(parse), [view, setView] = useState(readView), [more, setMore] = useState(false);
+  const [route, setRoute] = useState(parse), [more, setMore] = useState(false);
   useEffect(() => { const f = () => setRoute(parse()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   const admin = S.phase === 'ready' && isAdmin();
   useEffect(() => (admin ? startAdminJobs() : undefined), [admin]);
+  // The remembered view decides where the app opens; admin chrome itself shows only on admin routes.
+  useEffect(() => { if (admin && readView() === 'admin' && ['', '#', '#/', '#/week'].includes(location.hash)) location.hash = '#/admin'; }, [admin]);
   if (S.phase === 'signed-out' || S.phase === 'no-roster') return <Login />;
   if (S.phase === 'verify') return <Verify />;
   if (S.phase !== 'ready' || S.term === null || (S.term && !loaded())) return <main id="main" class="fl-loading"><p class="fl-muted" role="status">Loading the council.</p></main>;
   if (S.term === false) return <main id="main" class="fl-loading"><p role="alert">No term is set. Ask the advisor to create settings/current.</p></main>;
 
-  const adminView = isAdmin() && (route.name === 'admin' || view === 'admin');
-  const switchView = (v) => { try { localStorage.setItem('council-view', v); } catch {} setView(v); location.hash = v === 'admin' ? '#/admin' : '#/week'; };
+  const adminView = isAdmin() && route.name === 'admin';
+  const switchView = (v) => { try { localStorage.setItem('council-view', v); } catch {} location.hash = v === 'admin' ? '#/admin' : '#/week'; };
   const key = navKey(route), Page = ROUTES[route.name] || Missing;
   const navLink = ([k, label, icon]) => <a key={k} href={`#/${k}`} aria-current={key === k ? 'page' : undefined}><Icon n={icon} />{label}</a>;
   return (

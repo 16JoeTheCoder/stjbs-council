@@ -8,9 +8,12 @@ import { Badge, Bar, Chip, FilterBar, TaskRow, Title, useFilter } from '../ui.js
 export function Checkin() {
   const w = week(), ci = S.checkins.find((c) => c.uid === S.me.id && c.weekId === w.id) || {};
   const [v, setV] = useState({ done: ci.done || '', doing: ci.doing || '', blocked: ci.blocked || '' }), [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  if (!checksIn(S.me)) return <><Title light="Check-in." bold="Not needed for you." title="Check-in" /><p class="fl-muted">The advisor and teachers do not check in. The members' answers are on their profiles and in the meeting view.</p></>;
   const submit = async (e) => {
     e.preventDefault();
     if (busy) return;
+    if (!v.done.trim() && !v.doing.trim() && !v.blocked.trim()) return setErr('Write at least one answer, then submit.');
     setBusy(true);
     if (await saveCheckin({ done: v.done.trim(), doing: v.doing.trim(), blocked: v.blocked.trim() })) location.hash = '#/week';
     else setBusy(false);
@@ -28,6 +31,7 @@ export function Checkin() {
         {box('done', 'Done', 'What you finished this week.')}
         {box('doing', 'Doing', 'What you work on next.')}
         {box('blocked', 'Blocked', 'What stops you. Leave empty if nothing does.')}
+        <p class="fl-error" role="alert">{err}</p>
         <div class="fl-actions"><button class="fl-btn fl-btn--red" disabled={busy}>Submit check-in</button><a class="fl-btn fl-btn--ghost" href="#/week">Cancel</a></div>
       </form>
     </>
