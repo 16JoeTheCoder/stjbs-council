@@ -12,6 +12,7 @@ const T = '2026-27';
 const OLD = '2025-26';
 let env;
 
+const FULL = { blocked: false, blockedReason: '', blockedOnUid: null, notes: '', link: '', startDate: null, dueDate: null, isDeal: false, dealStage: null, pledgedIdr: 0, receivedIdr: 0, completedAt: null, assignedAt: null, leadUid: null };
 const roster = {
   ariel: 'advisor', nadia: 'president', kevin: 'vp', sarah: 'treasurer',
   dimas: 'secretary', michael: 'officer', alya: 'officer', budi: 'teacher',
@@ -32,17 +33,17 @@ async function seed() {
     for (const [n, r] of Object.entries(roster)) await setDoc(doc(db, 'members', em(n)), memberDoc(n, r));
     await setDoc(doc(db, 'members', em('ghost')), memberDoc('ghost', 'officer', { active: false }));
     await setDoc(doc(db, 'items/p1'), {
-      termId: T, kind: 'project', parentId: null, ancestors: [], title: 'Carnival', status: 'todo', archived: false,
+      ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'Carnival', status: 'todo', archived: false,
       leadUid: em('michael'), leadUids: [em('michael')], assigneeUids: [], createdByUid: em('nadia'),
       createdAt: Timestamp.now(),
     });
     await setDoc(doc(db, 'items/c1'), {
-      termId: T, kind: 'task', parentId: 'p1', ancestors: ['p1'], title: 'Booths', status: 'todo', archived: false,
+      ...FULL, termId: T, kind: 'task', parentId: 'p1', ancestors: ['p1'], title: 'Booths', status: 'todo', archived: false,
       leadUid: null, leadUids: [em('michael')], assigneeUids: [em('alya')], createdByUid: em('nadia'),
       createdAt: Timestamp.now(),
     });
     await setDoc(doc(db, 'items/pub1'), {
-      termId: T, kind: 'project', parentId: null, ancestors: [], title: 'Public project', status: 'doing', archived: false,
+      ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'Public project', status: 'doing', archived: false,
       leadUid: em('michael'), leadUids: [em('michael')], assigneeUids: [], createdByUid: em('nadia'),
       createdAt: Timestamp.now(), public: true, publicBlurb: 'Hello',
     });
@@ -490,7 +491,7 @@ test('items: legacy item without public/publicBlurb/touchedAt still updatable by
   await ok(updateDoc(doc(as('nadia'), 'items/p1'), { notes: 'd', touchedAt: T_() }));
 });
 test('items: creating a root project needs touchedAt (exec/advisor)', async () => {
-  const base = { termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdByUid: em('sarah'), createdAt: serverTimestamp() };
+  const base = { ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdByUid: em('sarah'), createdAt: serverTimestamp() };
   await ok(setDoc(doc(as('sarah'), 'items/new1'), { ...base, touchedAt: T_() }));
   await no(setDoc(doc(as('sarah'), 'items/new2'), base));
 });
@@ -522,13 +523,13 @@ test('items: public only on root projects (admin cannot set on child)', async ()
   await no(updateDoc(doc(as('nadia'), 'items/c1'), { public: true, touchedAt: T_() }));
 });
 test('items: member creating a child with public true fails', async () => {
-  const child = { termId: T, kind: 'task', parentId: 'p1', ancestors: ['p1'], title: 'Sub', status: 'todo', archived: false, leadUid: null, leadUids: [em('michael')], assigneeUids: [], createdByUid: em('michael'), createdAt: serverTimestamp(), touchedAt: T_() };
+  const child = { ...FULL, termId: T, kind: 'task', parentId: 'p1', ancestors: ['p1'], title: 'Sub', status: 'todo', archived: false, leadUid: null, leadUids: [em('michael')], assigneeUids: [], createdByUid: em('michael'), createdAt: serverTimestamp(), touchedAt: T_() };
   await ok(setDoc(doc(as('michael'), 'items/ch1'), child));
   await no(setDoc(doc(as('michael'), 'items/ch2'), { ...child, public: true }));
   await no(setDoc(doc(as('michael'), 'items/ch3'), { ...child, publicBlurb: 'x' }));
 });
 test('items: root create with public true only by admin', async () => {
-  const base = { termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdAt: serverTimestamp(), touchedAt: T_(), public: true, publicBlurb: 'hi' };
+  const base = { ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdAt: serverTimestamp(), touchedAt: T_(), public: true, publicBlurb: 'hi' };
   await ok(setDoc(doc(as('nadia'), 'items/r1'), { ...base, createdByUid: em('nadia') }));
   await no(setDoc(doc(as('sarah'), 'items/r2'), { ...base, createdByUid: em('sarah') }));
 });
