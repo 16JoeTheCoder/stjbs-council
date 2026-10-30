@@ -1,0 +1,45 @@
+i  emulators: Starting emulators: firestore
+i  emulators: Detected demo project ID "demo-council", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail.
+⚠  emulators: It seems that you are running multiple instances of the emulator suite for project demo-council. This may result in unexpected behavior.
+⚠  firestore: Did not find a Cloud Firestore rules file specified in a firebase.json config file.
+⚠  firestore: The emulator will default to allowing all reads and writes. Learn more about this option: https://firebase.google.com/docs/emulator-suite/install_and_configure#security_rules_configuration.
+i  firestore: Firestore Emulator logging to firestore-debug.log
+⚠  Unable to fetch the CLI MOTD and remote config. This is not a fatal error, but may indicate an issue with your network connection.
+✔  firestore: Firestore Emulator was started in standard edition.
+✔  firestore: Firestore Emulator UI websocket is running on 9250.
+i  Running script: node --test tests/rules.test.mjs
+TAP version 13
+# Subtest: non-member denied
+ok 1 - non-member denied
+  ---
+  duration_ms: 2433.308812
+  type: 'test'
+  ...
+# Subtest: unverified email denied
+ok 2 - unverified email denied
+  ---
+  duration_ms: 314.758198
+  type: 'test'
+  ...
+# [2026-10-30T08:15:25.773Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fa5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L82:24 for 'create' @ L82, evaluation error at L87:24 for 'update' @ L87, false for 'create' @ L82
+# Subtest: member cannot create a root project; exec can
+ok 3 - member cannot create a root project; exec can
+  ---
+  duration_ms: 319.267117
+  type: 'test'
+  ...
+# [2026-10-30T08:15:26.071Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fa8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:26.115Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fa9 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:26.145Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13faa error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:26.178Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fab error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# Subtest: assignee can mark done but not change due date or assignees
+ok 4 - assignee can mark done but not change due date or assignees
+  ---
+  duration_ms: 333.443193
+  type: 'test'
+  ...
