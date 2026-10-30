@@ -7,10 +7,7 @@ const L=require('./m3lib.cjs');
  // bell
  await p.click('button[aria-label^="Notifications"]'); await p.waitForTimeout(300); await L.shot(p,'raka-bell-1440');
  console.log('bell items', await p.locator('.fl-note-item').count(), 'unread', await p.locator('.fl-note-item.is-unread').count(), await p.locator('button[aria-label^="Notifications"]').getAttribute('aria-label'));
- await p.click('text=Mark all as read'); await p.waitForTimeout(800);
- console.log('after mark', await p.locator('button[aria-label^="Notifications"]').getAttribute('aria-label'), await p.locator('.fl-note-item.is-unread').count(), 'markbtn', await p.locator('text=Mark all as read').count());
- await p.reload(); await p.waitForSelector('.fl-app'); console.log('after reload', await p.locator('button[aria-label^="Notifications"]').getAttribute('aria-label'));
- await p.click('button[aria-label^="Notifications"]'); await p.click('text=See all activity'); await p.waitForTimeout(500); console.log('see all ->',p.url());
+ await p.click('text=See all activity'); await p.waitForTimeout(500); console.log('see all ->',p.url());
  await p.click('button[aria-label^="Notifications"]'); await p.keyboard.press('Escape'); await p.waitForTimeout(200); console.log('esc closes bell', await p.locator('.fl-pop').count(), await p.locator('.fl-pop').first().innerText().then(t=>t.slice(0,40)).catch(()=>''));
  // avatar
  await p.click('.fl-user'); await L.shot(p,'raka-avatar-1440'); console.log('menu', (await p.locator('.fl-pop').innerText()).replace(/\n/g,' | '));

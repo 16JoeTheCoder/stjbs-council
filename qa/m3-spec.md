@@ -2,7 +2,7 @@
 
 Checker: spec-conformance, Job A. Source: `qa/PROMPT.md` ("Delete or replace", "Navigation", "Screens": Home, Projects, Committees, Ideas, Search, Sign-in) and `design/fiatlux/DESIGN.md`. Evidence is from the code at commit `fc41332` plus `npm run check` (prints `ok`). I did not run the demo. Page-length numbers come from the alpha tester's screenshots in `qa/screens-m3/`.
 
-Counts: **DONE 47, PARTIAL 9, MISSING 0, LATER 14.** No blocker, no major. 12 minor findings (F1 to F12) at the end.
+Counts: **DONE 63, PARTIAL 10, MISSING 0, LATER 6 table rows (plus the unbuilt screens listed below).** No blocker, no major. 12 minor findings (F1 to F12) at the end.
 
 Not built yet (LATER, per the brief): Calendar, Resources, admin Overview, Announcements, Public site and Approvals screens, comment mentions and Make task, icons, README, seed polish, screenshots, Lighthouse.
 
