@@ -222,7 +222,7 @@ export function Approvals() {
                 <div class="fl-caption">From {memberName(x.byUid)} · {fmtDay(isoDay(x.createdAt))}{x.type === 'template-edit' && ` · replaces ${target(x)?.name || 'a template that no longer exists'}`}</div>
                 {x.note && <p class="fl-small fl-muted fl-pre">{x.note}</p>}</div>
               <span class="fl-actions">
-                <button class="fl-btn fl-btn--red fl-btn--sm" disabled={x.type === 'template-edit' && !target(x)} onClick={() => decide(x, 'approved')} aria-label={`Approve ${x.name}`}>Approve</button>
+                <button class="fl-btn fl-btn--ghost fl-btn--sm" disabled={x.type === 'template-edit' && !target(x)} onClick={() => decide(x, 'approved')} aria-label={`Approve ${x.name}`}>Approve</button>
                 <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => decide(x, 'rejected')} aria-label={`Reject ${x.name}`}>Reject</button></span>
             </div>))}</div> : <Empty>Nothing waits for approval.</Empty>}
       </Panel>

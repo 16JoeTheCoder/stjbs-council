@@ -177,7 +177,7 @@ export function Comments({ it }) {
   };
   // Make task: the comment becomes a task under this item (or its parent, since tasks are leaves), for the person
   // it mentions or else its author. The existing task form opens prefilled; saving sends the usual "assigned" notice.
-  const makeTask = (c) => setTask({ title: c.text.split('\n')[0].replace(/@\S+\s?/g, '').trim().slice(0, 80) || 'New task',
+  const makeTask = (c) => setTask({ title: c.text.split('\n')[0].replace(/@(\S+)/g, '$1').trim().slice(0, 80) || 'New task',
     assigneeUids: [c.mentionUids?.[0] || c.authorUid].filter((u) => S.members.find((m) => m.id === u && m.active && m.role !== 'teacher')) });
   return (
     <section class="fl-panel" aria-labelledby="comments-h">

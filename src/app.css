@@ -185,11 +185,12 @@ body.fl-locked { overflow: hidden; }
 .fl-month--head > div { min-height: 0; padding: var(--s-2); border: 0; }
 .fl-scroll > .fl-month { min-width: 640px; }
 .fl-month button.fl-ev, .fl-cal__allday button.fl-ev, .fl-cal__grid button.fl-ev { border: 0; text-align: left; font-family: var(--font-sans); }
-.fl-month .fl-ev--committee, .fl-cal__grid .fl-ev--committee { border: var(--border) solid var(--info); }
-.fl-month .fl-ev--quiet, .fl-cal__grid .fl-ev--quiet, .fl-cal__allday .fl-ev--quiet { border: var(--border) solid var(--line-strong); }
+.fl-month button.fl-ev--committee, .fl-cal__grid button.fl-ev--committee, .fl-cal__allday button.fl-ev--committee { border: var(--border) solid var(--info); }
+.fl-month .fl-ev--quiet, .fl-cal__grid button.fl-ev--quiet, .fl-cal__allday .fl-ev--quiet { border: var(--border) solid var(--line-strong); }
 a.fl-ev { display: inline-block; }
 .fl-up .fl-linkbtn { color: var(--ink); min-height: 0; text-align: left; }
-.fl-row--doc { grid-template-columns: auto minmax(0, 1fr) auto; }
+.fl-row--doc { grid-template-columns: 112px minmax(0, 1fr) auto; }
+.fl-row--doc > .fl-tag, .fl-row--doc > .fl-badge { justify-self: start; }
 @media (max-width: 599px) { .fl-row--doc { grid-template-columns: minmax(0, 1fr); } .fl-row--doc > .fl-tag, .fl-row--doc > .fl-badge { justify-self: start; } }
 .fl-mentions { position: relative; }
 .fl-mentions .fl-pop { top: auto; bottom: calc(100% + var(--s-1)); left: 0; right: auto; }
