@@ -82,3 +82,10 @@ Minor findings and notes for Josef, not fixed immediately. One line each: ID, wh
   - The bell now shows an unread dot as well as the count.
   - Teachers and the advisor cannot write check-ins.
   - `createdAt` is typed on every new collection.
+- **Final alpha (`qa/final-alpha.md`):**
+  - An empty subteam exported to a template comes back as a task (the template schema has no "team" type; it is a leaf).
+  - "Start project from template" uses today when no event date is changed.
+  - Typing fast straight after picking an @mention can garble the first characters (seen only with automated typing).
+  - RSVP, vote and pin give no toast.
+  - Approve and reject do not notify the submitter.
+  - Fixed: password reset for an unknown email showed "Email or password is wrong"; it now shows the same neutral note as for a known email.

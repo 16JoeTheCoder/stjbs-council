@@ -1,0 +1,27 @@
+const L=require('./flib.cjs');
+const step=async(n,f)=>{try{const r=await f(); console.log('['+n+']',r===undefined?'ok':JSON.stringify(r).slice(0,800))}catch(e){console.log('['+n+'] FAIL',e.message.split('\n')[0].slice(0,160))}};
+const txt=async(p,n=400)=>(await p.innerText('main')).replace(/\n+/g,' | ').slice(0,n);
+const toast=p=>p.locator('[role=status]').allInnerTexts();
+(async()=>{
+ let {b,p}=await L.open(1440,900); p.setDefaultTimeout(3500); await L.login(p,'kevin');
+ await step('menu',async()=>{await p.click('button.fl-user'); await p.waitForTimeout(300); const m=await p.locator('[role=menu]').innerText(); await p.click('[role=menuitem]:has-text("admin view")'); await p.waitForTimeout(700); const a=[m.replace(/\n/g,'|'),p.url(),await p.locator('.fl-badge, :text-is("Admin view")').count()]; await p.goto(L.B+'#/projects'); await p.waitForTimeout(600); a.push(await p.locator(':text-is("Admin view")').count()); await p.reload(); await p.waitForTimeout(1500); a.push(p.url()); return a});
+ await step('member view',async()=>{await p.click('button.fl-user'); await p.click('[role=menuitem]:has-text("member view")'); await p.waitForTimeout(500); return p.url()});
+ await step('sign out',async()=>{await p.click('button.fl-user'); await p.click('[role=menuitem]:has-text("Sign out")'); await p.waitForTimeout(1500); const a=[await p.locator('#email').count()]; await p.goBack(); await p.waitForTimeout(1000); a.push(await p.locator('#email').count(), p.url()); return a});
+ await b.close();
+ ({b,p}=await L.open(1440,900)); p.setDefaultTimeout(3500); await L.login(p,'raka');
+ await step('committees',async()=>{await p.goto(L.B+'#/committees'); await p.waitForTimeout(700); await L.shot(p,'raka-committees'); await p.click('main a:has-text("Michael")'); await p.waitForTimeout(700); return [p.url(), await txt(p,500)]});
+ await step('own profile',async()=>{await p.goto(L.B+'#/people/raka%40stjbs.sch.id'); await p.waitForTimeout(700); await L.shot(p,'raka-profile'); return await txt(p,400)});
+ await step('bad person',async()=>{await p.goto(L.B+'#/people/zzz'); await p.waitForTimeout(700); return await txt(p,200)});
+ await step('ideas',async()=>{await p.goto(L.B+'#/ideas'); await p.waitForTimeout(700); await p.fill('main textarea, main input[type=text]','Longer lunch <b>break</b> & "fun" '+'x'.repeat(200)); const v=(await p.locator('main textarea, main input[type=text]').first().inputValue()).length; await p.click('main button:has-text("Pin")'); await p.waitForTimeout(900); const t=await txt(p,500); return [v,t]});
+ await step('vote',async()=>{const btn=p.locator('main button[aria-label^="Vote"], main button:has-text("Vote")').first(); const l=await btn.getAttribute('aria-label'); const before=await btn.innerText(); await btn.click(); await p.waitForTimeout(800); const after=await p.locator('main button[aria-pressed],main button[aria-label^="Vote"],main button[aria-label^="Remove"]').first().innerText(); return [l,before,after]});
+ await step('resources',async()=>{await p.goto(L.B+'#/resources'); await p.waitForTimeout(700); await L.shot(p,'raka-resources'); return await txt(p,800)});
+ await step('activity',async()=>{await p.goto(L.B+'#/activity'); await p.waitForTimeout(700); await L.shot(p,'raka-activity'); return await txt(p,300)});
+ await step('digest',async()=>{await p.goto(L.B+'#/digest'); await p.waitForTimeout(700); await p.context().grantPermissions(['clipboard-read','clipboard-write']); await p.click('button:has-text("Copy digest")'); await p.waitForTimeout(300); const wa=await p.getAttribute('a:has-text("WhatsApp")','href'); return [await toast(p),(await p.evaluate(()=>navigator.clipboard.readText())).slice(0,250), wa.slice(0,60)]});
+ await b.close();
+ ({b,p}=await L.open(390,844)); p.setDefaultTimeout(3500); await L.login(p,'raka');
+ await step('phone tabs',async()=>{const t=await p.$$eval('.fl-tabbar a, .fl-tabbar button, nav[aria-label=Tabs] a',e=>e.map(x=>(x.getAttribute('aria-label')||x.innerText).trim())); await p.click('.fl-tabbar button:has-text("More"), button[aria-label="More"]'); await p.waitForTimeout(400); await L.shot(p,'raka-more-390'); return [t,(await p.locator('[role=dialog]').first().innerText().catch(()=>'')).replace(/\n/g,'|')]});
+ await b.close();
+ ({b,p}=await L.open(390,844)); p.setDefaultTimeout(3500); await L.login(p,'nadia');
+ await step('phone admin more',async()=>{await p.goto(L.B+'#/admin'); await p.waitForTimeout(700); await L.shot(p,'nadia-admin-390'); await p.click('button[aria-label="More"], .fl-tabbar button:has-text("More")'); await p.waitForTimeout(400); return (await p.locator('[role=dialog]').first().innerText().catch(()=>'')).replace(/\n/g,'|')});
+ await b.close();
+})();

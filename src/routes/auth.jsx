@@ -45,7 +45,8 @@ export function Login() {
         const cred = await createUserWithEmailAndPassword(auth, addr, pw);
         await sendEmailVerification(cred.user);
       }
-      if (mode === 'reset') { await sendPasswordResetEmail(auth, addr); setNote(`If ${addr} has an account, a reset link is on its way. Check spam too.`); }
+      if (mode === 'reset') await sendPasswordResetEmail(auth, addr).catch((e) => { if (e.code !== 'auth/user-not-found') throw e; });
+      if (mode === 'reset') setNote(`If ${addr} has an account, a reset link is on its way. Check spam too.`); // never reveal which emails have accounts
     } catch (err) { setError({ msg: say(err), field: err.code === 'auth/invalid-email' || mode === 'reset' ? 'email' : 'password' }); }
     setBusy(false);
   };

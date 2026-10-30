@@ -1,0 +1,21 @@
+const L=require('./flib.cjs');
+const step=async(n,f)=>{try{const r=await f(); console.log('['+n+']',r===undefined?'ok':JSON.stringify(r).slice(0,800))}catch(e){console.log('['+n+'] FAIL',e.message.split('\n')[0].slice(0,160))}};
+const txt=async(p,n=400)=>(await p.innerText('main')).replace(/\n+/g,' | ').slice(0,n);
+const toast=p=>p.locator('[role=status]').allInnerTexts();
+(async()=>{
+ let {b,p}=await L.open(1440,900); p.setDefaultTimeout(3500); await L.login(p,'ariel');
+ await step('settings',async()=>{await p.goto(L.B+'#/settings'); await p.waitForTimeout(600); await p.click('main button:has-text("Light")'); await p.waitForTimeout(300); const th=await p.evaluate(()=>document.documentElement.dataset.theme); await L.shot(p,'ariel-settings-light'); await p.click('main button:has-text("Dark")'); return [th,await txt(p,600)]});
+ await step('close term',async()=>{await p.goto(L.B+'#/admin/members'); await p.waitForTimeout(800); const inp=p.locator('input[placeholder="2027-28"]'); const d1=await inp.isDisabled(); const cb=p.locator('button:has-text("Close term and start")'); const cd=await cb.isDisabled(); const [dl]=await Promise.all([p.waitForEvent('download'),p.click('button:has-text("Download backup")')]); await dl.saveAs('qa/final-backup.json'); const j=JSON.parse(require('fs').readFileSync('qa/final-backup.json','utf8')); await p.waitForTimeout(500); const d2=await inp.isDisabled(); await inp.fill('2027-28'); const c2=await cb.isDisabled(); return [d1,cd,dl.suggestedFilename(),Object.keys(j),d2,c2]});
+ await step('avatar menu',async()=>{await p.goto(L.B+'#/week'); await p.click('.fl-user button, [aria-label*="ccount"], .fl-avatar'); await p.waitForTimeout(300); return await p.locator('[role=menu]').innerText()});
+ await step('switch admin',async()=>{await p.click('[role=menuitem]:has-text("admin view")'); await p.waitForTimeout(600); const a=[p.url(), await p.locator('.fl-badge--admin,.fl-nav__badge,:text("Admin view")').count()]; await p.goto(L.B+'#/projects'); await p.waitForTimeout(500); a.push(await p.locator(':text-is("Admin view")').count()); return a});
+ await step('sign out',async()=>{await p.click('.fl-user button, [aria-label*="ccount"], .fl-avatar'); await p.click('[role=menuitem]:has-text("Sign out")'); await p.waitForTimeout(1500); return await p.locator('#email').count()});
+ await step('back after signout',async()=>{await p.goBack(); await p.waitForTimeout(1000); return [p.url(), await p.locator('#email').count()]});
+ await b.close();
+ ({b,p}=await L.open(1440,900)); p.setDefaultTimeout(3500); await L.login(p,'kevin');
+ await step('admin overview',async()=>{await p.goto(L.B+'#/admin'); await p.waitForTimeout(800); await L.shot(p,'kevin-overview'); return await txt(p,900)});
+ await step('copy reminder',async()=>{await p.context().grantPermissions(['clipboard-read','clipboard-write']); await p.click('button:has-text("Copy reminder")'); await p.waitForTimeout(300); return [await toast(p),(await p.evaluate(()=>navigator.clipboard.readText())).slice(0,200)]});
+ await step('publish',async()=>{await p.goto(L.B+'#/admin/public'); await p.waitForTimeout(800); const before=await txt(p,500); await p.click('button:has-text("Publish now")'); await p.waitForTimeout(1500); return [before,await toast(p)]});
+ await step('announce long',async()=>{await p.goto(L.B+'#/admin/announcements'); await p.waitForTimeout(600); return await txt(p,300)});
+ await b.close();
+ const r=await L.open(1440,900); await r.p.goto('http://localhost:5173/'); await r.p.waitForTimeout(1500); console.log('public:',(await r.p.innerText('body')).replace(/\n+/g,' | ').slice(480,1400)); await r.b.close();
+})();
