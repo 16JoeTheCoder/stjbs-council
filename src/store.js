@@ -70,8 +70,10 @@ async function startItems(termId, my) {
   let cache = null;
   try { const d = await getDoc(doc(db, 'cache', termId)); if (d.exists()) cache = d.data(); } catch { /* fall back below */ }
   if (my !== gen) return;
-  if (!cache) { set({ cacheInfo: null }); return allItems(termId); }
-  const base = JSON.parse(cache.json), at = cache.at.toMillis();
+  let base = null;
+  try { base = JSON.parse(cache?.json); } catch { /* a damaged snapshot is ignored */ }
+  if (!Array.isArray(base) || typeof cache.at?.toMillis !== 'function') { set({ cacheInfo: null }); return allItems(termId); }
+  const at = cache.at.toMillis();
   set({ cacheInfo: { at, updatedAt: cache.updatedAt, delta: 0 } });
   const since = Timestamp.fromMillis(at - 60e3); // covers writes whose request time came just before their commit
   termStops.push(onSnapshot(query(collection(db, 'items'), where('termId', '==', termId), where('touchedAt', '>=', since)), meta, (s) => {

@@ -33,3 +33,10 @@ Minor findings and notes for Josef, not fixed immediately. One line each: ID, wh
   - Saving a task edit shows no toast.
   - Fixed now: Add member overwrote an existing member, and permission-denied said "check your connection".
 - **Tests (`qa/m1-tests.md`):** 12 independent item tests are skipped because the requirements do not give the item document shape. Item behaviour is covered by `tests/rules.test.mjs`.
+
+## M2 minors and accepted risks
+
+- **M2-S1 (security, accepted risk):** anonymous reads of `public/feed` count against the shared free quota. Without Cloud Functions nothing can rate-limit them. Mitigated by the public page's 5-minute reuse window; requests the rules deny already cost reads today (plan section 2.9).
+- **M2-S3 (security, documented):** the cache wipe on Sign out cannot run while another tab holds the database, and sessions that end without Sign out (token expiry, the automatic no-roster sign-out) leave the cache on the device. The README tells members on shared computers to use Sign out and close the other tabs (L1-34).
+- **Alpha:** two aborted Firestore channel requests are logged on sign out. This is SDK noise.
+- **Spec:** the snapshot JSON keeps empty default fields (plan 6.2 said they would be dropped). That is simpler, and the size check still guards the limit. "Publish now" arrives with the admin screens in M5.

@@ -62,35 +62,34 @@ function Site() {
             <span class="fl-eyebrow">St. Johannes Berchmans Student Council</span>
             <h1 id="hero-h" class="fl-display">Lead. <span class="fl-light">Serve. Build.</span></h1>
             <p class="fl-muted">Students who plan the events, projects and changes that make school better for everyone.</p>
-            <div class="fl-actions"><a class="fl-btn fl-btn--red" href="#live">Explore our work</a><a class="fl-btn fl-btn--ghost" href="#join">Join us</a></div>
+            <div class="fl-actions"><a class="fl-btn fl-btn--red" href={live ? '#live' : '#about'}>Explore our work</a><a class="fl-btn fl-btn--ghost" href="#join">Join us</a></div>
           </div>
         </section>
 
         {live && <Announcements list={live.announcements} />}
 
+        {live && <>
         <section id="live" class="fl-panel" aria-labelledby="live-h">
           <div class="fl-panel__head">
             <h2 id="live-h" class="fl-h2">What we are working on now</h2>
-            {state?.feed && <span class="fl-live">{state.stale ? 'Updated earlier' : `Last change ${ago(state.feed.updatedAt)}`}</span>}
+            <span class="fl-live">{state.stale ? 'Updated earlier' : `Last change ${ago(state.feed.updatedAt)}`}</span>
           </div>
-          {!state ? <p class="fl-muted" role="status">Loading the latest projects.</p>
-            : !live ? <p class="fl-muted">Our current projects appear here. Check back soon.</p>
-            : live.projects.length ? <div class="fl-grid">{live.projects.map((p) => <PublicProject key={p.title} p={p} />)}</div>
+          {live.projects.length ? <div class="fl-grid">{live.projects.map((p) => <PublicProject key={p.title} p={p} />)}</div>
             : <p class="fl-muted">No public projects right now. Check back soon.</p>}
         </section>
 
         <section id="events" class="fl-panel" aria-labelledby="events-h">
           <div class="fl-panel__head"><h2 id="events-h" class="fl-h2">Coming up</h2></div>
-          {live?.events.length ? (
+          {live.events.length ? (
             <ul class="fl-list">{live.events.slice(0, 8).map((e) => (
               <li key={e.date + e.start + e.title} class="fl-up">
                 <span class="fl-date">{fmtDay(e.date).split(' ')[2]}<b>{e.date.slice(8)}</b></span>
                 <div><h3 class="fl-h3">{e.title}</h3><p class="fl-small fl-muted"><span class="fl-mono">{fmtDay(e.date)} · {e.start} to {e.end}</span>{e.location && ` · ${e.location}`}</p></div>
                 <span class={`fl-tag ${EVENT_TAG[e.type] || ''}`}>{e.type[0].toUpperCase() + e.type.slice(1)}</span>
               </li>))}</ul>
-          ) : <p class="fl-muted">{state ? 'No public events are scheduled yet.' : 'Loading events.'}</p>}
+          ) : <p class="fl-muted">No public events are scheduled yet.</p>}
         </section>
-
+        </>}
         <Mission img={building} />
 
         <section id="about" class="fl-panel" aria-labelledby="about-h">
