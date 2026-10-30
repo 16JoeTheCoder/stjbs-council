@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { S, memberName } from './store.js';
-import { fmtDay, stamp } from './time.js';
+import { fmtDay, isoDay, stamp, week } from './time.js';
 import { CHIPS, activeMembers, applyFilter, canManage, canWork, groupState, initials, isMine, progress, taskState, tree } from './model.js';
 import { ItemForm } from './routes/projects.jsx';
 import { addComment, deleteComment, toggleDone } from './actions.js';
@@ -177,8 +177,12 @@ export function Comments({ it }) {
   };
   // Make task: the comment becomes a task under this item (or its parent, since tasks are leaves), for the person
   // it mentions or else its author. The existing task form opens prefilled; saving sends the usual "assigned" notice.
-  const makeTask = (c) => setTask({ title: c.text.split('\n')[0].replace(/@(\S+)/g, '$1').trim().slice(0, 80) || 'New task',
-    assigneeUids: [c.mentionUids?.[0] || c.authorUid].filter((u) => S.members.find((m) => m.id === u && m.active && m.role !== 'teacher')) });
+  const makeTask = (c) => {
+    const w = week(), able = (u) => S.members.some((m) => m.id === u && m.active && m.role !== 'teacher');
+    setTask({ title: c.text.split('\n')[0].replace(/@(\S+)/g, '$1').trim().slice(0, 80) || 'New task',
+      assigneeUids: [[...(c.mentionUids || []), c.authorUid].find(able)].filter(Boolean),
+      dueDate: isoDay() <= w.due ? w.due : w.end }); // due this week, so it lands in the assignee's Needs you
+  };
   return (
     <section class="fl-panel" aria-labelledby="comments-h">
       <div class="fl-panel__head"><h2 id="comments-h" class="fl-h2">Comments</h2>

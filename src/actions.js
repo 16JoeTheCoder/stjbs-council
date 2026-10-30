@@ -3,7 +3,7 @@ import { arrayRemove, arrayUnion, collection, doc, writeBatch, deleteDoc, update
 import { db } from './firebase.js';
 import { S, fail, toast } from './store.js';
 import { isAdmin, tree } from './model.js';
-import { refreshCache } from './publish.js';
+import { publish, refreshCache } from './publish.js';
 import { week } from './time.js';
 
 const T = () => S.term.termId;
@@ -54,7 +54,7 @@ export function updateItem(it, patch, verb = 'updated') {
     log(b, verb, it.id, `${verb} "${patch.title || it.title}"`);
     notify(b, added, 'assigned', it, `assigned you "${it.title}"`);
     if (patch.blockedOnUid && patch.blockedOnUid !== it.blockedOnUid) notify(b, [patch.blockedOnUid], 'blocked-on-you', it, `is blocked on you: "${it.title}"`);
-  });
+  }).then((ok) => { if (ok && ('public' in patch || 'publicBlurb' in patch)) publish(); return ok; });
 }
 
 export const toggleDone = (t) => updateItem(t, { status: t.status === 'done' ? 'todo' : 'done' }, t.status === 'done' ? 'reopened' : 'completed')
@@ -184,10 +184,11 @@ export async function saveAnnouncement(a, data) {
     if (a) await updateDoc(doc(db, 'announcements', a.id), { ...data, updatedAt: now() });
     else await setDoc(newRef('announcements'), { ...data, termId: T(), createdByUid: S.me.id, archived: false, createdAt: now() });
     toast(a ? 'Announcement saved.' : 'Announcement posted.');
+    publish(); // an audience or date change reaches the public site now, not at the next 10-minute tick
     return true;
   } catch (e) { fail(e); return false; }
 }
-export const archiveAnnouncement = (a) => updateDoc(doc(db, 'announcements', a.id), { archived: true, updatedAt: now() }).then(() => toast(`Archived "${a.title}".`), fail);
+export const archiveAnnouncement = (a) => updateDoc(doc(db, 'announcements', a.id), { archived: true, updatedAt: now() }).then(() => { toast(`Archived "${a.title}".`); publish(); }, fail);
 
 const KIND = [['document', 'Doc'], ['spreadsheets', 'Sheet'], ['presentation', 'Slides'], ['forms', 'Form'], ['drawings', 'Drawing'], ['folders', 'Folder']];
 export const kindOf = (url) => KIND.find(([k]) => url.includes(`/${k}/`))?.[1] || 'File';
@@ -201,7 +202,7 @@ export function decide(sub, status) {
     if (sub.type === 'template-edit') {
       const t = S.docTemplates.find((x) => x.id === sub.targetId);
       if (!t) throw Object.assign(new Error('That template no longer exists'), { code: 'not-found' });
-      b.update(doc(db, 'docTemplates', t.id), { url: sub.url, version: t.version + 1, updatedAt: now() });
+      if (t.url !== sub.url) b.update(doc(db, 'docTemplates', t.id), { url: sub.url, version: t.version + 1, updatedAt: now() });
     }
   }, status === 'approved' ? `Approved "${sub.name}".` : `Rejected "${sub.name}".`);
 }

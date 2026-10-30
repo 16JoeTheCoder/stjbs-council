@@ -1,0 +1,38 @@
+const L=require('./m4lib.cjs');
+const counts=async p=>await p.locator('[aria-label=RSVP] button').allInnerTexts();
+(async()=>{
+ let {b,p}=await L.open(1440,900); await L.login(p,'raka');
+ await p.goto(L.B+'#/calendar'); await p.waitForTimeout(1200);
+ await p.click('.fl-cal__grid .fl-ev:has-text("Council weekly")'); await p.waitForTimeout(1000);
+ console.log('sheet:', (await p.locator('.fl-sheet, [role=dialog]').first().innerText()).replace(/\n/g,' | '));
+ await L.shot(p,'raka-event-sheet-1440');
+ console.log('initial',await counts(p), p.url());
+ await p.click('[aria-label=RSVP] button:has-text("Going")'); await p.waitForTimeout(800); console.log('going',await counts(p), await p.locator('[aria-label=RSVP] p').allInnerTexts());
+ await p.click('[aria-label=RSVP] button:has-text("Going")'); await p.waitForTimeout(800); console.log('going again',await counts(p));
+ await p.click('[aria-label=RSVP] button:has-text("Can\'t go")'); await p.waitForTimeout(800); console.log('cant',await counts(p));
+ const href=await p.locator('a:has-text("Share to WhatsApp")').getAttribute('href'); console.log('wa:', decodeURIComponent(href));
+ console.log('canedit raka (not creator):', await p.locator('button:has-text("Edit event")').count());
+ await p.reload(); await p.waitForTimeout(1500); console.log('after reload', p.url(), await counts(p).catch(e=>'nosheet'));
+ await p.keyboard.press('Escape'); await p.waitForTimeout(400); console.log('after esc', p.url());
+ // Add event cases
+ await p.click('text=Add event'); await p.waitForTimeout(400);
+ await p.click('form button.fl-btn--red'); console.log('blank title:', await p.locator('form .fl-error').innerText());
+ await p.fill('#ev-title','Raka test'); await p.fill('#ev-start','17:00'); await p.fill('#ev-end','16:00'); await p.click('form button.fl-btn--red'); console.log('end<start:', await p.locator('form .fl-error').innerText());
+ await p.fill('#ev-end',''); await p.click('form button.fl-btn--red'); console.log('blank end:', await p.locator('form .fl-error').innerText());
+ console.log('public checkbox for officer:', await p.locator('text=Show on the public website').count());
+ await p.fill('#ev-start','08:00'); await p.fill('#ev-end','08:30'); await p.fill('#ev-title','A'.repeat(200)); console.log('title len', (await p.inputValue('#ev-title')).length);
+ await p.fill('#ev-title','<b>Hi</b> & "quotes" 😀 <script>alert(1)</script>'); await p.fill('#ev-date','2026-10-30'); await p.fill('#ev-notes','note\nline2');
+ await p.click('form button.fl-btn--red'); await p.waitForTimeout(1200); console.log('saved?', await p.locator('form').count(), await p.locator('[role=status]').allInnerTexts());
+ await L.shot(p,'raka-event-added-1440');
+ console.log('allday/grid:', await p.evaluate(()=>[...document.querySelectorAll('.fl-cal__grid .fl-ev')].map(e=>e.innerText.replace(/\n/g,' '))));
+ await p.click('.fl-cal__grid .fl-ev:has-text("Hi")'); await p.waitForTimeout(800); await L.shot(p,'raka-event-special-sheet');
+ console.log('edit btn (creator):', await p.locator('button:has-text("Edit event")').count(), await p.locator('button:has-text("Archive event")').count());
+ console.log('h1:', await p.locator('.fl-sheet h1, [role=dialog] h1').first().innerText());
+ await p.click('button:has-text("Edit event")'); await p.waitForTimeout(500); console.log('edit form', await p.inputValue('#ev-title'));
+ await p.fill('#ev-title','Raka edited'); await p.click('form button.fl-btn--red'); await p.waitForTimeout(1000);
+ console.log('after edit grid:', await p.evaluate(()=>[...document.querySelectorAll('.fl-cal__grid .fl-ev')].map(e=>e.innerText.replace(/\n/g,' ')).join('; ')));
+ await p.click('.fl-cal__grid .fl-ev:has-text("Raka edited")'); await p.waitForTimeout(500);
+ await p.click('button:has-text("Archive event")'); await p.waitForTimeout(1000);
+ console.log('after archive:', await p.evaluate(()=>[...document.querySelectorAll('.fl-cal__grid .fl-ev')].map(e=>e.innerText.replace(/\n/g,' ')).join('; ')), p.url());
+ console.log(p.logs.join('\n')); await b.close();
+})().catch(e=>{console.error(e);process.exit(1)});

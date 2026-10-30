@@ -114,7 +114,21 @@ Nothing new in the Firebase console. This release only needs the rules, indexes 
 
 After deploy day, `npm run deploy` is all a release needs.
 
-The first setup of a brand-new project (create the Firebase project, enable Email/Password sign-in, create Firestore in `asia-southeast2`, bootstrap `settings/current` and the advisor's `members` document, copy `.env.example` to `.env.local`) is unchanged; see the history of this file before the Fiat Lux release.
+### First setup of a brand-new project (only if the Firebase project ever has to be recreated)
+
+Do all of this signed in as the dedicated council Gmail account, never a personal one.
+
+1. **Create the project.** In the Firebase console in the browser: Add project, Analytics off.
+2. **Add a web app.** Project settings, Your apps, Web. Copy the config values.
+3. **Enable sign-in.** Build, Authentication, Sign-in method, Email/Password, Enable. Edit the verification email text under Templates.
+4. **Create Firestore.** Build, Firestore Database, production mode, location `asia-southeast2` (Jakarta). The location cannot change later.
+5. **Bootstrap.** In the Firestore data tab, create:
+   - collection `settings`, document `current`: `termId` and `termName` (strings, for example `2026-27`) and `startDate` (string, for example `2026-10-26`);
+   - collection `members`, document id = the advisor's lowercased school email: `name` (string), `role` `advisor`, `active` `true`, `section` (string), `reportsTo` (null), `termId` (string).
+6. **Test email delivery on day one.** Create an account with a real school inbox. If the verification email does not arrive, ask IT to allow `noreply@<project-id>.firebaseapp.com`.
+7. **Config.** In VS Code, in the repo root, copy `.env.example` to `.env.local` and paste the values from step 2. They are public identifiers, not secrets; `.env.local` stays out of git.
+
+Then follow the deploy steps above.
 
 ## Decisions
 

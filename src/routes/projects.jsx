@@ -20,7 +20,7 @@ function PublicSwitch({ it }) {
   if (!isAdmin()) return null;
   return (
     <label class="fl-checkrow fl-small">
-      <input type="checkbox" class="fl-switch" checked={it.public === true} onChange={() => updateItem(it, { public: !it.public }, it.public ? 'made private' : 'made public').then((ok) => ok && toast(it.public ? `"${it.title}" is off the public site.` : `"${it.title}" goes on the public site at the next publish.`))} />
+      <input type="checkbox" class="fl-switch" checked={it.public === true} onChange={() => updateItem(it, { public: !it.public }, it.public ? 'made private' : 'made public').then((ok) => ok && toast(it.public ? `"${it.title}" is off the public site.` : `"${it.title}" is on the public site.`))} />
       Public
     </label>
   );

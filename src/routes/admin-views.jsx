@@ -204,7 +204,8 @@ function AddTemplate({ done }) {
 }
 
 export function Approvals() {
-  const pending = usePending(), [adding, setAdding] = useState(false);
+  const pending = usePending(), [adding, setAdding] = useState(false), [busy, setBusy] = useState(null);
+  const act = async (x, status) => { setBusy(x.id); await decide(x, status); setBusy(null); }; // one decision at a time per row
   const archive = useQuery(() => query(collection(db, 'submissions'), where('type', '==', 'archive'), orderBy('createdAt', 'desc'), limit(50)));
   const target = (x) => S.docTemplates.find((t) => t.id === x.targetId);
   return (
@@ -218,18 +219,18 @@ export function Approvals() {
           : pending.length ? <div class="fl-list">{pending.sort((a, b) => a.createdAt - b.createdAt).map((x) => (
             <div key={x.id} class="fl-row fl-row--doc">
               <span class="fl-tag">{SUB_TYPE[x.type]}</span>
-              <div><a class="fl-h3" href={x.url} target="_blank" rel="noopener noreferrer">{x.name}</a>
+              <div><a class="fl-h3" href={googleUrl(x.url) ? x.url : undefined} target="_blank" rel="noopener noreferrer">{x.name}</a>
                 <div class="fl-caption">From {memberName(x.byUid)} · {fmtDay(isoDay(x.createdAt))}{x.type === 'template-edit' && ` · replaces ${target(x)?.name || 'a template that no longer exists'}`}</div>
                 {x.note && <p class="fl-small fl-muted fl-pre">{x.note}</p>}</div>
               <span class="fl-actions">
-                <button class="fl-btn fl-btn--ghost fl-btn--sm" disabled={x.type === 'template-edit' && !target(x)} onClick={() => decide(x, 'approved')} aria-label={`Approve ${x.name}`}>Approve</button>
-                <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => decide(x, 'rejected')} aria-label={`Reject ${x.name}`}>Reject</button></span>
+                <button class="fl-btn fl-btn--ghost fl-btn--sm" disabled={busy === x.id || (x.type === 'template-edit' && !target(x))} onClick={() => act(x, 'approved')} aria-label={`Approve ${x.name}`}>Approve</button>
+                <button class="fl-btn fl-btn--ghost fl-btn--sm" disabled={busy === x.id} onClick={() => act(x, 'rejected')} aria-label={`Reject ${x.name}`}>Reject</button></span>
             </div>))}</div> : <Empty>Nothing waits for approval.</Empty>}
       </Panel>
       <Panel title="Document templates" id="tpl-h">
         {S.docTemplates.length ? <div class="fl-list">{[...S.docTemplates].sort((a, b) => a.name.localeCompare(b.name)).map((t) => (
           <div key={t.id} class="fl-row fl-row--doc"><span class="fl-tag">{t.kind}</span>
-            <div><a class="fl-h3" href={t.url} target="_blank" rel="noopener noreferrer">{t.name}</a><div class="fl-caption fl-mono">Version {t.version}</div></div>
+            <div><a class="fl-h3" href={googleUrl(t.url) ? t.url : undefined} target="_blank" rel="noopener noreferrer">{t.name}</a><div class="fl-caption fl-mono">Version {t.version}</div></div>
             <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => confirm(`Archive "${t.name}"? Members stop seeing it.`) && archiveTemplate(t)} aria-label={`Archive ${t.name}`}>Archive</button></div>))}</div>
           : <Empty>No templates yet.</Empty>}
       </Panel>
@@ -237,7 +238,7 @@ export function Approvals() {
         {archive === null ? <p class="fl-muted" role="status">Loading.</p> : archive === false ? <p class="fl-error" role="alert">The archive did not load.</p>
           : archive.length ? <div class="fl-list">{archive.map((x) => (
             <div key={x.id} class="fl-row fl-row--doc"><span class={`fl-badge fl-badge--${SUB_STATUS[x.status][0]}`}>{SUB_STATUS[x.status][1]}</span>
-              <div><a class="fl-h3" href={x.url} target="_blank" rel="noopener noreferrer">{x.name}</a>
+              <div><a class="fl-h3" href={googleUrl(x.url) ? x.url : undefined} target="_blank" rel="noopener noreferrer">{x.name}</a>
                 <div class="fl-caption">{x.projectId ? `${tree().byId[x.projectId]?.title || 'A past project'} · ` : ''}{memberName(x.byUid)} · {fmtDay(isoDay(x.createdAt))}</div></div><span /></div>))}</div>
           : <Empty>The archive is empty. Members file reports and final documents from Resources.</Empty>}
       </Panel>

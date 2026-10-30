@@ -79,7 +79,7 @@ export function Resources() {
                 <span class="fl-tag">{d.kind}</span>
                 <div><div class="fl-h3">{d.name}</div><div class="fl-caption fl-mono">Version {d.version}</div></div>
                 <span class="fl-actions">
-                  <a class="fl-btn fl-btn--ghost fl-btn--sm" href={copy || d.url} target="_blank" rel="noopener noreferrer"><Icon n={copy ? 'copy' : 'ext'} />{copy ? 'Make a copy' : 'Open'}</a>
+                  <a class="fl-btn fl-btn--ghost fl-btn--sm" href={copy || (googleUrl(d.url) ? d.url : undefined)} target="_blank" rel="noopener noreferrer"><Icon n={copy ? 'copy' : 'ext'} />{copy ? 'Make a copy' : 'Open'}</a>
                   {!teacher && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => setForm({ target: d })} aria-label={`Suggest an edit to ${d.name}`}>Suggest an edit</button>}
                 </span>
               </div>
@@ -93,7 +93,7 @@ export function Resources() {
             : mine.length ? <div class="fl-list">{mine.map((x) => (
               <div key={x.id} class="fl-row fl-row--doc">
                 <span class={`fl-badge fl-badge--${SUB_STATUS[x.status][0]}`}>{SUB_STATUS[x.status][1]}</span>
-                <div><a class="fl-h3" href={x.url} target="_blank" rel="noopener noreferrer">{x.name}</a><div class="fl-caption">{SUB_TYPE[x.type]} · {fmtDay(isoDay(x.createdAt))}</div></div>
+                <div><a class="fl-h3" href={googleUrl(x.url) ? x.url : undefined} target="_blank" rel="noopener noreferrer">{x.name}</a><div class="fl-caption">{SUB_TYPE[x.type]} · {fmtDay(isoDay(x.createdAt))}</div></div>
                 <span />
               </div>))}</div>
             : <Empty>Nothing shared yet. Use Share something to suggest a template or file a document for next year.</Empty>}
