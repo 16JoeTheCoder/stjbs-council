@@ -546,7 +546,7 @@ test('teacher: reads items, events, announcements; comments; writes nothing else
   await ok(getDoc(doc(db, 'items/p1')));
   await ok(getDoc(doc(db, 'events/e1')));
   await ok(getDoc(doc(db, 'announcements/a1')));
-  await ok(setDoc(doc(db, 'comments/tc1'), { itemId: 'p1', authorUid: em('budi'), text: 'Nice', termId: T, createdAt: serverTimestamp() }));
+  await ok(setDoc(doc(db, 'comments/tc1'), { itemId: 'p1', authorUid: em('budi'), text: 'Nice', termId: T, createdAt: Date.now() }));
   await no(setDoc(doc(db, 'events/te'), ev({ createdByUid: em('budi') })));
   await no(setDoc(doc(db, 'ideas/ti'), idea({ authorUid: em('budi'), voters: [em('budi')] })));
   await no(setDoc(doc(db, 'rsvps', 'e1_' + em('budi')), rs('budi')));
@@ -556,7 +556,7 @@ test('teacher: reads items, events, announcements; comments; writes nothing else
 
 // ---------- comments mentionUids ----------
 test('comments: optional mentionUids up to 10, 11 fails', async () => {
-  const c = (o) => ({ itemId: 'p1', authorUid: em('michael'), text: 'hi @alya', termId: T, createdAt: serverTimestamp(), ...o });
+  const c = (o) => ({ itemId: 'p1', authorUid: em('michael'), text: 'hi @alya', termId: T, createdAt: Date.now(), ...o });
   await ok(setDoc(doc(as('michael'), 'comments/m1'), c({ mentionUids: [em('alya')] })));
   await ok(setDoc(doc(as('michael'), 'comments/m10'), c({ mentionUids: Array.from({ length: 10 }, (_, i) => `u${i}${D}`) })));
   await no(setDoc(doc(as('michael'), 'comments/m11'), c({ mentionUids: Array.from({ length: 11 }, (_, i) => `u${i}${D}`) })));

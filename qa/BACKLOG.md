@@ -67,3 +67,18 @@ Minor findings and notes for Josef, not fixed immediately. One line each: ID, wh
 
     These are low value for a 30-person roster with verified school accounts.
 - **Lighthouse:** a smaller mobile hero image would save about 227 kB. Not needed for the gate (Performance 94).
+
+## Final pass minors (`qa/final-spec.md`, `qa/final-security.md`)
+
+- **Popovers:** the bell and the avatar menu close on Esc and on an outside tap but do not trap focus; sheets do.
+- **Tap targets:** a few small links inside dense rows (breadcrumbs, mono dates) measure under 44 px tall.
+- **CSS:** `src/app.css` uses a few literal radii, two `!important` overrides of system rules, and the grid-line gradient inherited from `fl-cal__bg`. All of them pass `npm run check`.
+- **Rules:**
+  - A lead or an event's creator can archive a public item; it drops off the public site at the next publish.
+  - Notification `type` and recipient are not checked against the roster.
+  - The admin-only `public/feed` and `cache` documents trust their admin writers for their JSON content.
+- **Earlier M3 spec minors F4, F5, F6, F9, F10, F11 (`qa/m3-spec.md`):** wording and spacing details already listed in that report. None changes behaviour.
+- **Fixed in the final pass:**
+  - The bell now shows an unread dot as well as the count.
+  - Teachers and the advisor cannot write check-ins.
+  - `createdAt` is typed on every new collection.

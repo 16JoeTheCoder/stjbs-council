@@ -173,7 +173,7 @@ test('notifications: cannot read, mark, delete or impersonate in another inbox',
   await assertFails(deleteDoc(doc(o, `notifications/${P.other}/items/n1`)));
   await assertFails(setDoc(doc(o, `notifications/${P.other}/items/f`), { termId: T, toUid: P.other, fromUid: P.lead, read: false, text: 'x' }));
   await assertFails(setDoc(doc(o, `notifications/${P.other}/items/f2`), { termId: T, toUid: P.lead, fromUid: P.officer, read: false, text: 'x' }));
-  await assertSucceeds(setDoc(doc(o, `notifications/${P.other}/items/ok`), { termId: T, toUid: P.other, fromUid: P.officer, read: false, text: 'x' }));
+  await assertSucceeds(setDoc(doc(o, `notifications/${P.other}/items/ok`), { termId: T, toUid: P.other, fromUid: P.officer, read: false, text: 'x', createdAt: Date.now() }));
 });
 test('notifications: GAP teacher (read/comment only) and anyone can write arbitrary, unbounded payloads into any member inbox', async () => {
   await assertFails(setDoc(doc(as(P.teacher), `notifications/${P.other}/items/t`), { termId: T, toUid: P.other, fromUid: P.teacher, read: false, text: 'x' }));
@@ -185,7 +185,7 @@ test('comments/activity: cannot forge author, edit or delete others', async () =
   await assertFails(deleteDoc(doc(o, 'comments/c1')));
   await assertFails(updateDoc(doc(o, 'comments/c1'), { text: 'x' }));
   await assertFails(setDoc(doc(o, 'activity/a'), { termId: T, actorUid: P.other }));
-  await assertSucceeds(setDoc(doc(o, 'activity/a2'), { termId: T, actorUid: P.officer }));
+  await assertSucceeds(setDoc(doc(o, 'activity/a2'), { termId: T, actorUid: P.officer, text: 'x', createdAt: Date.now() }));
   await assertFails(updateDoc(doc(o, 'activity/a2'), { actorUid: P.other }));
 });
 

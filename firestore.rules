@@ -104,7 +104,7 @@ service cloud.firestore {
 
     match /checkins/{id} {
       allow read: if active();
-      allow create, update: if active() && termOk() && request.resource.data.uid == me()
+      allow create, update: if active() && termOk() && request.resource.data.uid == me() && !(role() in ['teacher', 'advisor'])
         && id == request.resource.data.termId + '_' + request.resource.data.weekId + '_' + me();
     }
 
@@ -146,7 +146,7 @@ service cloud.firestore {
     function annOk(d) {
       return d.keys().hasOnly(['termId', 'title', 'body', 'audience', 'startDate', 'endDate', 'createdByUid', 'archived', 'createdAt', 'updatedAt'])
         && text(d.title, 1, 80) && d.body is string && d.body.size() <= 2000 && d.audience in ['everyone', 'members']
-        && day(d.startDate) && day(d.endDate) && d.endDate >= d.startDate && d.archived is bool;
+        && day(d.startDate) && day(d.endDate) && d.endDate >= d.startDate && d.archived is bool && d.createdAt is number;
     }
     match /announcements/{id} {
       allow read: if active();
@@ -162,7 +162,7 @@ service cloud.firestore {
         && text(d.title, 1, 80) && d.type in ['meeting', 'project', 'committee', 'other'] && day(d.date)
         && hhmm(d.start) && hhmm(d.end) && d.end >= d.start
         && d.location is string && d.location.size() <= 120 && d.notes is string && d.notes.size() <= 1000
-        && d.public is bool && d.archived is bool && optString(d, 'itemId');
+        && d.public is bool && d.archived is bool && optString(d, 'itemId') && d.createdAt is number;
     }
     match /events/{id} {
       allow read: if active();
@@ -182,7 +182,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['termId', 'eventId', 'uid', 'status', 'archived', 'createdAt', 'updatedAt'])
         && request.resource.data.uid == me() && request.resource.data.eventId is string
         && id == request.resource.data.eventId + '_' + me()
-        && request.resource.data.status in ['going', 'not'] && request.resource.data.archived == false
+        && request.resource.data.status in ['going', 'not'] && request.resource.data.archived == false && request.resource.data.createdAt is number
         && exists(/databases/$(db)/documents/events/$(request.resource.data.eventId));
     }
 
@@ -199,7 +199,7 @@ service cloud.firestore {
       allow create: if active() && notTeacher() && termOk()
         && request.resource.data.keys().hasOnly(['termId', 'text', 'authorUid', 'voters', 'archived', 'createdAt', 'updatedAt'])
         && text(request.resource.data.text, 1, 140) && request.resource.data.authorUid == me()
-        && request.resource.data.voters == [me()] && request.resource.data.archived == false;
+        && request.resource.data.voters == [me()] && request.resource.data.archived == false && request.resource.data.createdAt is number;
       allow update: if active() && termOk()
         && ((notTeacher() && changed().hasOnly(['voters']) && voteOk(request.resource.data.voters, resource.data.voters))
           || (isAdmin() && changed().hasOnly(['archived', 'updatedAt']) && request.resource.data.archived is bool));
@@ -208,7 +208,7 @@ service cloud.firestore {
     function tplOk(d) {
       return d.keys().hasOnly(['name', 'kind', 'url', 'version', 'archived', 'createdAt', 'updatedAt'])
         && text(d.name, 1, 80) && d.kind is string && d.kind.size() <= 40 && google(d.url)
-        && d.version is int && d.archived is bool;
+        && d.version is int && d.archived is bool && d.createdAt is number;
     }
     match /docTemplates/{id} {
       allow read: if active();

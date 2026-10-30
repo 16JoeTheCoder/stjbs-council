@@ -410,3 +410,11 @@ test('member fields are typed so a bad section cannot break screens', async () =
   await assertFails(updateDoc(doc(as(people.president), `members/${people.officer}`), { name: '', termId: T }));
   await assertSucceeds(updateDoc(doc(as(people.president), `members/${people.officer}`), { section: 'Welfare', termId: T }));
 });
+
+test('teachers and the advisor do not write check-ins; new documents need a numeric createdAt', async () => {
+  const c = (who) => ({ termId: T, weekId: '2026-W44', uid: who, done: 'x', doing: '', blocked: '' });
+  await assertFails(setDoc(doc(as(people.teacher), `checkins/${T}_2026-W44_${people.teacher}`), c(people.teacher)));
+  await assertFails(setDoc(doc(as(people.advisor), `checkins/${T}_2026-W44_${people.advisor}`), c(people.advisor)));
+  await assertFails(setDoc(doc(as(people.officer), 'events/nodate'), { ...event({}), createdAt: 'now' }));
+  await assertFails(setDoc(doc(as(people.vp), 'announcements/nodate'), { ...ann({ createdByUid: people.vp }), createdAt: null }));
+});

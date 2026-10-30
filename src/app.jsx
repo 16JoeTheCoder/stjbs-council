@@ -74,7 +74,7 @@ function Bell({ route }) {
   return (
     <div class="fl-search-host" ref={ref}>
       <button class="fl-iconbtn" aria-label={`Notifications, ${label} unread`} aria-expanded={open} onClick={() => setOpen(!open)}>
-        <Icon n="bell" />{n > 0 && <span class="fl-count-text" aria-hidden="true">{label}</span>}
+        <Icon n="bell" />{n > 0 && <><span class="fl-dot" aria-hidden="true" /><span class="fl-count-text" aria-hidden="true">{label}</span></>}
       </button>
       {open && (
         <div class="fl-pop fl-pop--wide" role="region" aria-label="Notifications">
