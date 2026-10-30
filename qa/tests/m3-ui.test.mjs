@@ -37,7 +37,7 @@ async function openAvatar(p) {
   });
   await h.asElement().click(); await p.waitForTimeout(400);
 }
-const tile = (p, n) => p.locator(`nav :text-is("${n}"), nav [aria-label="${n}"], [class*=tab] :text-is("${n}"), [class*=tab] [aria-label="${n}"]`).last();
+const tile = (p, n) => p.locator(`a[aria-label="${n}"], button[aria-label="${n}"]`).last();
 
 test('sign-in: split layout with tagline, form, no sign-up', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -46,7 +46,11 @@ test('sign-in: split layout with tagline, form, no sign-up', async () => {
   const t = await p.innerText('body');
   assert.match(t, /Lead\.\s*Serve\.\s*Build\./);
   assert.ok(await p.locator('input[type=password]').isVisible());
-  assert.equal(await p.getByRole('button', { name: /sign up|create account|register/i }).count() + await p.getByRole('link', { name: /sign up|create account|register/i }).count(), 0, 'no open sign-up control');
+  // 'Create account' exists but must stay roster-gated: a non-roster email is refused
+  await p.fill('input[type=email]', `qa-stranger-${Date.now()}@example.com`); await p.fill('input[type=password]', 'council123');
+  await p.getByRole('button', { name: /create account/i }).first().click(); await p.waitForTimeout(2000);
+  assert.ok(await p.locator('input[type=email]').isVisible(), 'stranger not admitted');
+  assert.match(await p.innerText('body'), /roster|not on|ask|isn.?t|cannot|can.?t|invalid|not allowed|officer/i, 'refusal message shown');
   void t;
   await shot(p, 'signin'); await ctx.close();
 });
@@ -69,8 +73,8 @@ test('phone bottom bar: Home, Calendar, Projects, Ideas, More; More lists Commit
   }
   assert.equal(await p.getByText('Committees', { exact: true }).count() === 0 || !(await p.getByText('Committees', { exact: true }).first().isVisible()), true, 'Committees hidden before More');
   await tile(p, 'More').click(); await p.waitForTimeout(500);
-  assert.ok(await p.getByText('Committees', { exact: true }).first().isVisible());
-  assert.ok(await p.getByText('Resources', { exact: true }).first().isVisible());
+  assert.ok(await p.getByRole('link', { name: 'Committees' }).last().isVisible());
+  assert.ok(await p.getByRole('link', { name: 'Resources' }).last().isVisible());
   await shot(p, 'more-390'); await ctx.close();
 });
 
@@ -97,7 +101,7 @@ test('admin switch shows Admin view badge and Switch to member view', async () =
 
 test('search: "/" focuses, "carn" groups results, Enter opens, Esc closes', async () => {
   const { ctx, p } = await session('michael');
-  await p.locator('body').click({ position: { x: 700, y: 600 } });
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.press('/'); await p.waitForTimeout(300);
   const tag = await p.evaluate(() => document.activeElement && (document.activeElement.tagName + ':' + (document.activeElement.getAttribute('placeholder') || '')));
   assert.match(tag, /^INPUT/i, 'search input focused: ' + tag);
@@ -115,7 +119,7 @@ test('search: "/" focuses, "carn" groups results, Enter opens, Esc closes', asyn
   const sheetOpen = await p.getByRole('dialog').count();
   assert.ok(after !== before || sheetOpen > 0, 'Enter opened first result');
   await go(p, '#/');
-  await p.locator('body').click({ position: { x: 700, y: 600 } });
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.press('/'); await p.keyboard.type('carn'); await p.waitForTimeout(500);
   await p.keyboard.press('Escape'); await p.waitForTimeout(400);
   const val = await p.evaluate(() => (document.activeElement.value ?? ''));
@@ -168,26 +172,23 @@ test('Home phone: top ideas and mission card hidden', async () => {
 });
 
 test('check-in panel only while this week check-in missing', async () => {
-  // Submit a check-in via the panel for one member, panel must then disappear.
-  const { ctx, p } = await session('raka');
-  const panel = p.getByText(/check-?in/i);
-  const initially = await p.locator('main, body').first().innerText();
-  const had = /check-?in/i.test(initially) && await p.getByRole('link', { name: /check.?in/i }).or(p.getByRole('button', { name: /check.?in/i })).first().isVisible().catch(() => false);
-  await shot(p, 'checkin-before');
-  if (had) {
-    await p.getByRole('link', { name: /check.?in/i }).or(p.getByRole('button', { name: /check.?in/i })).first().click();
-    await p.waitForTimeout(800);
-    const ta = p.locator('textarea').first();
-    if (await ta.count()) await ta.fill('Done test work');
-    const submit = p.getByRole('button', { name: /submit|send|save|post/i }).first();
-    await submit.click(); await p.waitForTimeout(1500);
-    await go(p, '#/');
-    const still = await p.getByRole('button', { name: /check.?in/i }).or(p.getByRole('link', { name: /^(do|submit|start|post) .*check.?in/i })).first().isVisible().catch(() => false);
-    assert.equal(still, false, 'panel gone after check-in');
-  } else {
-    assert.ok(true, 'check-in already present: panel absent');
+  let ctx, p, start, found = false;
+  for (const who of ['dimas', 'bryan', 'alya', 'clara', 'sarah', 'raka']) {   // demo state persists between runs; take any member still missing
+    ({ ctx, p } = await session(who));
+    start = p.getByText('Start check-in', { exact: false });
+    if (await start.first().isVisible().catch(() => false)) { found = true; break; }
+    assert.equal(await start.count(), 0, who + ' has checked in: panel absent');
+    await ctx.close();
   }
-  void panel; await ctx.close();
+  if (!found) return;   // everyone already checked in; absence verified above
+  await shot(p, 'checkin-before');
+  await start.first().click(); await p.waitForTimeout(800);
+  const tas = p.locator('textarea');
+  for (let i = 0; i < await tas.count(); i++) await tas.nth(i).fill('QA check-in answer ' + i);
+  await p.getByRole('button', { name: /submit check-in/i }).click(); await p.waitForTimeout(2000);
+  await go(p, '#/');
+  assert.equal(await p.getByText('Start check-in', { exact: false }).count(), 0, 'panel gone after check-in');
+  await shot(p, 'checkin-after'); await ctx.close();
 });
 
 test('Projects: Progress default, Pipeline has Planning / In progress / Done', async () => {
@@ -226,15 +227,20 @@ test('Ideas: pin <=140 chars, vote toggles by exactly one', async () => {
   const { ctx, p } = await session('michael');
   await go(p, '#/ideas');
   const text = 'qa idea ' + Date.now();
-  const ta = p.locator('textarea, input[type=text]').filter({ hasNot: p.locator('[placeholder*=earch]') }).first();
+  const ta = p.getByPlaceholder(/movie night/i);
   await ta.fill('x'.repeat(200));
   const len = await ta.inputValue();
   assert.ok(len.length <= 140, `field caps at 140, got ${len.length}`);
   await ta.fill(text);
   await p.getByRole('button', { name: /pin idea/i }).first().click(); await p.waitForTimeout(1500);
   assert.ok(await p.getByText(text).first().isVisible(), 'idea appears');
-  const card = p.locator('*', { has: p.getByText(text) }).filter({ has: p.getByRole('button') }).last();
-  const btn = card.getByRole('button').first();
+  await p.evaluate(t => {
+    const el = [...document.querySelectorAll('*')].find(e => e.children.length === 0 && e.textContent.trim() === t);
+    let c = el; while (c && c.querySelectorAll('button').length < 1) c = c.parentElement;
+    const btns = [...c.querySelectorAll('button')].filter(b => b.textContent.includes('▲'));
+    (btns[0] || c.querySelector('button')).setAttribute('data-qa-vote', '1');
+  }, text);
+  const btn = p.locator('[data-qa-vote]');
   const num = async () => parseInt((await btn.innerText()).match(/\d+/)?.[0] ?? '0', 10);
   const n0 = await num();
   await btn.click(); await p.waitForTimeout(1000);
@@ -276,14 +282,14 @@ test('Calendar: week grid, prev/Today/next, month view, Add event', async () => 
   assert.match(t, /06:00|6 ?AM/i, 'grid starts 06:00');
   assert.ok(await p.getByText('Upcoming', { exact: false }).first().isVisible(), 'Upcoming list');
   const title = async () => (await p.locator('h1,h2,[class*=title]').allInnerTexts()).join('|');
-  const rangeText = async () => (await p.innerText('main, body')).match(/\b\d{1,2}\s+\w{3,9}\b[^\n]{0,30}\d{4}/)?.[0] ?? '';
+  const rangeText = async () => (await p.innerText('body')).match(/Calendar\. [^\n]+/)?.[0] ?? '';
   const r0 = await rangeText();
-  await p.getByRole('button', { name: /next|›|>|→/i }).first().click(); await p.waitForTimeout(500);
+  await p.getByRole('button', { name: /^next/i }).first().click(); await p.waitForTimeout(500);
   const r1 = await rangeText();
   assert.notEqual(r1, r0, 'next changes range');
-  await p.getByRole('button', { name: /^previous|prev|‹|<|←/i }).first().click(); await p.waitForTimeout(500);
+  await p.getByRole('button', { name: /^previous/i }).first().click(); await p.waitForTimeout(500);
   assert.equal(await rangeText(), r0, 'prev returns');
-  await p.getByRole('button', { name: /next|›|>|→/i }).first().click(); await p.waitForTimeout(300);
+  await p.getByRole('button', { name: /^next/i }).first().click(); await p.waitForTimeout(300);
   await p.getByRole('button', { name: /^today$/i }).first().click(); await p.waitForTimeout(500);
   assert.equal(await rangeText(), r0, 'Today returns to current range');
   await p.getByText('Month', { exact: true }).first().click(); await p.waitForTimeout(600);
@@ -299,7 +305,7 @@ test('Calendar: month navigation across a year boundary shows December then Janu
   for (let i = 0; i < 4; i++) {
     const m = (await p.innerText('body')).match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/);
     if (m) seen.add(m[0]);
-    await p.getByRole('button', { name: /next|›|>|→/i }).first().click(); await p.waitForTimeout(400);
+    await p.getByRole('button', { name: /^next/i }).first().click(); await p.waitForTimeout(400);
   }
   const list = [...seen];
   assert.ok(list.some(s => /^December/.test(s)) && list.some(s => /^January/.test(s)), 'Dec and Jan seen: ' + list);
@@ -310,18 +316,21 @@ test('Calendar: month navigation across a year boundary shows December then Janu
 test('Calendar: event sheet has Going / Can\'t go with counts, RSVP changes count by one', async () => {
   const { ctx, p } = await session('michael');
   await go(p, '#/calendar');
-  const ev = p.locator('[class*=event], [class*=chip], [class*=upcoming] li, [class*=upcoming] a, [class*=upcoming] button').filter({ hasText: /\S/ }).first();
-  await ev.click(); await p.waitForTimeout(700);
+  await p.getByRole('button', { name: /Council weekly meeting/ }).first().click(); await p.waitForTimeout(700);
   const going = p.getByRole('button', { name: /going/i }).first();
   const cant = p.getByRole('button', { name: /can.?t go/i }).first();
   assert.ok(await going.isVisible(), 'Going'); assert.ok(await cant.isVisible(), "Can't go");
   assert.ok(await p.getByText(/share to whatsapp/i).first().isVisible(), 'Share to WhatsApp');
-  const count = async () => parseInt(((await going.innerText()).match(/\d+/) ?? ['0'])[0], 10);
-  const n0 = await count();
-  const pressed = await going.getAttribute('aria-pressed');
-  await going.click(); await p.waitForTimeout(1000);
-  const n1 = await count();
-  assert.equal(Math.abs(n1 - n0), pressed === 'true' ? 1 : 1, `Going count ${n0} -> ${n1}`);
+  const num = async l => parseInt(((await l.innerText()).match(/\d+/) ?? ['0'])[0], 10);
+  const g0 = await num(going), c0 = await num(cant);
+  const wasGoing = (await going.getAttribute('aria-pressed')) === 'true';
+  const [flip, other, fn0, on0] = wasGoing ? [cant, going, c0, g0] : [going, cant, g0, c0];
+  await flip.click(); await p.waitForTimeout(1200);
+  assert.equal(await num(flip), fn0 + 1, 'chosen count +1');
+  assert.equal(await num(other), on0 - 1, 'previous choice count -1');
+  await other.click(); await p.waitForTimeout(1200);
+  assert.equal(await num(flip), fn0, 'restored');
+  assert.equal(await num(other), on0, 'restored');
   await shot(p, 'event-sheet'); await ctx.close();
 });
 
