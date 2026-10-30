@@ -4,7 +4,8 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { S, memberName } from './store.js';
 import { fmtDay, stamp } from './time.js';
-import { CHIPS, activeMembers, applyFilter, canWork, groupState, initials, isMine, progress, taskState, tree } from './model.js';
+import { CHIPS, activeMembers, applyFilter, canManage, canWork, groupState, initials, isMine, progress, taskState, tree } from './model.js';
+import { ItemForm } from './routes/projects.jsx';
 import { addComment, deleteComment, toggleDone } from './actions.js';
 
 export function Chip({ email, lead, big, named, sub }) {
@@ -131,35 +132,74 @@ export function FilterBar({ list, f, set, teams = [], hideList }) {
   );
 }
 
+// "@Name" picks a member; names that two people share get the last initial. Only names still in the text notify.
+const mentionLabels = () => {
+  const list = activeMembers(), first = (m) => m.name.split(' ')[0];
+  return list.map((m) => ({ id: m.id, label: list.filter((x) => first(x) === first(m)).length > 1 ? `${first(m)} ${m.name.split(' ').at(-1)[0]}` : first(m) }));
+};
+const escape = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function MentionText({ text, uids = [] }) {
+  const names = mentionLabels().filter((x) => uids.includes(x.id)).map((x) => x.label);
+  if (!names.length) return <p class="fl-pre">{text}</p>;
+  const parts = text.split(new RegExp(`(@(?:${names.map(escape).join('|')}))`, 'g'));
+  return <p class="fl-pre">{parts.map((p, i) => (i % 2 ? <span key={i} class="fl-mention">{p}</span> : p))}</p>;
+}
+
 export function Comments({ it }) {
   const [list, setList] = useState(null), [all, setAll] = useState(false), [open, setOpen] = useState(false);
-  const [text, setText] = useState(''), [busy, setBusy] = useState(false), box = useRef();
+  const [text, setText] = useState(''), [busy, setBusy] = useState(false), [picked, setPicked] = useState({}), [q, setQ] = useState(null);
+  const [task, setTask] = useState(null), box = useRef();
   useEffect(() => onSnapshot(query(collection(db, 'comments'), where('itemId', '==', it.id), where('termId', '==', S.term.termId)),
     (s) => setList(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.createdAt - b.createdAt)), () => setList(false)), [it.id]);
   if (list === false) return <p class="fl-error" role="alert">Comments did not load. Reload the page to try again.</p>;
   if (!list) return <p class="fl-caption" role="status">Loading comments.</p>;
   const shown = all ? list : list.slice(-2);
+  const parent = it.kind === 'task' ? tree().byId[it.parentId] : it, manage = parent && canManage(parent);
+  const type = (e) => {
+    setText(e.target.value);
+    const m = e.target.value.slice(0, e.target.selectionStart).match(/(?:^|\s)@([A-Za-z]*)$/);
+    setQ(m ? m[1].toLowerCase() : null);
+  };
+  const choices = q === null ? [] : mentionLabels().filter((x) => x.id !== S.me.id && x.label.toLowerCase().startsWith(q)).slice(0, 6);
+  const pick = (x) => {
+    const at = box.current.selectionStart, before = text.slice(0, at).replace(/@[A-Za-z]*$/, `@${x.label} `);
+    setText(before + text.slice(at)); setPicked({ ...picked, [x.label]: x.id }); setQ(null);
+    setTimeout(() => { box.current.focus(); box.current.setSelectionRange(before.length, before.length); });
+  };
   const post = async (e) => {
     e.preventDefault();
     if (!text.trim() || busy) return;
     setBusy(true);
-    if (await addComment(it, text.trim())) setText('');
+    const uids = [...new Set(Object.entries(picked).filter(([label]) => text.includes(`@${label}`)).map(([, id]) => id))].slice(0, 10);
+    if (await addComment(it, text.trim(), uids)) { setText(''); setPicked({}); }
     box.current?.focus();
     setBusy(false);
   };
+  // Make task: the comment becomes a task under this item (or its parent, since tasks are leaves), for the person
+  // it mentions or else its author. The existing task form opens prefilled; saving sends the usual "assigned" notice.
+  const makeTask = (c) => setTask({ title: c.text.split('\n')[0].replace(/@\S+\s?/g, '').trim().slice(0, 80) || 'New task',
+    assigneeUids: [c.mentionUids?.[0] || c.authorUid].filter((u) => S.members.find((m) => m.id === u && m.active && m.role !== 'teacher')) });
   return (
     <section class="fl-panel" aria-labelledby="comments-h">
       <div class="fl-panel__head"><h2 id="comments-h" class="fl-h2">Comments</h2>
         {list.length > 2 && <button class="fl-btn fl-btn--ghost fl-btn--sm" aria-expanded={all} onClick={() => setAll(!all)}>{all ? 'Show latest two' : `Show all (${list.length})`}</button>}</div>
+      {task && <ItemForm parent={parent} kind="task" prefill={task} done={() => setTask(null)} />}
       {shown.map((c) => (
         <div key={c.id} class="fl-comment"><Chip email={c.authorUid} />
-          <div><p><b>{memberName(c.authorUid)}</b> <span class="fl-caption fl-mono">{stamp(c.createdAt)}</span></p><p class="fl-pre">{c.text}</p>
-            {c.authorUid === S.me.id && <div><button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => deleteComment(c)}>Delete comment</button></div>}</div></div>
+          <div><p><b>{memberName(c.authorUid)}</b> <span class="fl-caption fl-mono">{stamp(c.createdAt)}</span></p><MentionText text={c.text} uids={c.mentionUids} />
+            <div class="fl-actions">
+              {manage && !task && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => makeTask(c)}>Make task</button>}
+              {c.authorUid === S.me.id && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => deleteComment(c)}>Delete comment</button>}
+            </div></div></div>
       ))}
       {!list.length && !open ? <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => { setOpen(true); setTimeout(() => box.current?.focus()); }}>Add comment</button> : (
         <form onSubmit={post} class="fl-form">
-          <div class="fl-field"><label for="comment-box">Comment</label>
-            <textarea id="comment-box" ref={box} class="fl-input" maxLength={500} rows={3} value={text} onInput={(e) => setText(e.target.value)} /></div>
+          <div class="fl-field fl-mentions"><label for="comment-box">Comment</label>
+            <textarea id="comment-box" ref={box} class="fl-input" maxLength={500} rows={3} value={text} onInput={type} aria-describedby="comment-help"
+              onKeyDown={(e) => { if (choices.length && (e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); pick(choices[0]); } if (e.key === 'Escape') setQ(null); }} />
+            {choices.length > 0 && <div class="fl-pop" role="listbox" aria-label="Mention someone">{choices.map((x) => (
+              <button type="button" role="option" key={x.id} onMouseDown={(e) => { e.preventDefault(); pick(x); }}><Chip email={x.id} />@{x.label}</button>))}</div>}
+            <span id="comment-help" class="fl-help">Type @ and a first name to mention someone; Enter picks the first match.</span></div>
           <div class="fl-actions"><button class="fl-btn fl-btn--ghost fl-btn--sm" disabled={busy || !text.trim()}>Post comment</button></div>
         </form>
       )}

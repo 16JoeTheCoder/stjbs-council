@@ -120,12 +120,14 @@ export async function archiveItem(it) {
   } catch (e) { fail(e); return false; }
 }
 
-export function addComment(it, text) {
+// A mention sends its own notification; mentioned people are left out of the general comment notice.
+export function addComment(it, text, mentionUids = []) {
   return run((b) => {
     const c = newRef('comments');
-    b.set(c, { termId: T(), itemId: it.id, authorUid: S.me.id, text, createdAt: now() });
+    b.set(c, { termId: T(), itemId: it.id, authorUid: S.me.id, text, ...(mentionUids.length ? { mentionUids } : {}), createdAt: now() });
     log(b, 'comment', it.id, `commented on "${it.title}"`);
-    notify(b, audience(it), 'comment', it, `commented on "${it.title}": ${text.slice(0, 80)}`);
+    notify(b, audience(it).filter((u) => !mentionUids.includes(u)), 'comment', it, `commented on "${it.title}": ${text.slice(0, 80)}`);
+    notify(b, mentionUids, 'mention', it, `mentioned you on "${it.title}": ${text.slice(0, 80)}`);
   });
 }
 export const deleteComment = (c) => deleteDoc(doc(db, 'comments', c.id)).catch(fail);
@@ -153,3 +155,56 @@ export const toggleVote = (idea) =>
   updateDoc(doc(db, 'ideas', idea.id), { voters: idea.voters.includes(S.me.id) ? arrayRemove(S.me.id) : arrayUnion(S.me.id) }).catch(fail);
 export const archiveIdea = (idea) =>
   updateDoc(doc(db, 'ideas', idea.id), { archived: true, updatedAt: now() }).then(() => toast('Idea archived.'), fail);
+
+// ---- Events and RSVPs. Only admins may set public; the rules refuse it from anyone else.
+export async function saveEvent(ev, data) {
+  const body = { ...data, itemId: data.itemId || null, updatedAt: now() };
+  try {
+    if (ev) await updateDoc(doc(db, 'events', ev.id), body);
+    else await setDoc(newRef('events'), { ...body, termId: T(), createdByUid: S.me.id, archived: false, createdAt: now() });
+    toast(ev ? 'Event saved.' : `Added "${data.title}".`);
+    return true;
+  } catch (e) { fail(e); return false; }
+}
+export const archiveEvent = (ev) => updateDoc(doc(db, 'events', ev.id), { archived: true, updatedAt: now() }).then(() => { toast(`Archived "${ev.title}".`); return true; }, (e) => { fail(e); return false; });
+export const rsvp = (ev, status) => setDoc(doc(db, 'rsvps', `${ev.id}_${S.me.id}`),
+  { termId: T(), eventId: ev.id, uid: S.me.id, status, archived: false, createdAt: now(), updatedAt: now() }).catch(fail);
+
+// ---- Resources: suggestions and the handover archive. Cross-term, so no termId.
+export function submitResource({ type, name, url, note, targetId, projectId }) {
+  return setDoc(newRef('submissions'), {
+    type, name, url, note, byUid: S.me.id, status: type === 'archive' ? 'filed' : 'pending', archived: false, createdAt: now(),
+    ...(targetId ? { targetId } : {}), ...(projectId ? { projectId } : {}),
+  }).then(() => { toast(type === 'archive' ? 'Filed in the handover archive.' : 'Sent for approval.'); return true; }, (e) => { fail(e); return false; });
+}
+
+// ---- Admin: announcements, approvals, document templates (advisor, president and VP; the rules check it).
+export async function saveAnnouncement(a, data) {
+  try {
+    if (a) await updateDoc(doc(db, 'announcements', a.id), { ...data, updatedAt: now() });
+    else await setDoc(newRef('announcements'), { ...data, termId: T(), createdByUid: S.me.id, archived: false, createdAt: now() });
+    toast(a ? 'Announcement saved.' : 'Announcement posted.');
+    return true;
+  } catch (e) { fail(e); return false; }
+}
+export const archiveAnnouncement = (a) => updateDoc(doc(db, 'announcements', a.id), { archived: true, updatedAt: now() }).then(() => toast(`Archived "${a.title}".`), fail);
+
+const KIND = [['document', 'Doc'], ['spreadsheets', 'Sheet'], ['presentation', 'Slides'], ['forms', 'Form'], ['drawings', 'Drawing'], ['folders', 'Folder']];
+export const kindOf = (url) => KIND.find(([k]) => url.includes(`/${k}/`))?.[1] || 'File';
+
+// Approving a new template creates it and approving an edit replaces the link and bumps the version, in one batch.
+export function decide(sub, status) {
+  return run((b) => {
+    b.update(doc(db, 'submissions', sub.id), { status });
+    if (status !== 'approved') return;
+    if (sub.type === 'new-template') b.set(newRef('docTemplates'), { name: sub.name, kind: kindOf(sub.url), url: sub.url, version: 1, archived: false, createdAt: now() });
+    if (sub.type === 'template-edit') {
+      const t = S.docTemplates.find((x) => x.id === sub.targetId);
+      if (!t) throw Object.assign(new Error('That template no longer exists'), { code: 'not-found' });
+      b.update(doc(db, 'docTemplates', t.id), { url: sub.url, version: t.version + 1, updatedAt: now() });
+    }
+  }, status === 'approved' ? `Approved "${sub.name}".` : `Rejected "${sub.name}".`);
+}
+export const addTemplate = ({ name, url }) => setDoc(newRef('docTemplates'), { name, kind: kindOf(url), url, version: 1, archived: false, createdAt: now() })
+  .then(() => { toast(`Added "${name}".`); return true; }, (e) => { fail(e); return false; });
+export const archiveTemplate = (t) => updateDoc(doc(db, 'docTemplates', t.id), { archived: true, updatedAt: now() }).then(() => toast(`Archived "${t.name}".`), fail);

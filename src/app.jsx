@@ -1,6 +1,6 @@
 // The shell: left rail on laptop, floating tab bar on phone, search, bell and avatar menu in the top bar,
 // and a member or admin view. Routes are hash routes under /app/.
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useErrorBoundary, useRef, useState } from 'preact/hooks';
 import { S, loaded, set, signOutHere, unreadCount, useStore } from './store.js';
 import { isAdmin, isExec, roleName } from './model.js';
 import { markRead } from './actions.js';
@@ -19,8 +19,11 @@ import { Digest } from './routes/digest.jsx';
 import { Templates } from './routes/templates.jsx';
 import { Workload } from './routes/workload.jsx';
 import { Admin } from './routes/admin.jsx';
+import { Announcements, Approvals, Overview, PublicSite } from './routes/admin-views.jsx';
 import { Settings } from './routes/settings.jsx';
 import { Ideas } from './routes/ideas.jsx';
+import { Calendar } from './routes/calendar.jsx';
+import { Resources } from './routes/resources.jsx';
 import crest from '../design/fiatlux/img/crest-256.png';
 import building from '../design/fiatlux/img/building.webp';
 
@@ -32,15 +35,15 @@ const parse = () => {
 
 const Missing = () => <><Title light="Not here." bold="Page not found" /><p><a class="fl-link" href="#/week">Go to Home</a></p></>;
 const NotForYou = () => <><Title light="Not for you." bold="Admin" /><p>Only the advisor, the president and the vice president open the admin view.</p></>;
-const ADMIN_PAGES = { members: Admin, workload: Workload, digest: Digest };
+const ADMIN_PAGES = { overview: Overview, announcements: Announcements, members: Admin, workload: Workload, public: PublicSite, approvals: Approvals, digest: Digest };
 const AdminRoute = ({ id }) => {
   if (!isAdmin()) return <NotForYou />;
-  const Page = ADMIN_PAGES[id || 'members'] || Missing;
-  return <Page />;
+  const Page = ADMIN_PAGES[id || 'overview'] || Missing;
+  return <Page nav={ADMIN_NAV} />;
 };
 const ROUTES = {
   week: Home, tasks: AllTasks, checkin: Checkin, projects: Projects, p: Item, meeting: Meeting, people: People, committees: People,
-  ideas: Ideas, activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
+  ideas: Ideas, calendar: Calendar, resources: Resources, activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
 };
 
 const MEMBER_NAV = [['week', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];
@@ -133,21 +136,34 @@ function More({ close, adminView, switchView }) {
   );
 }
 
+// One broken document must not blank the whole app: the page shows a way out instead.
+function Guard({ children }) {
+  const [err, reset] = useErrorBoundary();
+  if (!err) return children;
+  return (
+    <><Title light="Something broke." bold="This page could not load." title="Error" />
+      <p class="fl-muted">Some data on this page is damaged ({String(err.message || err).slice(0, 80)}). Other pages still work.</p>
+      <div class="fl-actions"><a class="fl-btn fl-btn--ghost" href="#/week" onClick={reset}>Go to Home</a><button class="fl-btn fl-btn--ghost" onClick={reset}>Try again</button></div></>
+  );
+}
+
 const readView = () => { try { return localStorage.getItem('council-view') || 'member'; } catch { return 'member'; } };
 
 export function App() {
   useStore();
-  const [route, setRoute] = useState(parse), [view, setView] = useState(readView), [more, setMore] = useState(false);
+  const [route, setRoute] = useState(parse), [more, setMore] = useState(false);
   useEffect(() => { const f = () => setRoute(parse()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   const admin = S.phase === 'ready' && isAdmin();
   useEffect(() => (admin ? startAdminJobs() : undefined), [admin]);
+  // The remembered view decides where the app opens; admin chrome itself shows only on admin routes.
+  useEffect(() => { if (admin && readView() === 'admin' && ['', '#', '#/', '#/week'].includes(location.hash)) location.hash = '#/admin'; }, [admin]);
   if (S.phase === 'signed-out' || S.phase === 'no-roster') return <Login />;
   if (S.phase === 'verify') return <Verify />;
   if (S.phase !== 'ready' || S.term === null || (S.term && !loaded())) return <main id="main" class="fl-loading"><p class="fl-muted" role="status">Loading the council.</p></main>;
   if (S.term === false) return <main id="main" class="fl-loading"><p role="alert">No term is set. Ask the advisor to create settings/current.</p></main>;
 
-  const adminView = isAdmin() && (route.name === 'admin' || view === 'admin');
-  const switchView = (v) => { try { localStorage.setItem('council-view', v); } catch {} setView(v); location.hash = v === 'admin' ? '#/admin' : '#/week'; };
+  const adminView = isAdmin() && route.name === 'admin';
+  const switchView = (v) => { try { localStorage.setItem('council-view', v); } catch {} location.hash = v === 'admin' ? '#/admin' : '#/week'; };
   const key = navKey(route), Page = ROUTES[route.name] || Missing;
   const navLink = ([k, label, icon]) => <a key={k} href={`#/${k}`} aria-current={key === k ? 'page' : undefined}><Icon n={icon} />{label}</a>;
   return (
@@ -166,7 +182,7 @@ export function App() {
           <div class="fl-tools"><Bell route={route} /><UserMenu route={route} adminView={adminView} switchView={switchView} /></div>
         </header>
         {S.error && <p class="fl-alert" role="alert">{S.error}</p>}
-        <main id="main" tabIndex={-1} class="fl-main"><Page key={`${route.name}/${route.id}`} id={route.id} q={route.q} /></main>
+        <main id="main" tabIndex={-1} class="fl-main"><Guard key={`${route.name}/${route.id}`}><Page id={route.id} q={route.q} /></Guard></main>
       </div>
       <nav class="fl-tabbar" aria-label="Tabs">
         {TABS.map(([k, label, icon]) => <a key={k} href={`#/${k}`} aria-label={label} aria-current={key === k ? 'page' : undefined}><Icon n={icon} /></a>)}
