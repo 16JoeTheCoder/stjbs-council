@@ -1,0 +1,34 @@
+const L=require('./m3lib.cjs');
+const T=async(p,s='main')=>(await p.locator(s).first().innerText()).replace(/\n/g,' | ');
+(async()=>{
+ let {b,p}=await L.open(1440,900); await L.login(p,'raka');
+ await p.goto(L.B+'#/ideas'); await p.waitForTimeout(800);
+ console.log('pin disabled blank', await p.locator('button:has-text("Pin idea")').isDisabled());
+ await p.fill('#idea','   '); console.log('pin disabled spaces', await p.locator('button:has-text("Pin idea")').isDisabled());
+ await p.fill('#idea','A'.repeat(200)); console.log('len',(await p.inputValue('#idea')).length, await p.locator('#idea-help').innerText());
+ await p.fill('#idea','Plant <script>alert(1)</script> trees & "pots" 🌱 日本語'); await p.click('button:has-text("Pin idea")'); await p.waitForTimeout(1200);
+ console.log('after pin:', (await T(p)).slice(0,500)); await L.shot(p,'raka-ideas-1440');
+ console.log('script elems in main', await p.locator('main script').count());
+ const note=p.locator('.fl-note:has-text("Plant")'); const vb=note.locator('.fl-vote[aria-pressed]');
+ console.log('own note votes', await vb.innerText(), await vb.getAttribute('aria-pressed'));
+ await vb.click(); await p.waitForTimeout(1000); console.log('after click own', await vb.innerText(), await vb.getAttribute('aria-pressed'));
+ await vb.click(); await p.waitForTimeout(1000); console.log('click again', await vb.innerText(), await vb.getAttribute('aria-pressed'));
+ const other=p.locator('.fl-note:has-text("Movie night")').locator('.fl-vote[aria-pressed]');
+ const before=await other.innerText(); await other.click(); await p.waitForTimeout(1000); console.log('other vote',before,'->',await other.innerText(), await other.getAttribute('aria-pressed'));
+ await p.reload(); await p.waitForSelector('.fl-app'); await p.waitForTimeout(1000);
+ console.log('after reload', await p.locator('.fl-note:has-text("Movie night") .fl-vote[aria-pressed]').innerText());
+ await p.locator('.fl-note:has-text("Movie night") .fl-vote[aria-pressed]').click(); await p.waitForTimeout(1000); console.log('unvote', await p.locator('.fl-note:has-text("Movie night") .fl-vote[aria-pressed]').innerText());
+ // sort
+ await p.click('button:has-text("Newest")'); await p.waitForTimeout(200); console.log('newest order', await p.locator('.fl-note p').allInnerTexts());
+ console.log('archive btn for officer', await p.locator('button:has-text("Archive")').count());
+ await p.goto(L.B+'#/week'); await p.waitForTimeout(800); console.log('home notes', await p.locator('.fl-ideas .fl-note p').allInnerTexts());
+ console.log('LOGS',[...new Set(p.logs)].join(' || ')); await b.close();
+ ({b,p}=await L.open(1440,900)); await L.login(p,'budi'); await p.goto(L.B+'#/ideas'); await p.waitForTimeout(800);
+ console.log('budi:', await p.locator('form').count(), 'vote disabled', await p.locator('.fl-vote[aria-pressed]').first().isDisabled(), 'note', await p.locator('.fl-note').count()); await L.shot(p,'budi-ideas-1440');
+ await p.goto(L.B+'#/week'); await p.waitForTimeout(800); console.log('budi home text', (await T(p)).slice(0,600)); console.log('budi checkin link?', await p.locator('a[href="#/checkin"]').count());
+ await b.close();
+ ({b,p}=await L.open(1440,900)); await L.login(p,'nadia'); await p.goto(L.B+'#/ideas'); await p.waitForTimeout(800);
+ console.log('nadia archive btns', await p.locator('.fl-note button:has-text("Archive")').count());
+ await p.locator('.fl-note:has-text("Plant") button:has-text("Archive")').click(); await p.waitForTimeout(1000); console.log('after archive', await p.locator('.fl-note').count(), await p.locator('.fl-toast').innerText().catch(()=>'no toast'));
+ console.log('LOGS',[...new Set(p.logs)].join(' || ')); await b.close();
+})().catch(e=>{console.error(e.message.slice(0,600));process.exit(1)});
