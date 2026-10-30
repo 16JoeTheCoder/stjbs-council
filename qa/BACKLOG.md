@@ -12,3 +12,24 @@ Minor findings and notes for Josef, not fixed immediately. One line each: ID, wh
 - L1-12 to L1-25, L1-29 to L1-36 (`docs/qa/logic-check.md`): folded into plan revision 2 or 3 where cheap. The rest are tracked by the M1 to M5 checks.
 - F17, F20, F23 (`qa/m0-spec-recheck.md`): small spec lines. Named in the plan; verified at the milestone that builds them.
 - L1-37 (major, fixed in plan revision 4) and L1-38 (minor, fixed): the last two M0 findings. The fixes were not re-checked by a separate agent because the three-round limit was reached. Logic reviewer pass 2 at M1 covers them against the real rules and code.
+
+## M1 minors
+
+- **Security (`qa/m1-security.md`):**
+  - Check-in ids can collide if a roster email contains `_` and a term id is crafted to match. This needs a hostile admin; the ids stay unique for real school emails.
+  - Notifications have no size or key limit, and teachers can send them. That is needed for teachers' comment notifications; the text is truncated client-side.
+  - A lead can archive a public project. It simply disappears from the public site at the next publish, which is harmless.
+  - Anonymous `public/feed` reads count against the shared free quota. This is an accepted risk (plan section 2.9), partly reduced by the 5-minute reuse window on the public page.
+- **Spec and logic (`qa/m1-spec.md`, `docs/qa/logic-check.md` pass 2):**
+  - L2-01 to L2-15 are all minor.
+  - The teacher check-in rule is unchanged from before.
+  - `createdAt` is only type-checked on submissions.
+  - Archive submissions do not require `projectId`.
+  - Workload reads grow late in the term (L2-02).
+  - L1-37's retry limits are built in M2 (`src/publish.js`).
+- **Alpha (`qa/m1-alpha.md`):**
+  - A deactivated member sees the "not on the roster" wording.
+  - Roster actions sit off-screen at 390 px with no scroll cue (the redesign's `fl-scroll` handles this in M3).
+  - Saving a task edit shows no toast.
+  - Fixed now: Add member overwrote an existing member, and permission-denied said "check your connection".
+- **Tests (`qa/m1-tests.md`):** 12 independent item tests are skipped because the requirements do not give the item document shape. Item behaviour is covered by `tests/rules.test.mjs`.

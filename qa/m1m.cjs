@@ -1,0 +1,24 @@
+const {open,login}=require('./m1lib.cjs');
+const toast=async p=>{await p.waitForTimeout(1500);return (await p.$$eval('[role=status],[role=alert],.jy-toast',e=>e.map(x=>x.innerText.trim()).filter(Boolean))).join(' || ')};
+const ov=async p=>p.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+(async()=>{let {b,p}=await open(390,844); await p.goto('http://localhost:5173/#/admin');await p.waitForTimeout(1000); await p.screenshot({path:'screens-m1/60-m-signedout.png'});
+ await login(p,'kevin','bad'); await p.screenshot({path:'screens-m1/61-m-wrongpw.png'});
+ await login(p,'kevin'); await p.goto('http://localhost:5173/#/admin');await p.waitForTimeout(1500);
+ console.log('overflow roster px:',await ov(p)); await p.screenshot({path:'screens-m1/62-m-roster.png',fullPage:true});
+ await p.click('button:has-text("Edit Alya")'); await p.waitForTimeout(400); await p.fill('[name=section]','Events, sec 1 to 3 (mobile)');
+ await p.click('button:has-text("Save member")'); console.log('mobile edit:',await toast(p)); await p.screenshot({path:'screens-m1/63-m-saved.png'});
+ await p.reload();await p.waitForTimeout(1500); console.log((await p.innerText('main')).includes('(mobile)'));
+ await p.click('button:has-text("Add member")'); await p.waitForTimeout(300); await p.fill('[name=id]','mo@stjbs.sch.id'); await p.fill('[name=name]','Mo Mobile'); await p.click('button:has-text("Save member")'); console.log('mobile add:',await toast(p));
+ await p.screenshot({path:'screens-m1/64-m-add.png',fullPage:true}); console.log(p.logs.filter(l=>!/400|ABORTED/.test(l)));
+ await b.close();
+ ({b,p}=await open(390,844)); await login(p,'michael'); console.log('overflow week',await ov(p)); await p.screenshot({path:'screens-m1/65-m-week.png',fullPage:true});
+ const cb=p.locator('main input[type=checkbox]').last(); console.log('cbs',await p.locator('main input[type=checkbox]').count());
+ await p.locator('li:has-text("Price list") input[type=checkbox]').first().click(); console.log('mobile untick:',await toast(p)); await p.screenshot({path:'screens-m1/66-m-untick.png'});
+ await p.locator('li:has-text("Price list") input[type=checkbox]').first().click(); console.log('mobile tick:',await toast(p));
+ await p.goto('http://localhost:5173/#/p/drinks');await p.waitForTimeout(1500); await p.click('button:has-text("Add task")'); await p.fill('[name=title]','Mobile QA task'); await p.click('form button:has-text("Add task")'); console.log('mobile add task:',await toast(p));
+ await p.screenshot({path:'screens-m1/67-m-drinks.png',fullPage:true}); console.log('overflow drinks',await ov(p));
+ await p.click('a:has-text("Mobile QA task")'); await p.waitForTimeout(600); await p.click('button:has-text("Update task")'); await p.click('button:has-text("Archive task")'); console.log('mobile archive:',await toast(p)); await p.screenshot({path:'screens-m1/68-m-archive-toast.png'});
+ await p.click('button:has-text("Undo")'); console.log('mobile undo:',await toast(p));
+ console.log(p.logs.filter(l=>!/400|ABORTED/.test(l)));
+ await b.close();
+})()

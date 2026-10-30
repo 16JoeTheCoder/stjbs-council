@@ -32,6 +32,7 @@ function MemberForm({ m, done }) {
     e.preventDefault();
     const email = v.id.trim().toLowerCase();
     if (!SCHOOL.test(email)) return bad('id', 'Use a school email ending in @stjbs.sch.id.');
+    if (!m && S.members.some((x) => x.id === email)) return bad('id', 'This email is already on the roster. Close this form and edit that member instead.');
     if (!v.name.trim()) return bad('name', 'Add a name, then save.');
     // A president's edit may touch only name, section and reports-to, so role is sent only when it may change.
     const data = { name: v.name.trim(), initials: initials(v.name), section: v.section.trim(), reportsTo: v.reportsTo || null, ...(can.role ? { role: v.role } : {}) };

@@ -22,7 +22,9 @@ export function toast(msg, undo = null) {
   clearTimeout(toastTimer);
   if (!undo) toastTimer = setTimeout(() => set({ toast: '', undo: null }), 4000); // an undo stays until used or dismissed
 }
-export const fail = (e) => toast(`That did not save (${e.code || e.message}). Check your connection and try again.`);
+export const fail = (e) => toast(e.code === 'permission-denied'
+  ? 'That did not save: your role is not allowed to make this change.'
+  : `That did not save (${e.code || e.message}). Check your connection and try again.`);
 
 export const memberName = (email) => S.members.find((m) => m.id === email)?.name || email || 'Unknown';
 

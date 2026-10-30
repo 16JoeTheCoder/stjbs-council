@@ -3,10 +3,10 @@ const toast=async p=>{await p.waitForTimeout(1500);return (await p.$$eval('[role
 (async()=>{let {b,p}=await open(); await login(p,'michael');
  await p.goto('http://localhost:5173/#/p/drinks');await p.waitForTimeout(1500);
  await p.click('a:has-text("QA task with detail")'); await p.waitForTimeout(800);
- await p.fill('[name=title]','QA task renamed').catch(async()=>{console.log('no title field; buttons',await p.$$eval('button',e=>e.map(x=>x.innerText)))});
- await p.click('button:has-text("Update task")'); console.log('update task:',await toast(p));
+ await p.click('button:has-text("Update task")'); await p.waitForTimeout(500); await p.screenshot({path:'screens-m1/53-update-form.png',fullPage:true}); await p.fill('[name=title]','QA task renamed');
+ await p.click('button:has-text("Save changes")'); console.log('update task:',await toast(p));
  await p.reload();await p.waitForTimeout(1200); console.log('renamed ok:',(await p.innerText('main')).includes('QA task renamed'));
- console.log(await p.$$eval('button',e=>e.map(x=>x.innerText.trim())));
+ await p.click('button:has-text("Update task")'); await p.waitForTimeout(400);
  await p.click('button:has-text("Archive task")'); console.log('archive task (confirm auto-accepted):',await toast(p)); await p.screenshot({path:'screens-m1/50-task-archived-toast.png'});
  await p.click('button:has-text("Undo")'); console.log('undo:',await toast(p));
  await p.goto('http://localhost:5173/#/p/drinks');await p.waitForTimeout(1500); console.log('back after undo:',(await p.innerText('main')).includes('QA task renamed'));
