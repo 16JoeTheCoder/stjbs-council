@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'preact/hooks';
-import { S, loaded, set, unreadCount, useStore } from './store.js';
+// The shell: left rail on laptop, floating tab bar on phone, search, bell and avatar menu in the top bar,
+// and a member or admin view. Routes are hash routes under /app/.
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { S, loaded, set, signOutHere, unreadCount, useStore } from './store.js';
+import { isAdmin, isExec, roleName } from './model.js';
+import { markRead } from './actions.js';
 import { startAdminJobs } from './publish.js';
-import { isAdmin, roleLinks } from './model.js';
-import { Chip, Icon, Title } from './ui.jsx';
+import { stamp } from './time.js';
+import { Icon, Sheet } from './shared.jsx';
+import { Chip, Title } from './ui.jsx';
+import { Search } from './search.jsx';
 import { Login, Verify } from './routes/auth.jsx';
-import { MyWeek } from './routes/my-week.jsx';
+import { AllTasks, Home } from './routes/home.jsx';
 import { Item, Projects } from './routes/projects.jsx';
 import { Checkin, Meeting } from './routes/meeting.jsx';
 import { People } from './routes/people.jsx';
@@ -13,7 +19,9 @@ import { Digest } from './routes/digest.jsx';
 import { Templates } from './routes/templates.jsx';
 import { Workload } from './routes/workload.jsx';
 import { Admin } from './routes/admin.jsx';
-import { About } from './routes/about.jsx';
+import { Settings } from './routes/settings.jsx';
+import crest from '../design/fiatlux/img/crest-256.png';
+import building from '../design/fiatlux/img/building.webp';
 
 const parse = () => {
   const [path, qs] = location.hash.slice(1).split('?');
@@ -26,48 +34,152 @@ export function setTheme(theme) {
   try { localStorage.setItem('council-theme', theme); } catch {}
 }
 
-const Missing = () => <><Title light="Not here." bold="Page not found" /><p><a href="#/week">Go to My week</a></p></>;
-const ROUTES = { week: MyWeek, projects: Projects, p: Item, checkin: Checkin, meeting: Meeting, people: People, feed: Feed, digest: Digest, templates: Templates, workload: Workload, admin: Admin, about: About };
+const Missing = () => <><Title light="Not here." bold="Page not found" /><p><a class="fl-link" href="#/week">Go to Home</a></p></>;
+const NotForYou = () => <><Title light="Not for you." bold="Admin" /><p>Only the advisor, the president and the vice president open the admin view.</p></>;
+const ADMIN_PAGES = { members: Admin, workload: Workload, digest: Digest };
+const AdminRoute = ({ id }) => {
+  if (!isAdmin()) return <NotForYou />;
+  const Page = ADMIN_PAGES[id || 'members'] || Missing;
+  return <Page />;
+};
+const ROUTES = {
+  week: Home, tasks: AllTasks, checkin: Checkin, projects: Projects, p: Item, meeting: Meeting, people: People, committees: People,
+  activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
+};
+
+const MEMBER_NAV = [['week', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];
+export const ADMIN_NAV = [['admin', 'Overview', 'shield'], ['admin/announcements', 'Announcements', 'megaphone'], ['admin/members', 'Members and roles', 'committees'],
+  ['admin/workload', 'Check-ins and workload', 'chart'], ['admin/public', 'Public site', 'globe'], ['admin/approvals', 'Approvals and archive', 'inbox'], ['admin/digest', 'Digest', 'digest']];
+const TABS = [['week', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['ideas', 'Ideas', 'ideas']];
+// Which nav entry a route lights up.
+const ALIAS = { tasks: 'week', checkin: 'week', p: 'projects', meeting: 'projects', people: 'committees', feed: 'activity', about: 'settings' };
+const navKey = (r) => (r.name === 'admin' ? `admin${r.id ? `/${r.id}` : ''}` : ALIAS[r.name] || r.name);
+
+// A popover that closes on an outside tap, on Esc (focus back to its button) and on navigation.
+function usePop(route) {
+  const [open, setOpen] = useState(false), ref = useRef();
+  useEffect(() => setOpen(false), [route]);
+  useEffect(() => {
+    if (!open) return undefined;
+    const out = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    const esc = (e) => { if (e.key === 'Escape') { setOpen(false); ref.current?.querySelector('button')?.focus(); } };
+    addEventListener('pointerdown', out); addEventListener('keydown', esc);
+    return () => { removeEventListener('pointerdown', out); removeEventListener('keydown', esc); };
+  }, [open]);
+  return [open, setOpen, ref];
+}
+
+function Bell({ route }) {
+  const [open, setOpen, ref] = usePop(route);
+  const n = unreadCount(), label = n >= 50 ? '50+' : String(n);
+  return (
+    <div class="fl-search-host" ref={ref}>
+      <button class="fl-iconbtn" aria-label={`Notifications, ${label} unread`} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Icon n="bell" />{n > 0 && <span class="fl-count-text" aria-hidden="true">{label}</span>}
+      </button>
+      {open && (
+        <div class="fl-pop fl-pop--wide" role="region" aria-label="Notifications">
+          <h4>For you</h4>
+          {S.notes.length ? S.notes.slice(0, 6).map((x) => (
+            <a key={x.id} class={`fl-note-item${x.read ? '' : ' is-unread'}`} href={x.itemId ? `#/p/${x.itemId}` : '#/activity'} onClick={() => !x.read && markRead(x)}>
+              <Chip email={x.fromUid} /><span>{S.members.find((m) => m.id === x.fromUid)?.name.split(' ')[0] || 'Someone'} {x.text} <small>{stamp(x.createdAt)}</small></span>
+            </a>
+          )) : <p class="fl-small fl-muted fl-pad">Nothing yet. Comments, mentions and tasks for you show up here.</p>}
+          <hr />
+          {n > 0 && <button onClick={() => S.notes.filter((x) => !x.read).forEach(markRead)}><Icon n="check" />Mark all as read</button>}
+          <a href="#/activity"><Icon n="activity" />See all activity</a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UserMenu({ route, adminView, switchView }) {
+  const [open, setOpen, ref] = usePop(route);
+  return (
+    <div class="fl-search-host" ref={ref}>
+      <button class="fl-user" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Chip email={S.me.id} big /><span><b>{S.me.name}</b><small>{roleName(S.me.role)}</small></span>
+      </button>
+      {open && (
+        <div class="fl-pop" role="menu">
+          <a role="menuitem" href={`#/people/${encodeURIComponent(S.me.id)}`}><Icon n="user" />My profile</a>
+          <a role="menuitem" href="#/settings"><Icon n="settings" />Settings</a>
+          {isAdmin() && <button role="menuitem" onClick={() => switchView(adminView ? 'member' : 'admin')}><Icon n="shield" />{adminView ? 'Switch to member view' : 'Switch to admin view'}</button>}
+          <hr />
+          <button role="menuitem" onClick={signOutHere}><Icon n="out" />Sign out</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Everything the tab bar does not cover, so no destination exists only on laptop.
+function More({ close, adminView, switchView }) {
+  const link = (href, label, icon) => <a href={href} onClick={close}><Icon n={icon} />{label}</a>;
+  return (
+    <Sheet label="More" onClose={close}>
+      <nav class="fl-more" aria-label="More">
+        <h2 class="fl-eyebrow">Council</h2>
+        {link('#/committees', 'Committees', 'committees')}
+        {link('#/resources', 'Resources', 'resources')}
+        {link('#/activity', 'All activity', 'activity')}
+        {isExec() && link('#/digest', 'Digest', 'digest')}
+        {isExec() && link('#/templates', 'Project templates', 'copy')}
+        {isAdmin() && <>
+          <h2 class="fl-eyebrow">Admin</h2>
+          {ADMIN_NAV.map(([k, label, icon]) => link(`#/${k}`, label, icon))}
+          <button onClick={() => { close(); switchView(adminView ? 'member' : 'admin'); }}><Icon n="shield" />{adminView ? 'Switch to member view' : 'Switch to admin view'}</button>
+        </>}
+        {link('#/settings', 'Settings', 'settings')}
+      </nav>
+    </Sheet>
+  );
+}
+
+const readView = () => { try { return localStorage.getItem('council-view') || 'member'; } catch { return 'member'; } };
 
 export function App() {
   useStore();
-  const [route, setRoute] = useState(parse);
-  const [dark, setDark] = useState(document.documentElement.dataset.theme !== 'light');
+  const [route, setRoute] = useState(parse), [view, setView] = useState(readView), [more, setMore] = useState(false);
   useEffect(() => { const f = () => setRoute(parse()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   const admin = S.phase === 'ready' && isAdmin();
   useEffect(() => (admin ? startAdminJobs() : undefined), [admin]);
   if (S.phase === 'signed-out' || S.phase === 'no-roster') return <Login />;
   if (S.phase === 'verify') return <Verify />;
-  if (S.phase !== 'ready' || S.term === null || (S.term && !loaded())) return <main id="main" class="jy-auth"><p class="jy-caption" role="status">Loading the council, step 1 of 1.</p></main>;
-  if (S.term === false) return <main id="main" class="jy-auth"><p role="alert">No term is set. Ask the advisor to create settings/current.</p></main>;
+  if (S.phase !== 'ready' || S.term === null || (S.term && !loaded())) return <main id="main" class="fl-loading"><p class="fl-muted" role="status">Loading the council.</p></main>;
+  if (S.term === false) return <main id="main" class="fl-loading"><p role="alert">No term is set. Ask the advisor to create settings/current.</p></main>;
 
-  const n = unreadCount(), unread = n >= 50 ? '50+' : n;
-  const tabs = [['week', 'My week'], ['projects', 'Projects'], ['people', 'People'], ['feed', 'Feed']];
-  const extra = roleLinks();
-  const active = (k) => route.name === k || (k === 'projects' && ['p', 'meeting'].includes(route.name));
-  const link = ([k, label], icon) => (
-    <a key={k} href={`#/${k}`} aria-current={active(k) ? 'page' : undefined}>{icon && <Icon n={k} />}<span>{label}</span></a>
-  );
-  const Page = ROUTES[route.name] || Missing;
-  const flip = () => { setTheme(dark ? 'light' : 'dark'); setDark(!dark); };
+  const adminView = isAdmin() && (route.name === 'admin' || view === 'admin');
+  const switchView = (v) => { try { localStorage.setItem('council-view', v); } catch {} setView(v); location.hash = v === 'admin' ? '#/admin' : '#/week'; };
+  const key = navKey(route), Page = ROUTES[route.name] || Missing;
+  const navLink = ([k, label, icon]) => <a key={k} href={`#/${k}`} aria-current={key === k ? 'page' : undefined}><Icon n={icon} />{label}</a>;
   return (
-    <>
-      <a class="jy-skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main').focus(); }}>Skip to content</a>
-      <header class="jy-header">
-        <a class="jy-brand" href="#/week">STJBS <b>Council</b></a>
-        <nav class="jy-topnav" aria-label="Main">{[...tabs, ...extra].map((t) => link(t))}</nav>
-        <div class="jy-tools">
-          <a class="jy-iconbtn" href="#/feed" aria-label={`Notifications, ${unread} unread`}><Icon n="bell" /><span class="jy-mono" aria-hidden="true">{unread}</span></a>
-          <button class="jy-iconbtn" onClick={flip} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}><Icon n={dark ? 'sun' : 'moon'} /></button>
-          <a href={`#/people/${S.me.id}`} class="jy-me" aria-label="Your profile"><Chip email={S.me.id} big /></a>
-        </div>
-      </header>
-      <div class="jy-toast" role="status" aria-live="polite">{S.toast}{S.undo && <>
-        <button class="jy-link" onClick={() => { S.undo.fn(); set({ undo: null, toast: '' }); }}>{S.undo.label}</button>
-        <button class="jy-link" onClick={() => set({ undo: null, toast: '' })}>Dismiss</button></>}</div>
-      {S.error && <p class="jy-alert" role="alert">{S.error}</p>}
-      <main id="main" tabIndex={-1} class="jy-page"><Page key={`${route.name}/${route.id}`} id={route.id} q={route.q} /></main>
-      <nav class="jy-tabbar" aria-label="Tabs">{tabs.map((t) => link(t, true))}</nav>
-    </>
+    <div class="fl-app">
+      <a class="fl-skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main').focus(); }}>Skip to content</a>
+      <aside class="fl-rail">
+        <a class="fl-brand" href="#/week"><img src={crest} alt="" width="44" height="44" /><div><b>Student Council</b><span>St. Johannes Berchmans</span></div></a>
+        {adminView && <span class="fl-badge-admin">Admin view</span>}
+        <nav class="fl-nav" aria-label="Main">{(adminView ? ADMIN_NAV : MEMBER_NAV).map(navLink)}</nav>
+        <a class="fl-rail__photo" href="/"><img src={building} alt="" /><span>Together for a stronger community</span></a>
+      </aside>
+      <div class="fl-col">
+        <header class="fl-top">
+          <img class="fl-top__crest" src={crest} alt="Student Council" width="40" height="40" />
+          <Search />
+          <div class="fl-tools"><Bell route={route} /><UserMenu route={route} adminView={adminView} switchView={switchView} /></div>
+        </header>
+        {S.error && <p class="fl-alert" role="alert">{S.error}</p>}
+        <main id="main" tabIndex={-1} class="fl-main"><Page key={`${route.name}/${route.id}`} id={route.id} q={route.q} /></main>
+      </div>
+      <nav class="fl-tabbar" aria-label="Tabs">
+        {TABS.map(([k, label, icon]) => <a key={k} href={`#/${k}`} aria-label={label} aria-current={key === k ? 'page' : undefined}><Icon n={icon} /></a>)}
+        <button aria-label="More" aria-expanded={more} onClick={() => setMore(true)}><Icon n="more" /></button>
+      </nav>
+      {more && <More close={() => setMore(false)} adminView={adminView} switchView={switchView} />}
+      <div class={S.toast ? 'fl-toast' : 'fl-sr'} role="status" aria-live="polite">{S.toast}{S.undo && <>
+        <button class="fl-btn fl-btn--sm fl-btn--ghost" onClick={() => { S.undo.fn(); set({ undo: null, toast: '' }); }}>{S.undo.label}</button>
+        <button class="fl-btn fl-btn--sm fl-btn--ghost" onClick={() => set({ undo: null, toast: '' })}>Dismiss</button></>}</div>
+    </div>
   );
 }

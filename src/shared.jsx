@@ -71,7 +71,15 @@ export function Sheet({ label, onClose, children }) {
 }
 
 const paragraphs = (text) => text.split(/\n+/).filter((p) => p.trim()).map((p, i) => <p key={i}>{p}</p>);
+export const AnnouncementSheet = ({ a, onClose }) => (
+  <Sheet label={a.title} onClose={onClose}>
+    <span class="fl-eyebrow fl-eyebrow--red">{dateRange(a.startDate, a.endDate)}</span>
+    <h1>{a.title}</h1>
+    {paragraphs(a.body || '')}
+  </Sheet>
+);
 
+// Shown while start <= today <= end, newest first, at most 3: 0 renders nothing, 1 a wide banner, 2 to 3 cards.
 export function Announcements({ list }) {
   const [open, setOpen] = useState(null);
   if (!list.length) return null;
@@ -88,13 +96,7 @@ export function Announcements({ list }) {
           </button>
         ))}
       </div>
-      {open && (
-        <Sheet label={open.title} onClose={() => setOpen(null)}>
-          <span class="fl-eyebrow fl-eyebrow--red">{dateRange(open.startDate, open.endDate)}</span>
-          <h1>{open.title}</h1>
-          {paragraphs(open.body || '')}
-        </Sheet>
-      )}
+      {open && <AnnouncementSheet a={open} onClose={() => setOpen(null)} />}
     </section>
   );
 }

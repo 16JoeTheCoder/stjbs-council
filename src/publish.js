@@ -27,7 +27,7 @@ export const localFeedHash = () => hash(feedJson(S.items, S.events, S.announceme
 
 // Safe to publish only when everything the payload reads has arrived from the server, without errors.
 export const canPublish = () => isAdmin() && loaded() && !S.error && S.ready.events && S.ready.announcements && S.ready.feed
-  && !S.fail.events && !S.fail.announcements && !S.fail.feed && !S.cached.items && !S.cached.events && !S.cached.announcements;
+  && !S.fail.events && !S.fail.announcements && !S.fail.feed && !S.cached.items && !S.cached.events && !S.cached.announcements && !S.cached.feed;
 
 let publishing = false;
 export async function publish(force = false) {

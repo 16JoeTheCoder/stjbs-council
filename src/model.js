@@ -72,9 +72,11 @@ export function personStatus(email, w = week()) {
   return { cls, word, line, ci, blocked, overdue, done };
 }
 
-// Extra destinations by role: top nav on laptop, profile page at every width.
-export const roleLinks = () => [canSeeStats() && ['workload', 'Workload'], isBoss() && S.me.role !== 'teacher' && ['templates', 'Templates'],
-  isAdmin() && ['admin', 'Admin'], ['digest', 'Digest']].filter(Boolean);
+// Exec in the roles table: may start root projects, edit the digest and project templates (the advisor too).
+export const isExec = (m = S.me) => isBoss(m) && m?.role !== 'teacher';
+const ROLE = { advisor: 'Advisor', president: 'President', vp: 'Vice president', treasurer: 'Treasurer', secretary: 'Secretary', officer: 'Officer', teacher: 'Teacher' };
+export const roleName = (r) => ROLE[r] || r;
+export const firstName = (email) => (S.members.find((m) => m.id === email)?.name || email || '').split(' ')[0];
 export const checksIn = (m) => !['teacher', 'advisor'].includes(m?.role);
 export const activeMembers = () => S.members.filter((m) => m.active).sort((a, b) => a.name.localeCompare(b.name));
 export const initials = (name = '') => (name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2) || '?').toUpperCase();
