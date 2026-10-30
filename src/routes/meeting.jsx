@@ -87,7 +87,7 @@ export function Meeting({ id }) {
       <FilterBar list={all} f={f} set={setF} hideList />
       <p class="fl-caption">The meeting view is built for a wide screen. Scroll sideways to see every lane.</p>
       <div class="fl-scroll"><div class="fl-lanes" role="list" aria-label="Subteams">
-        {lanes.map((lane, i) => {
+        {lanes.map((lane) => {
           const tasks = lane === root ? (kids[id] || []).filter((x) => x.kind === 'task') : under(lane.id), p = progress(tasks);
           return (
             <section key={lane.id} class="fl-lane" role="listitem" aria-label={lane.title}>
