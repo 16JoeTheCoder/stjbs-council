@@ -108,7 +108,7 @@ export function Home() {
                 <div><a class="fl-h3" href={`#/p/${r.id}`}>{r.title}</a><span class="fl-mono fl-small">{pct(progress(tree().under(r.id)))}%</span></div>
                 <Steps root={r} />
               </div>
-            )) : <Empty>You are not on a project yet. Ask a lead to add you to a task.</Empty>}
+            )) : <Empty>{checksIn(S.me) ? 'You are not on a project yet. Ask a lead to add you to a task.' : 'Projects you lead or hold tasks in show here. Projects has every project.'}</Empty>}
           </Panel>
           {!(anns.length === 1 && showCheckin) && <Mission img={building} extra="fl-desk-only" />}
         </div>

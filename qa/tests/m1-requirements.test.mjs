@@ -61,19 +61,19 @@ async function seed() {
 const ev = (o = {}) => ({
   title: 'Assembly', type: 'meeting', date: '2026-11-02', start: '09:00', end: '10:00',
   location: 'Hall', notes: '', public: false, createdByUid: em('michael'), archived: false,
-  termId: T, createdAt: serverTimestamp(), ...o,
+  termId: T, createdAt: Date.now(), ...o,
 });
 const ann = (o = {}) => ({
   title: 'Bake sale', body: 'Friday', audience: 'everyone', startDate: '2026-11-01', endDate: '2026-11-05',
-  createdByUid: em('nadia'), archived: false, termId: T, createdAt: serverTimestamp(), ...o,
+  createdByUid: em('nadia'), archived: false, termId: T, createdAt: Date.now(), ...o,
 });
 const idea = (o = {}) => ({
   text: 'More plants', authorUid: em('michael'), voters: [em('michael')], archived: false,
-  termId: T, createdAt: serverTimestamp(), ...o,
+  termId: T, createdAt: Date.now(), ...o,
 });
 const tpl = (o = {}) => ({
   name: 'Budget sheet', kind: 'sheet', url: 'https://docs.google.com/spreadsheets/d/abc/edit', version: 1,
-  archived: false, createdAt: serverTimestamp(), ...o,
+  archived: false, createdAt: Date.now(), ...o,
 });
 const sub = (o = {}) => ({
   type: 'new-template', name: 'Poster', url: 'https://docs.google.com/document/d/abc/edit', note: '',
@@ -280,7 +280,7 @@ test('events: creator retitling public event fails, admin ok (plan L1-11)', asyn
 });
 
 // ---------- rsvps ----------
-const rs = (n, o = {}) => ({ eventId: 'e1', uid: em(n), status: 'going', archived: false, termId: T, createdAt: serverTimestamp(), ...o });
+const rs = (n, o = {}) => ({ eventId: 'e1', uid: em(n), status: 'going', archived: false, termId: T, createdAt: Date.now(), ...o });
 test('rsvps: own going / not ok for every non-teacher role', async () => {
   for (const n of ['ariel', 'nadia', 'kevin', 'sarah', 'dimas', 'michael'])
     await ok(setDoc(doc(as(n), 'rsvps', 'e1_' + em(n)), rs(n)));
@@ -494,7 +494,7 @@ test.skip('items: legacy item without public/publicBlurb/touchedAt still updatab
   await ok(updateDoc(doc(as('nadia'), 'items/p1'), { notes: 'd', touchedAt: T_() }));
 });
 test.skip('items: creating a root project needs touchedAt (exec/advisor)', async () => {
-  const base = { ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdByUid: em('sarah'), createdAt: serverTimestamp() };
+  const base = { ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdByUid: em('sarah'), createdAt: Date.now() };
   await ok(setDoc(doc(as('sarah'), 'items/new1'), { ...base, touchedAt: T_() }));
   await no(setDoc(doc(as('sarah'), 'items/new2'), base));
 });
@@ -526,13 +526,13 @@ test.skip('items: public only on root projects (admin cannot set on child)', asy
   await no(updateDoc(doc(as('nadia'), 'items/c1'), { public: true, touchedAt: T_() }));
 });
 test.skip('items: member creating a child with public true fails', async () => {
-  const child = { ...FULL, termId: T, kind: 'task', parentId: 'p1', ancestors: ['p1'], title: 'Sub', status: 'todo', archived: false, leadUid: null, leadUids: [em('michael')], assigneeUids: [], createdByUid: em('michael'), createdAt: serverTimestamp(), touchedAt: T_() };
+  const child = { ...FULL, termId: T, kind: 'task', parentId: 'p1', ancestors: ['p1'], title: 'Sub', status: 'todo', archived: false, leadUid: null, leadUids: [em('michael')], assigneeUids: [], createdByUid: em('michael'), createdAt: Date.now(), touchedAt: T_() };
   await ok(setDoc(doc(as('michael'), 'items/ch1'), child));
   await no(setDoc(doc(as('michael'), 'items/ch2'), { ...child, public: true }));
   await no(setDoc(doc(as('michael'), 'items/ch3'), { ...child, publicBlurb: 'x' }));
 });
 test.skip('items: root create with public true only by admin', async () => {
-  const base = { ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdAt: serverTimestamp(), touchedAt: T_(), public: true, publicBlurb: 'hi' };
+  const base = { ...FULL, termId: T, kind: 'project', parentId: null, ancestors: [], title: 'New', status: 'todo', archived: false, leadUid: null, leadUids: [], assigneeUids: [], createdAt: Date.now(), touchedAt: T_(), public: true, publicBlurb: 'hi' };
   await ok(setDoc(doc(as('nadia'), 'items/r1'), { ...base, createdByUid: em('nadia') }));
   await no(setDoc(doc(as('sarah'), 'items/r2'), { ...base, createdByUid: em('sarah') }));
 });

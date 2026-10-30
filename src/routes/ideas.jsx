@@ -29,7 +29,7 @@ function Note({ idea, board }) {
         <span>{firstName(idea.authorUid)}</span>
         <span class="fl-actions">
           {board && isAdmin() && <button class="fl-vote" onClick={() => archiveIdea(idea)} aria-label={`Archive idea: ${idea.text}`}>Archive</button>}
-          <button class="fl-vote" aria-pressed={mine} disabled={busy || S.me.role === 'teacher'} onClick={vote}
+          <button class="fl-vote" aria-pressed={mine} disabled={busy || S.me.role === 'teacher'} title={S.me.role === 'teacher' ? 'Teachers read the board; students vote.' : undefined} onClick={vote}
             aria-label={`${mine ? 'Remove your vote for' : 'Vote for'} "${idea.text}", ${n} ${n === 1 ? 'vote' : 'votes'}`}>▲ {n}</button>
         </span>
       </footer>

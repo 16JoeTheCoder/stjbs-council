@@ -89,3 +89,13 @@ Minor findings and notes for Josef, not fixed immediately. One line each: ID, wh
   - RSVP, vote and pin give no toast.
   - Approve and reject do not notify the submitter.
   - Fixed: password reset for an unknown email showed "Email or password is wrong"; it now shows the same neutral note as for a known email.
+- **Logic pass 3 (`docs/qa/logic-check.md`):**
+  - L3-01: laptop Home measures 1.66 to 1.96 screens against the 1.5 budget, mostly from the announcements and the idea notes.
+  - L3-03: with no feed and no saved copy, the public nav still links to the hidden Projects and Events sections.
+  - L3-05: the Public site preview shows project cards and only counts for events and announcements.
+  - L3-06: a future announcement is in the public JSON from the moment it is saved (the page hides it until its start day).
+  - L3-08 to L3-10: small wording points.
+  - Fixed in the final pass:
+    - L3-02: the My projects empty state now fits teachers and the advisor.
+    - L3-04: the public nav order matches the page.
+    - L3-07: a teacher's disabled vote button says why.

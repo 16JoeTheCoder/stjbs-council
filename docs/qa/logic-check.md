@@ -190,3 +190,61 @@ Counts: 0 blockers, 0 majors, 15 minors. Spec table: `qa/m1-spec.md`.
 - Index set: items delta, events window, announcements, ideas, submissions archive, activity. Equality-only queries (submissions by `status` or `byUid`, docTemplates, rsvps, public roots) need none. The plan's "kept `items (termId, archived)`" never existed and is not needed.
 - `voteOk` blocks `[me, me, me]`, swaps, multi-add and removing someone else, assuming `Set.hasAll(list)` and `List.toSet()` are available in the rules language (about 90 % sure; the written tests are the proof once run).
 - `public/feed` and `cache/*` use exact-key whitelists, so the `putDoc` merge trap (L1-06) cannot apply because no code writes them through `putDoc`.
+
+## Pass 3 (before finishing, M5)
+
+Reviewer: Pass 3, no access to the author's reasoning. Reviewed the final code at HEAD (after `f967195`), `design/fiatlux/DESIGN.md`, the 66 screenshots in `docs/qa/screens/`, and my own browser pass against `npm run demo` (emulator only): roles raka (officer), sarah (treasurer), nadia (president), kevin (VP), ariel (advisor), budi (teacher), dimas (secretary) and a signed-out visitor, at 1440 and 390 px, in both themes, every member route plus every admin route for the three admins. Scripts and screenshots: `qa/pass3.cjs`, `qa/p3b.cjs` to `qa/p3d.cjs`, `qa/screens-final/`.
+
+Method note: the theme is the `council-theme` value in localStorage (default dark whatever the operating system says), so a browser colour-scheme switch does not change it. My first "light" pass was therefore dark; the real light pass sets the stored value and ran a contrast scan (text under 3:1 against its background, stage surfaces excluded) over 16 routes for four roles at both sizes. Result: no text under 3:1 in light; the only hit is the rail photo caption, which sits on the photo and reads white on the picture.
+
+Counts: 0 blockers, 0 majors, 10 minors.
+
+### Answers
+
+1. **Confusing?** Little. Two wrong-for-the-role sentences (L3-02, L3-08).
+2. **Too long?** Phone Home is 1.6 to 2.1 screens against a budget of 5. Laptop Home is 1.66 screens for admins, teacher and advisor, 1.88 for treasurer and secretary, 1.96 for an officer with a due check-in: over the 1.5 budget (L3-01). Longest other page: Committees on a phone, 4.1 screens (a roster, not Home). No page scrolls sideways at 390 px in either theme, and no page raised a script error, for any role.
+3. **Unreachable?** No. Every route in the plan is reachable from the rail, the tab bar, More, the avatar menu or a link on a page, and each role lands on a sensible page. Non-admins who type `#/admin` get "Not for you"; a teacher typing `#/workload` or `#/templates` gets "Not for you"; the advisor typing `#/checkin` gets "Not needed for you". Dead anchors exist on the public site in one case (L3-03).
+4. **Broken?** Nothing I could reproduce. The two majors from the M4 alpha (Make task not in Needs you; an event added outside the loaded window invisible) are fixed and now covered by `qa/tests/m5-gaps.test.mjs`.
+5. **Useless?** Disabled vote buttons for teachers explain nothing on Home (L3-07). Nothing else.
+
+### Does the public feed leak a student's name or email?
+
+Not found. Evidence: the live feed document after my Publish now runs has keys `v, projects, events, announcements` only; a scan of it for any member name, `@` or initials found nothing; a REST `list` on `public` returns 403; the rules allow only `json`, `hash`, `updatedAt` and no `updatedByUid`. `feedPayload` (`src/feed.js:19-30`) is a field whitelist: project title, stage, counts, blurb; event title, type, date, times, location; announcement title, body and dates, only for audience `everyone`. Free text can still carry a name, but every public free-text field is admin-only once public (project title and blurb, event title, type, date, time and location, announcements), the check is in the rules, and the earlier "creator edits a public event after review" hole (L1-11, L2-05) is closed. Two residual points are L3-04 and L3-05.
+
+### Findings
+
+| ID | Severity | Location | What is wrong | What to do |
+|---|---|---|---|---|
+| L3-01 | minor | `src/routes/home.jsx` (laptop), DESIGN.md length budget | Laptop Home measures 1.96 screens for an officer (1.88 treasurer and secretary, 1.66 admins, advisor, teacher) against "about 1.5". Lists are capped; the extra length is two announcement cards, the check-in panel beside Needs you, and the idea notes. Already in `qa/BACKLOG.md` (M3) as "revisit if it bothers people". Phone is fine (2.1 of 5). | Accept, or show only the first announcement card plus "n more" on laptop, which brings officers to about 1.7. |
+| L3-02 | minor | `src/routes/home.jsx` My projects empty state | Teacher, advisor and anyone who holds no task see "You are not on a project yet. Ask a lead to add you to a task." A teacher or the advisor can never be added to a task (rules and `able()` exclude them), so the advice is wrong for them; the president and VP see it too, and they lead nothing by assignment. | Role-aware line: "Projects you follow are on the Projects page." for teacher, advisor and admins. |
+| L3-03 | minor | `src/site.jsx` nav (`#events`, `#live`) | When the feed cannot be fetched and nothing is cached (first visit while offline, quota exhausted, feed deleted), the Projects and Coming up sections are not rendered but the nav links "Events" and "Projects" and the "Explore our work" fallback are. Two nav links then jump nowhere. | Render the two sections always with the existing muted "Check back soon" lines, or drop those two nav links when `live` is empty. |
+| L3-04 | minor | `src/site.jsx` nav order | Nav reads Home, Events, Projects, About but the page runs Projects (`#live`) before Coming up (`#events`). | Swap the two links, or the two sections. |
+| L3-05 | minor | `src/routes/admin-views.jsx` `PublicSite` preview | Pass 2 asked the preview to show the exact outgoing text. It shows project cards only; events and announcements appear as counts ("2 public events and 1 public announcement"), so an admin cannot read the event title, location or announcement body that is about to be on the open internet without opening each item. The text is admin-controlled, so this is a review aid, not a leak. | List the outgoing event titles with date and place and the announcement titles in the preview, from the same `preview` object already parsed. |
+| L3-06 | minor | `src/feed.js:24-25`, `qa/tests/m2-security.test.mjs` test 14 | An announcement is written into the public JSON from the moment it is saved, not from its start date. The public page hides it until its start, but a direct REST read shows a scheduled announcement before it is meant to be public. Not a student name; a surprise for the author. | Filter `a.startDate <= day` in `feedPayload`, and the hash then also changes on the start day (needs a republish; the existing 10-minute job covers it while an admin is open). |
+| L3-07 | minor | `src/routes/ideas.jsx` and Home "Top ideas" | For a teacher the vote buttons are disabled with no title or text; only the Ideas page says "Teachers can read the board", and Home shows the buttons without that sentence. | Add `title="Teachers read the board; students vote."` or hide the count button for teachers on Home. |
+| L3-08 | minor | `src/routes/home.jsx` hero line | For the advisor and teachers the line is "No tasks this week" with no check-in text (correct), but the "Needs you" empty state still says "All my tasks has the rest", pointing at a page that is always empty for them. | Same fix as L3-02. |
+| L3-09 | minor | `firestore.rules` ideas vote branch; pass 2 L2-06 | Still open. An archived idea accepts votes (the board filters archived ideas, so nothing shows). | Add `resource.data.archived == false` to the vote branch and one test. |
+| L3-10 | minor | `src/routes/projects.jsx:234`; pass 2 L2-07 | Still open in part. A lead of a public root project still sees an editable Title field, and a legacy title with a trailing space counts as a title change, which the rule refuses ("That did not save"). Pass 2 L2-02 (Workload reads every check-in of the term) is also unchanged (`workload.jsx:48`), about 1 200 reads late in the term per visit. | Disable the title input when `it.public && !isAdmin()`; for Workload reuse `S.checkins` for the loaded weeks. |
+
+### Earlier findings marked open, re-checked against the final code
+
+| ID | Status | Evidence |
+|---|---|---|
+| L1-04 standalone launch redirect | RESOLVED | `index.html:9-10` redirects when `display-mode: standalone` or `navigator.standalone`. |
+| L1-20 quota message and usage note | RESOLVED | `store.js:32,47` map `resource-exhausted` to a quota message; README lines 136-137 cover usage and shared computers. |
+| L1-23 regression list | RESOLVED | skip link, "Show all (n)", "Delete comment", reports-to loop guard (`people.jsx:23`), "Start from template", "Open digest" (`meeting.jsx:79`), `beforeinstallprompt` (`settings.jsx:12`), "Page not found" and "No term is set" are all present. |
+| L1-26, L1-28, L1-37 publish and snapshot safeguards | RESOLVED | `publish.js` reads from the server before writing (`getDocsFromServer`), `canPublish` needs fresh listeners, the snapshot has a 6 h and 24 h retry cool-down (`:62-82`). The L2-03 named test is not among the 46 rules tests (it is client code); not run. |
+| L2-01 Close term backup | RESOLVED | `admin.jsx:70` now lists all 13 collections and leaves `public` out. |
+| L2-05 public event date and time edits | RESOLVED | public event text and time are admin-only (`calendar.jsx:136,154`, rules). The creator can still archive their own public event (m1-security 9). |
+| L2-08 Add member on an existing address | RESOLVED | `admin.jsx:34` refuses it with a clear message. |
+| L2-09 teacher check-in write | RESOLVED | `firestore.rules:107` excludes teacher and advisor; the m1-security test now passes. |
+| L2-06, L2-07, L2-02 | OPEN | see L3-09 and L3-10. |
+| L1-12 to L1-19, L1-21, L1-22, L1-24, L1-25, L1-29 to L1-36, L2-04, L2-10 to L2-15 | NOT RE-CHECKED | Minors the author folded into the plan or the backlog; I spot-checked the ones above only. |
+
+### Checked and found sound
+
+- Roles: officer, treasurer and secretary see no admin entry; president, VP and advisor see "Switch to admin view" and the same seven admin pages; teacher sees no check-in panel, no Make task, no pin-idea form and no template or workload page.
+- Admin Overview on a phone lists all admin sections at the top; "Who has admin" shows the three admins; "Nothing needs you right now" appears only when nothing is pending.
+- Light theme: all screens render with the stage surfaces (hero, mission card, announcement banner) dark as designed, and no overflow at 390 px.
+- Public site at 390 px in both themes (`docs/qa/screens/public-site-phone-*.jpg`): hero, announcement, projects, coming up, mission card, about and join read cleanly; no member data.
+

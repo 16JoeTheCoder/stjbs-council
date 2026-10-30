@@ -51,7 +51,7 @@ function Site() {
       <header class="fl-site-top">
         <a class="fl-brand" href="#main"><img src={crest} alt="" width="44" height="44" /><div><b>Student Council</b><span>St. Johannes Berchmans</span></div></a>
         <nav class="fl-site-nav" aria-label="Sections">
-          <a href="#main">Home</a><a href="#events">Events</a><a href="#live">Projects</a><a href="#about">About</a>
+          <a href="#main">Home</a><a href="#live">Projects</a><a href="#events">Events</a><a href="#about">About</a>
         </nav>
         <a class="fl-btn fl-btn--red fl-btn--sm" href="/app/">Dashboard</a>
       </header>
