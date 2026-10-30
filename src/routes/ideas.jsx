@@ -20,7 +20,8 @@ const state = (list, empty) => (list === null ? <p class="fl-muted" role="status
   : !list.length ? <Empty>{empty}</Empty> : null);
 
 function Note({ idea, board }) {
-  const mine = idea.voters.includes(S.me.id), n = idea.voters.length;
+  const mine = idea.voters.includes(S.me.id), n = idea.voters.length, [busy, setBusy] = useState(false);
+  const vote = async () => { setBusy(true); await toggleVote(idea); setBusy(false); }; // a double tap must not undo itself
   return (
     <article class="fl-note">
       <p>{idea.text}</p>
@@ -28,7 +29,7 @@ function Note({ idea, board }) {
         <span>{firstName(idea.authorUid)}</span>
         <span class="fl-actions">
           {board && isAdmin() && <button class="fl-vote" onClick={() => archiveIdea(idea)} aria-label={`Archive idea: ${idea.text}`}>Archive</button>}
-          <button class="fl-vote" aria-pressed={mine} disabled={S.me.role === 'teacher'} onClick={() => toggleVote(idea)}
+          <button class="fl-vote" aria-pressed={mine} disabled={busy || S.me.role === 'teacher'} onClick={vote}
             aria-label={`${mine ? 'Remove your vote for' : 'Vote for'} "${idea.text}", ${n} ${n === 1 ? 'vote' : 'votes'}`}>▲ {n}</button>
         </span>
       </footer>

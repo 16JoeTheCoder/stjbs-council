@@ -40,3 +40,30 @@ Minor findings and notes for Josef, not fixed immediately. One line each: ID, wh
 - **M2-S3 (security, documented):** the cache wipe on Sign out cannot run while another tab holds the database, and sessions that end without Sign out (token expiry, the automatic no-roster sign-out) leave the cache on the device. The README tells members on shared computers to use Sign out and close the other tabs (L1-34).
 - **Alpha:** two aborted Firestore channel requests are logged on sign out. This is SDK noise.
 - **Spec:** the snapshot JSON keeps empty default fields (plan 6.2 said they would be dropped). That is simpler, and the size check still guards the limit. "Publish now" arrives with the admin screens in M5.
+
+## M3 and M4 minors
+
+- **Alpha M3 (`qa/m3-alpha.md`):**
+  - Home runs to about 1.95 laptop screens for an officer with two announcements, the check-in panel and four ideas, against the 1.5 budget. Every list is capped; the extra length comes from the announcements and the idea notes. Revisit if it bothers people.
+  - A few actions have no toast: vote and RSVP. Their counts change in place.
+- **Spec M3 (`qa/m3-spec.md`):** the Home hero eyebrow reads "Friday 30 October" (long form), matching `preview.html`; lists use "Fri 30 Oct".
+- **Security M3 (`qa/m3-security.md`):**
+  - The sign-out wipe fails silently when another tab holds the cache (documented in the README).
+  - Task links accept any http(s) address, as before the redesign.
+- **Alpha M4 (`qa/m4-alpha.md`):**
+  - Narrow phone week grid: very short events clip their text; the event sheet shows it in full.
+  - "Next up" prefers the next public event.
+  - A typed `@Name` that was not picked from the suggestions is plain text and notifies nobody, by design: only picked names resolve to a person.
+  - Approving or rejecting a submission does not notify the submitter; My submissions shows the status.
+  - The phone admin Overview shows no "Admin view" badge; its title and link list make the view clear.
+- **Spec and security M4 (`qa/m4-spec.md`, `qa/m4-security.md`):**
+  - A3: the mission card hides when a single announcement banner and the check-in panel both show (DESIGN.md rule 4, at most two red-filled surfaces).
+  - A4: overlapping events overlap in the week grid.
+  - S1 to S4, S7, S10:
+    - mention and notification lists are not checked against the roster;
+    - an RSVP id could collide for emails containing `_`;
+    - admins may set any submission status;
+    - idea pins are not rate-limited.
+
+    These are low value for a 30-person roster with verified school accounts.
+- **Lighthouse:** a smaller mobile hero image would save about 227 kB. Not needed for the gate (Performance 94).

@@ -22,7 +22,7 @@ const inGrid = (e) => toMin(e.start) >= DAY_START && toMin(e.end) <= DAY_END;
 const go = (patch, q) => { const p = new URLSearchParams(q); for (const [k, v] of Object.entries(patch)) (v ? p.set(k, v) : p.delete(k)); location.hash = `#/calendar?${p}`; };
 
 // Events for [from, to]: the store's window, plus a one-off read when the range leaves it.
-function useEvents(from, to) {
+function useEvents(from, to, tick) {
   const today = isoDay(), lo = addDays(today, -EVENT_BACK_DAYS), hi = addDays(today, EVENT_AHEAD_DAYS);
   const outside = from < lo || to > hi, [extra, setExtra] = useState([]);
   useEffect(() => {
@@ -30,14 +30,14 @@ function useEvents(from, to) {
     let live = true;
     getDocs(eventsQuery(S.term.termId, today, from, to)).then((s) => live && setExtra(s.docs.map((d) => ({ id: d.id, ...d.data() }))), () => live && setExtra([]));
     return () => { live = false; };
-  }, [from, to, outside]);
+  }, [from, to, outside, tick]); // tick re-reads after this page saves or archives an event outside the window
   const byId = new Map([...(outside ? extra : []), ...S.events].map((e) => [e.id, e]));
   return [...byId.values()].filter((e) => !e.archived && e.date >= from && e.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
 }
 const dueMarkers = (from, to) => (tree().kids.root || []).filter((r) => r.dueDate && r.dueDate >= from && r.dueDate <= to);
 
-const Chip = ({ e, q }) => (
-  <button class={EV_CLASS[e.type] || 'fl-ev'} onClick={() => go({ e: e.id }, q)}>{e.title}<small>{e.start} to {e.end}</small></button>
+const Chip = ({ e, q, day }) => (
+  <button class={EV_CLASS[e.type] || 'fl-ev'} onClick={() => go({ e: e.id }, q)}>{e.title}<small>{day ? `${fmtDay(e.date)}, ` : ''}{e.start} to {e.end}</small></button>
 );
 const Due = ({ r }) => <a class="fl-ev fl-ev--quiet" href={`#/p/${r.id}`}>Due: {r.title}</a>;
 
@@ -47,7 +47,7 @@ function Week({ start, events, q }) {
   return (
     <>
       {(allDay.length > 0 || dues.length > 0) && (
-        <div class="fl-cal__allday" aria-label="All day and evening">{allDay.map((e) => <Chip key={e.id} e={e} q={q} />)}{dues.map((r) => <Due key={r.id} r={r} />)}</div>
+        <div class="fl-cal__allday" aria-label="All day and evening">{allDay.map((e) => <Chip key={e.id} e={e} q={q} day />)}{dues.map((r) => <Due key={r.id} r={r} />)}</div>
       )}
       <div class="fl-cal fl-scroll">
         <div class="fl-cal__grid" role="grid" aria-label={`Week of ${fmtDay(start)}`}>
@@ -95,7 +95,7 @@ function Month({ anchor, events, q }) {
   );
 }
 
-function EventSheet({ ev, q, edit }) {
+function EventSheet({ ev, q, edit, archived }) {
   const [rs, setRs] = useState(null);
   useEffect(() => onSnapshot(query(collection(db, 'rsvps'), where('eventId', '==', ev.id)), (s) => setRs(s.docs.map((d) => d.data())), () => setRs(false)), [ev.id]);
   const mine = rs && rs.find((r) => r.uid === S.me.id)?.status, n = (st) => (rs ? rs.filter((r) => r.status === st).length : 0);
@@ -119,7 +119,7 @@ function EventSheet({ ev, q, edit }) {
       <div class="fl-actions">
         <a class="fl-btn fl-btn--ghost fl-btn--sm" href={wa(text)} target="_blank" rel="noopener noreferrer"><Icon n="share" />Share to WhatsApp</a>
         {canEdit && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={edit}>Edit event</button>}
-        {canEdit && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => confirm(`Archive "${ev.title}"? It disappears from the calendar.`) && archiveEvent(ev).then((ok) => ok && go({ e: null }, q))}>Archive event</button>}
+        {canEdit && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => confirm(`Archive "${ev.title}"? It disappears from the calendar.`) && archiveEvent(ev).then((ok) => { if (ok) { archived(); go({ e: null }, q); } })}>Archive event</button>}
       </div>
     </Sheet>
   );
@@ -168,10 +168,10 @@ function EventForm({ ev, day, done }) {
 
 export function Calendar({ q }) {
   const today = isoDay(), view = q.get('v') === 'month' ? 'month' : 'week', anchor = /^\d{4}-\d{2}-\d{2}$/.test(q.get('d') || '') ? q.get('d') : today;
-  const [form, setForm] = useState(null);
+  const [form, setForm] = useState(null), [tick, setTick] = useState(0), saved = () => setTick(tick + 1);
   const from = view === 'week' ? monday(anchor) : monday(monthStart(anchor));
   const to = view === 'week' ? addDays(from, 6) : addDays(monday(addDays(addMonths(anchor, 1), -1)), 6);
-  const events = useEvents(from, to);
+  const events = useEvents(from, to, tick);
   const open = q.get('e') && (events.find((e) => e.id === q.get('e')) || S.events.find((e) => e.id === q.get('e')));
   const upcoming = S.events.filter((e) => !e.archived && e.date >= today).sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
   const featured = upcoming.find((e) => e.public) || upcoming[0];
@@ -182,7 +182,7 @@ export function Calendar({ q }) {
       <Title light="Calendar." bold={label} title="Calendar">
         {S.me.role !== 'teacher' && !form && <button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setForm({ day: anchor })}><Icon n="plus" />Add event</button>}
       </Title>
-      {form && <EventForm ev={form.ev} day={form.day} done={() => setForm(null)} />}
+      {form && <EventForm ev={form.ev} day={form.day} done={() => { setForm(null); saved(); }} />}
       <div class="fl-actions">
         <div class="fl-seg" role="group" aria-label="View">
           <button aria-pressed={view === 'week'} onClick={() => go({ v: 'week' }, q)}>Week</button>
@@ -216,7 +216,7 @@ export function Calendar({ q }) {
           </section>
         )}
       </div>
-      {open && <EventSheet ev={open} q={q} edit={() => { setForm({ ev: open }); go({ e: null }, q); }} />}
+      {open && <EventSheet ev={open} q={q} archived={saved} edit={() => { setForm({ ev: open }); go({ e: null }, q); }} />}
     </>
   );
 }

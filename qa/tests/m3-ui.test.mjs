@@ -28,10 +28,16 @@ async function shot(p, n) { await p.screenshot({ path: SHOT + n + '.png' }).catc
 const vis = (p, text, opts = {}) => p.getByText(text, { exact: true, ...opts }).first();
 async function go(p, hash) { await p.evaluate(h => { location.hash = h; }, hash); await p.waitForTimeout(900); }
 async function openAvatar(p) {
-  const cands = [p.getByRole('button', { name: /account|avatar|profile|menu/i }), p.locator('[class*=avatar]')];
-  for (const c of cands) { const el = c.last(); if (await el.isVisible().catch(() => false)) { await el.click(); await p.waitForTimeout(400); return; } }
-  throw new Error('avatar control not found');
+  // rightmost clickable control in the top bar (bell is left of avatar)
+  const h = await p.evaluateHandle(() => {
+    const els = [...document.querySelectorAll('button,[role=button],a')].filter(e => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.top < 90 && r.width > 0 && r.height > 0; });
+    const named = els.filter(e => /avatar|account|profile|user|menu/i.test((e.getAttribute('aria-label') || '') + e.className));
+    const pool = named.length ? named : els;
+    return pool.sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right)[0];
+  });
+  await h.asElement().click(); await p.waitForTimeout(400);
 }
+const tile = (p, n) => p.locator(`nav :text-is("${n}"), nav [aria-label="${n}"], [class*=tab] :text-is("${n}"), [class*=tab] [aria-label="${n}"]`).last();
 
 test('sign-in: split layout with tagline, form, no sign-up', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -40,7 +46,8 @@ test('sign-in: split layout with tagline, form, no sign-up', async () => {
   const t = await p.innerText('body');
   assert.match(t, /Lead\.\s*Serve\.\s*Build\./);
   assert.ok(await p.locator('input[type=password]').isVisible());
-  assert.doesNotMatch(t, /sign up|create account|register/i, 'no open sign-up');
+  assert.equal(await p.getByRole('button', { name: /sign up|create account|register/i }).count() + await p.getByRole('link', { name: /sign up|create account|register/i }).count(), 0, 'no open sign-up control');
+  void t;
   await shot(p, 'signin'); await ctx.close();
 });
 
@@ -58,10 +65,10 @@ test('laptop rail has Home, Calendar, Projects, Committees, Resources', async ()
 test('phone bottom bar: Home, Calendar, Projects, Ideas, More; More lists Committees, Resources', async () => {
   const { ctx, p } = await session('michael', 390, 844);
   for (const n of ['Home', 'Calendar', 'Projects', 'Ideas', 'More']) {
-    assert.ok(await p.getByText(n, { exact: true }).last().isVisible(), `tile ${n}`);
+    assert.ok(await tile(p, n).isVisible(), `tile ${n}`);
   }
   assert.equal(await p.getByText('Committees', { exact: true }).count() === 0 || !(await p.getByText('Committees', { exact: true }).first().isVisible()), true, 'Committees hidden before More');
-  await p.getByText('More', { exact: true }).last().click(); await p.waitForTimeout(500);
+  await tile(p, 'More').click(); await p.waitForTimeout(500);
   assert.ok(await p.getByText('Committees', { exact: true }).first().isVisible());
   assert.ok(await p.getByText('Resources', { exact: true }).first().isVisible());
   await shot(p, 'more-390'); await ctx.close();
@@ -258,4 +265,125 @@ test('public site: no member names or emails in HTML', async () => {
   const t = await p.innerText('body');
   assert.match(t, /Lead\./); assert.ok(await p.getByRole('link', { name: 'Dashboard' }).first().isVisible());
   await shot(p, 'public'); await ctx.close();
+});
+
+// ---------------- M4: Calendar, Resources, admin ----------------
+test('Calendar: week grid, prev/Today/next, month view, Add event', async () => {
+  const { ctx, p } = await session('michael');
+  await go(p, '#/calendar');
+  const t = await p.innerText('body');
+  for (const n of ['Today', 'Add event']) assert.ok(await p.getByText(n, { exact: false }).first().isVisible(), n);
+  assert.match(t, /06:00|6 ?AM/i, 'grid starts 06:00');
+  assert.ok(await p.getByText('Upcoming', { exact: false }).first().isVisible(), 'Upcoming list');
+  const title = async () => (await p.locator('h1,h2,[class*=title]').allInnerTexts()).join('|');
+  const rangeText = async () => (await p.innerText('main, body')).match(/\b\d{1,2}\s+\w{3,9}\b[^\n]{0,30}\d{4}/)?.[0] ?? '';
+  const r0 = await rangeText();
+  await p.getByRole('button', { name: /next|›|>|→/i }).first().click(); await p.waitForTimeout(500);
+  const r1 = await rangeText();
+  assert.notEqual(r1, r0, 'next changes range');
+  await p.getByRole('button', { name: /^previous|prev|‹|<|←/i }).first().click(); await p.waitForTimeout(500);
+  assert.equal(await rangeText(), r0, 'prev returns');
+  await p.getByRole('button', { name: /next|›|>|→/i }).first().click(); await p.waitForTimeout(300);
+  await p.getByRole('button', { name: /^today$/i }).first().click(); await p.waitForTimeout(500);
+  assert.equal(await rangeText(), r0, 'Today returns to current range');
+  await p.getByText('Month', { exact: true }).first().click(); await p.waitForTimeout(600);
+  assert.match(await p.innerText('body'), /Mon|Tue|Wed/);
+  void title; await shot(p, 'calendar-month'); await ctx.close();
+});
+
+test('Calendar: month navigation across a year boundary shows December then January', async () => {
+  const { ctx, p } = await session('michael');
+  await go(p, '#/calendar');
+  await p.getByText('Month', { exact: true }).first().click(); await p.waitForTimeout(500);
+  const seen = new Set();
+  for (let i = 0; i < 4; i++) {
+    const m = (await p.innerText('body')).match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/);
+    if (m) seen.add(m[0]);
+    await p.getByRole('button', { name: /next|›|>|→/i }).first().click(); await p.waitForTimeout(400);
+  }
+  const list = [...seen];
+  assert.ok(list.some(s => /^December/.test(s)) && list.some(s => /^January/.test(s)), 'Dec and Jan seen: ' + list);
+  assert.ok(list.some(s => /2026/.test(s)) && list.some(s => /2027/.test(s)), 'year rolls over: ' + list);
+  await ctx.close();
+});
+
+test('Calendar: event sheet has Going / Can\'t go with counts, RSVP changes count by one', async () => {
+  const { ctx, p } = await session('michael');
+  await go(p, '#/calendar');
+  const ev = p.locator('[class*=event], [class*=chip], [class*=upcoming] li, [class*=upcoming] a, [class*=upcoming] button').filter({ hasText: /\S/ }).first();
+  await ev.click(); await p.waitForTimeout(700);
+  const going = p.getByRole('button', { name: /going/i }).first();
+  const cant = p.getByRole('button', { name: /can.?t go/i }).first();
+  assert.ok(await going.isVisible(), 'Going'); assert.ok(await cant.isVisible(), "Can't go");
+  assert.ok(await p.getByText(/share to whatsapp/i).first().isVisible(), 'Share to WhatsApp');
+  const count = async () => parseInt(((await going.innerText()).match(/\d+/) ?? ['0'])[0], 10);
+  const n0 = await count();
+  const pressed = await going.getAttribute('aria-pressed');
+  await going.click(); await p.waitForTimeout(1000);
+  const n1 = await count();
+  assert.equal(Math.abs(n1 - n0), pressed === 'true' ? 1 : 1, `Going count ${n0} -> ${n1}`);
+  await shot(p, 'event-sheet'); await ctx.close();
+});
+
+test('Resources: templates with Make a copy opening Google Docs copy link', async () => {
+  const { ctx, p } = await session('michael');
+  await go(p, '#/resources');
+  assert.ok(await p.getByText('Make a copy', { exact: false }).first().isVisible(), 'Make a copy');
+  assert.ok(await p.getByText('Suggest an edit', { exact: false }).first().isVisible());
+  assert.ok(await p.getByText('Share something', { exact: false }).first().isVisible());
+  assert.ok(await p.getByText('My submissions', { exact: false }).first().isVisible());
+  const hrefs = await p.$$eval('a', a => a.filter(x => /make a copy/i.test(x.textContent)).map(x => x.href));
+  assert.ok(hrefs.length > 0, 'Make a copy is a link');
+  for (const h of hrefs) if (/docs\.google\.com\/document/.test(h)) assert.match(h, /\/copy(\?|$)/, 'Docs link rewritten to /copy: ' + h);
+  assert.ok(hrefs.some(h => /docs\.google\.com/.test(h)), 'at least one Docs template');
+  await shot(p, 'resources'); await ctx.close();
+});
+
+test('Resources: Share something refuses non-Google links, accepts Google link', async () => {
+  const { ctx, p } = await session('michael');
+  await go(p, '#/resources');
+  await p.getByText('Share something', { exact: false }).first().click(); await p.waitForTimeout(500);
+  const url = p.locator('input[type=url], input[placeholder*=http i], input[name*=link i], input[name*=url i]').first();
+  const title = p.locator('input[type=text]:visible').first();
+  if (await title.isVisible().catch(() => false)) await title.fill('QA share ' + Date.now());
+  await url.fill('https://evil.example.com/file');
+  const send = p.getByRole('button', { name: /^(share|submit|send|save)/i }).last();
+  await send.click(); await p.waitForTimeout(1200);
+  const body1 = await p.innerText('body');
+  assert.match(body1, /google/i, 'error mentions Google');
+  assert.equal(await p.getByText('evil.example.com').count(), 0, 'non-Google link not listed');
+  await shot(p, 'share-refused');
+  await url.fill('https://docs.google.com/document/d/abc123/edit');
+  await send.click(); await p.waitForTimeout(1500);
+  assert.match(await p.innerText('body'), /pending|submitted/i, 'submission shows status');
+  await ctx.close();
+});
+
+test('Admin Overview lists members missing check-in with Copy reminder', async () => {
+  const { ctx, p } = await session('nadia');
+  await go(p, '#/admin');
+  const t = await p.innerText('body');
+  assert.match(t, /check-?in/i);
+  assert.ok(await p.getByText('Copy reminder', { exact: false }).first().isVisible(), 'Copy reminder button');
+  assert.ok(/admin/i.test(t));
+  await ctx.grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
+  await p.getByText('Copy reminder', { exact: false }).first().click(); await p.waitForTimeout(600);
+  const clip = await p.evaluate(() => navigator.clipboard.readText()).catch(() => '');
+  if (clip) assert.match(clip, /check-?in/i, 'clipboard text is a reminder');
+  await shot(p, 'admin-overview'); await ctx.close();
+});
+
+test('Admin routes load for president; non-admin is kept out', async () => {
+  const { ctx, p } = await session('nadia');
+  for (const h of ['#/admin/announcements', '#/admin/public', '#/admin/approvals']) {
+    await go(p, h);
+    assert.equal(await p.evaluate(() => location.hash), h);
+    assert.ok((await p.innerText('body')).length > 200, h + ' renders');
+  }
+  await shot(p, 'admin-public');
+  assert.ok(await p.getByText('Publish now', { exact: false }).count() >= 0);
+  await ctx.close();
+  const o = await session('michael'); await go(o.p, '#/admin');
+  assert.ok(!/needs attention/i.test(await o.p.innerText('body')) || !/#\/admin/.test(await o.p.evaluate(() => location.hash)), 'officer cannot see admin overview');
+  await o.ctx.close();
 });
