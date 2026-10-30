@@ -4,16 +4,15 @@ import { initializeTestEnvironment, assertSucceeds } from '@firebase/rules-unit-
 import { doc, setDoc, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 let env;
 const E='a@stjbs.sch.id';
-const base={ termId:'T', kind:'project', parentId:null, ancestors:[], title:'x', status:'todo', archived:false, leadUid:null, leadUids:[], assigneeUids:[], createdByUid:E, createdAt:Timestamp.now(), updatedAt:Timestamp.now(), notes:'', link:'', blocked:false, blockedReason:'', blockedOnUid:null, startDate:null,dueDate:null,isDeal:false,dealStage:null,pledgedIdr:0,receivedIdr:0,assignedAt:null,completedAt:null };
-const shapes={A:{...base},B:{...base,public:false},C:{...base,public:false,publicBlurb:''},D:{...base,public:false,publicBlurb:'',touchedAt:Timestamp.now()},F:{...base,touchedAt:Timestamp.now()},G:{...base,publicBlurb:'z'}};
+const base={ termId:'T', kind:'project', parentId:null, ancestors:[], title:'x', status:'todo', archived:false, leadUid:null, leadUids:[], assigneeUids:[], createdByUid:E, createdAt:Date.now(), updatedAt:Date.now(), notes:'', link:'', blocked:false, blockedReason:'', blockedOnUid:null, startDate:null,dueDate:null,isDeal:false,dealStage:null,pledgedIdr:0,receivedIdr:0,assignedAt:null,completedAt:null };
+const shapes={A:{...base}};
 before(async()=>{env=await initializeTestEnvironment({projectId:'demo-council',firestore:{host:'127.0.0.1',port:8180,rules:readFileSync('firestore.rules','utf8')}});
 await env.withSecurityRulesDisabled(async c=>{const db=c.firestore();await setDoc(doc(db,'settings/current'),{termId:'T'});
 await setDoc(doc(db,'members/'+E),{name:'a',role:'advisor',active:true,termId:'T'});
 for (const [k,v] of Object.entries(shapes)) await setDoc(doc(db,'items/'+k),v);});});
 after(()=>env.cleanup());
 const as=n=>env.authenticatedContext(n+'@stjbs.sch.id',{email:n+'@stjbs.sch.id',email_verified:true}).firestore();
-for (const k of Object.keys(shapes)) {
- test('upd '+k, ()=>assertSucceeds(updateDoc(doc(as('a'),'items/'+k),{notes:'a',touchedAt:serverTimestamp()})));
- test('upd-notouch '+k, ()=>assertSucceeds(updateDoc(doc(as('a'),'items/'+k),{notes:'a'})));
- test('create '+k, ()=>assertSucceeds(setDoc(doc(as('a'),'items/new'+k),{...shapes[k],touchedAt:serverTimestamp(),createdAt:serverTimestamp()})));
-}
+test('merge full', ()=>assertSucceeds(setDoc(doc(as('a'),'items/A'),{...base,notes:'z',touchedAt:serverTimestamp()},{merge:true})));
+test('merge full num', ()=>assertSucceeds(setDoc(doc(as('a'),'items/A'),{...base,notes:'z',touchedAt:serverTimestamp(),updatedAt:Date.now()},{merge:true})));
+test('update full', ()=>assertSucceeds(updateDoc(doc(as('a'),'items/A'),{...base,notes:'z',touchedAt:serverTimestamp()})));
+test('update status', ()=>assertSucceeds(updateDoc(doc(as('a'),'items/A'),{status:'doing',touchedAt:serverTimestamp()})));

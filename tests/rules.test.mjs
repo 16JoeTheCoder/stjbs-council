@@ -288,7 +288,7 @@ test('ideas: vote and unvote only yourself, once', async () => {
   await assertFails(updateDoc(ref(people.vp), { voters: [people.lead, people.officer, people.vp, people.vp, people.vp] }));
   await assertFails(updateDoc(ref(people.vp), { voters: [people.officer, people.vp] }));
   await assertFails(updateDoc(ref(people.vp), { voters: [people.lead, people.officer, people.president] }));
-  await assertFails(updateDoc(ref(people.vp), { voters: [people.lead] }));
+  await assertFails(updateDoc(ref(people.vp), { voters: [people.officer] }));
   await assertSucceeds(updateDoc(ref(people.officer), { voters: arrayRemove(people.officer) }));
   await assertFails(updateDoc(ref(people.teacher), { voters: arrayUnion(people.teacher) }));
 });
@@ -376,4 +376,24 @@ test('comments: at most 10 mentions', async () => {
   const c = (n) => ({ termId: T, itemId: 't1', authorUid: people.officer, text: 'hi', mentionUids: Array(n).fill(people.lead), createdAt: 1 });
   await assertSucceeds(setDoc(doc(as(people.officer), 'comments/m1'), c(2)));
   await assertFails(setDoc(doc(as(people.officer), 'comments/m2'), c(11)));
+});
+
+test('writes for an old term are refused in every term-scoped collection', async () => {
+  const old = '2025-26';
+  await assertFails(setDoc(doc(as(people.vp), 'announcements/o1'), ann({ termId: old, createdByUid: people.vp })));
+  await assertFails(setDoc(doc(as(people.officer), 'events/o2'), event({ termId: old })));
+  await assertFails(setDoc(doc(as(people.officer), 'ideas/o3'), { termId: old, text: 'x', authorUid: people.officer, voters: [people.officer], archived: false, createdAt: 1 }));
+  await assertFails(setDoc(doc(as(people.officer), `rsvps/e1_${people.officer}`), { termId: old, eventId: 'e1', uid: people.officer, status: 'going', archived: false, createdAt: 1 }));
+  await assertFails(setDoc(doc(as(people.president), 'items/o4'), item({ termId: old, kind: 'project', createdByUid: people.president, ...touch })));
+});
+test('a non-admin cannot add public fields to a legacy item, even false (L2-04)', async () => {
+  await assertFails(updateDoc(doc(as(people.treasurer), 'items/p'), { public: false, ...touch }));
+  await assertFails(updateDoc(doc(as(people.lead), 'items/drinks'), { publicBlurb: '', ...touch }));
+  await assertSucceeds(updateDoc(doc(as(people.advisor), 'items/p'), { public: false, ...touch }));
+});
+test('approving a new template creates it in the same batch', async () => {
+  const db = as(people.vp), b = writeBatch(db);
+  b.update(doc(db, 'submissions/s1'), { status: 'approved' });
+  b.set(doc(db, 'docTemplates/new1'), tpl({ name: 'Budget sheet', url: 'https://docs.google.com/spreadsheets/d/x/edit' }));
+  await assertSucceeds(b.commit());
 });
