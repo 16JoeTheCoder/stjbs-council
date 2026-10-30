@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase.js';
 import { S, memberName } from '../store.js';
-import { initials } from '../model.js';
+import { initials, isAdmin } from '../model.js';
 import { putDoc } from '../actions.js';
 import { isoDay, monday, weekId } from '../time.js';
 import { Title, useAutofocus, useReturnFocus } from '../ui.jsx';
@@ -10,11 +10,21 @@ import { roleName } from './people.jsx';
 import { download } from './views.jsx';
 
 const ROLES = ['president', 'vp', 'treasurer', 'secretary', 'officer', 'teacher', 'advisor'];
+const PRESIDENT_ROLES = ['officer', 'treasurer', 'secretary', 'teacher'];
 const SCHOOL = /^[^@\s]+@stjbs\.sch\.id$/;
 
+// What the signed-in admin may do to a member; mirrors the members rules in firestore.rules.
+export function rosterPowers(m) {
+  const r = S.me.role, self = m?.id === S.me.id, target = m?.role;
+  if (r === 'advisor') return { roles: ROLES, role: !self, active: !self, edit: true };
+  if (r === 'vp') return { roles: ROLES.filter((x) => x !== 'advisor'), role: !self && target !== 'advisor', active: !self && target !== 'advisor', edit: target !== 'advisor' };
+  if (r === 'president') return { roles: PRESIDENT_ROLES, role: !m, active: false, edit: target !== 'advisor' };
+  return { roles: [], role: false, active: false, edit: false };
+}
+
 function MemberForm({ m, done }) {
-  const advisor = S.me.role === 'advisor';
-  const [v, setV] = useState(m || { id: '', name: '', role: 'officer', section: '', reportsTo: '' });
+  const can = rosterPowers(m);
+  const [v, setV] = useState(m ? { ...m, section: m.section || '' } : { id: '', name: '', role: 'officer', section: '', reportsTo: '' });
   const [err, setErr] = useState({}), [busy, setBusy] = useState(false), ref = useAutofocus();
   const bad = (field, msg) => { setErr({ field, msg }); ref.current.querySelector(`[name=${field}]`)?.focus(); };
   const on = (k) => (e) => setV({ ...v, [k]: e.target.value });
@@ -23,7 +33,8 @@ function MemberForm({ m, done }) {
     const email = v.id.trim().toLowerCase();
     if (!SCHOOL.test(email)) return bad('id', 'Use a school email ending in @stjbs.sch.id.');
     if (!v.name.trim()) return bad('name', 'Add a name, then save.');
-    const data = { name: v.name.trim(), initials: initials(v.name), role: v.role, section: v.section.trim(), reportsTo: v.reportsTo || null };
+    // A president's edit may touch only name, section and reports-to, so role is sent only when it may change.
+    const data = { name: v.name.trim(), initials: initials(v.name), section: v.section.trim(), reportsTo: v.reportsTo || null, ...(can.role ? { role: v.role } : {}) };
     if (!m) Object.assign(data, { active: true, createdAt: Date.now() });
     setBusy(true);
     if (await putDoc(`members/${email}`, data, `${data.name} saved.`)) done(); else setBusy(false);
@@ -37,8 +48,8 @@ function MemberForm({ m, done }) {
       <h2 class="jy-h2">{m ? `Edit ${m.name}` : 'Add member'}</h2>
       {field('id', 'School email', { type: 'email', disabled: !!m })}
       {field('name', 'Name', { maxLength: 60 })}
-      <label class="jy-field"><span class="jy-field__label">Role</span><select class="jy-field__input" value={v.role} onChange={on('role')} disabled={(m?.role === 'advisor' && !advisor) || m?.id === S.me.id}>
-        {ROLES.filter((r) => advisor || r !== 'advisor').map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
+      <label class="jy-field"><span class="jy-field__label">Role</span><select class="jy-field__input" value={v.role} onChange={on('role')} disabled={!can.role}>
+        {(can.role ? can.roles : [v.role]).map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
       {field('section', 'Section', { maxLength: 60, placeholder: 'For example sec 1 to sec 3' })}
       <label class="jy-field"><span class="jy-field__label">Reports to</span><select class="jy-field__input" value={v.reportsTo || ''} onChange={on('reportsTo')}>
         <option value="">Nobody</option>{S.members.filter((x) => x.active && x.id !== v.id).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
@@ -92,7 +103,7 @@ function CloseTerm() {
 
 export function Admin() {
   const [edit, setEdit] = useState(null), advisor = S.me.role === 'advisor', back = useReturnFocus(!!edit);
-  if (!advisor && S.me.role !== 'president') return <><Title light="Not for you." bold="Admin" /><p>Only the advisor and the president manage the roster.</p></>;
+  if (!isAdmin()) return <><Title light="Not for you." bold="Admin" /><p>Only the advisor, the president and the vice president manage the roster.</p></>;
   const members = [...S.members].sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name));
   return (
     <>
@@ -104,8 +115,8 @@ export function Admin() {
         <tbody>{members.map((m) => (
           <tr key={m.id}><td>{m.name}</td><td class="jy-mono">{m.id}</td><td>{roleName(m.role)}</td><td>{m.section}</td><td>{m.reportsTo ? memberName(m.reportsTo) : ''}</td>
             <td>{m.active ? 'Active' : 'Deactivated'}</td>
-            <td>{(advisor || m.role !== 'advisor') && <button class="jy-link" onClick={() => setEdit(m)}>Edit {m.name}</button>}{' '}
-              {advisor && m.id !== S.me.id && <button class="jy-link" onClick={() => putDoc(`members/${m.id}`, { active: !m.active }, `${m.name} ${m.active ? 'deactivated' : 'reactivated'}.`)}>{m.active ? 'Deactivate' : 'Reactivate'}</button>}</td></tr>))}</tbody>
+            <td>{rosterPowers(m).edit && <button class="jy-link" onClick={() => setEdit(m)}>Edit {m.name}</button>}{' '}
+              {rosterPowers(m).active && <button class="jy-link" onClick={() => putDoc(`members/${m.id}`, { active: !m.active }, `${m.name} ${m.active ? 'deactivated' : 'reactivated'}.`)}>{m.active ? 'Deactivate' : 'Reactivate'}</button>}</td></tr>))}</tbody>
       </table></div>
       {advisor && <CloseTerm />}
     </>

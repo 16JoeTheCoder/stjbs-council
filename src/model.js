@@ -5,7 +5,8 @@ import { addDays, dayStartMs, isoDay, monday, week, weekId } from './time.js';
 export const EXEC = ['president', 'vp', 'treasurer', 'secretary'];
 export const STAGES = ['Lead', 'Contacted', 'Negotiating', 'Signed'];
 export const isBoss = (m = S.me) => m?.role === 'advisor' || EXEC.includes(m?.role);
-export const canSeeStats = (m = S.me) => ['advisor', 'president', 'vp'].includes(m?.role);
+export const isAdmin = (m = S.me) => ['advisor', 'president', 'vp'].includes(m?.role);
+export const canSeeStats = isAdmin;
 export const canManage = (it) => S.me?.role !== 'teacher' && (isBoss() || !!it?.leadUids?.includes(S.me?.id));
 export const canWork = (t) => canManage(t) || (S.me?.role !== 'teacher' && t.assigneeUids?.includes(S.me?.id));
 export const isMine = (t) => !!t.assigneeUids?.includes(S.me?.id);
@@ -73,7 +74,7 @@ export function personStatus(email, w = week()) {
 
 // Extra destinations by role: top nav on laptop, profile page at every width.
 export const roleLinks = () => [canSeeStats() && ['workload', 'Workload'], isBoss() && S.me.role !== 'teacher' && ['templates', 'Templates'],
-  ['advisor', 'president'].includes(S.me?.role) && ['admin', 'Admin'], ['digest', 'Digest']].filter(Boolean);
+  isAdmin() && ['admin', 'Admin'], ['digest', 'Digest']].filter(Boolean);
 export const checksIn = (m) => !['teacher', 'advisor'].includes(m?.role);
 export const activeMembers = () => S.members.filter((m) => m.active).sort((a, b) => a.name.localeCompare(b.name));
 export const initials = (name = '') => (name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2) || '?').toUpperCase();

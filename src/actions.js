@@ -1,5 +1,5 @@
 // Every write. Each change carries termId and writes its activity entry and notifications in the same batch.
-import { collection, doc, writeBatch, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, deleteDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { S, fail, toast } from './store.js';
 import { tree } from './model.js';
@@ -7,6 +7,8 @@ import { week } from './time.js';
 
 const T = () => S.term.termId;
 const now = () => Date.now();
+// Every item write carries the server time; the rules require it and the item snapshot relies on it.
+const touch = () => ({ touchedAt: serverTimestamp() });
 const newRef = (path) => doc(collection(db, path));
 
 function log(b, type, itemId, text) {
@@ -32,7 +34,7 @@ export function createItem(parent, data) {
     leadUids: [...(parent?.leadUids || []), ...(leadUid ? [leadUid] : [])], leadUid, kind: 'task', title: '', notes: '', link: '',
     assigneeUids: [], createdByUid: S.me.id, status: 'todo', blocked: false, blockedReason: '', blockedOnUid: null,
     startDate: null, dueDate: null, assignedAt: data.assigneeUids?.length ? now() : null, completedAt: null,
-    archived: false, isDeal: false, dealStage: 'Lead', pledgedIdr: 0, receivedIdr: 0, createdAt: now(), updatedAt: now(), ...data,
+    archived: false, isDeal: false, dealStage: 'Lead', pledgedIdr: 0, receivedIdr: 0, createdAt: now(), updatedAt: now(), ...data, ...touch(),
   };
   return run((b) => {
     b.set(ref, item);
@@ -42,7 +44,7 @@ export function createItem(parent, data) {
 }
 
 export function updateItem(it, patch, verb = 'updated') {
-  const p = { ...patch, updatedAt: now() };
+  const p = { ...patch, updatedAt: now(), ...touch() };
   if (patch.status && (patch.status === 'done') !== (it.status === 'done')) p.completedAt = patch.status === 'done' ? now() : null;
   const added = (patch.assigneeUids || []).filter((u) => !it.assigneeUids.includes(u));
   if (added.length) p.assignedAt = now();
@@ -78,7 +80,7 @@ export async function changeLead(it, leadUid) {
   for (const x of subtree) {
     if (x.id !== it.id) fresh[x.id] = [...fresh[x.parentId], ...(x.leadUid ? [x.leadUid] : [])];
     ops.push({ ref: doc(db, 'items', x.id), depth: x.ancestors.length - depth, parentId: x.parentId,
-      patch: x.id === it.id ? { leadUid: leadUid || null, leadUids: fresh[x.id], updatedAt: now() } : { leadUids: fresh[x.id] } });
+      patch: x.id === it.id ? { leadUid: leadUid || null, leadUids: fresh[x.id], updatedAt: now(), ...touch() } : { leadUids: fresh[x.id], ...touch() } });
   }
   try {
     await commitChunked(ops);
@@ -97,7 +99,7 @@ export async function createTree(nodes) {
     ops.push({ ref, depth: made[n.key].ancestors.length, parentId: parent?.id || null, data: {
       termId: T(), parentId: parent?.id || null, ancestors: made[n.key].ancestors, leadUids: [], leadUid: null, notes: '', link: '',
       assigneeUids: [], createdByUid: S.me.id, status: 'todo', blocked: false, blockedReason: '', blockedOnUid: null, startDate: null,
-      assignedAt: null, completedAt: null, archived: false, dealStage: 'Lead', pledgedIdr: 0, receivedIdr: 0, createdAt: now(), updatedAt: now(), ...fields } });
+      assignedAt: null, completedAt: null, archived: false, dealStage: 'Lead', pledgedIdr: 0, receivedIdr: 0, createdAt: now(), updatedAt: now(), ...fields, ...touch() } });
   }
   try { await commitChunked(ops); await run((b) => log(b, 'created', ids[nodes[0].key], `started "${nodes[0].title}" from a template`)); return ids[nodes[0].key]; }
   catch (e) { fail(e); return null; }
@@ -107,7 +109,7 @@ export async function createTree(nodes) {
 export async function archiveItem(it) {
   const list = S.items.filter((x) => x.id === it.id || x.ancestors.includes(it.id));
   if (!confirm(`Archive "${it.title}"${list.length > 1 ? ` and the ${list.length - 1} items inside it` : ''}? It disappears from every screen.`)) return false;
-  const flag = (archived) => commitChunked(list.map((x) => ({ ref: doc(db, 'items', x.id), depth: x.ancestors.length, parentId: x.parentId, patch: { archived, updatedAt: now() } })));
+  const flag = (archived) => commitChunked(list.map((x) => ({ ref: doc(db, 'items', x.id), depth: x.ancestors.length, parentId: x.parentId, patch: { archived, updatedAt: now(), ...touch() } })));
   try {
     await flag(true);
     await run((b) => log(b, 'archived', it.id, `archived "${it.title}"`));
