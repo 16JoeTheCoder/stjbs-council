@@ -23,11 +23,13 @@ service cloud.firestore {
     function text(s, lo, hi) { return s is string && s.size() >= lo && s.size() <= hi; }
     function day(s) { return s is string && s.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
     function hhmm(s) { return s is string && s.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'); }
-    // Google Docs and Drive links only; the docs.google.com/url redirector and look-alike hosts are refused.
+    // Google Docs and Drive links only: a fixed host, a known path, plain URL characters, and no dot-segments or
+    // encoded dots and slashes, so neither look-alike hosts nor the docs.google.com/url redirector get through.
     function google(u) {
       return u is string && u.size() <= 500
-        && (u.matches('^https://docs[.]google[.]com/(document|spreadsheets|presentation|forms|drawings)/[^ ]*$')
-          || u.matches('^https://drive[.]google[.]com/(file/|drive/|open[?]|uc[?])[^ ]*$'));
+        && u.matches('^[A-Za-z0-9._~:/?#&=%+!$()*,;@-]+$') && !u.matches('.*([.][.]|%2[eEfF]|%5[cC]).*')
+        && (u.matches('^https://docs[.]google[.]com/(document|spreadsheets|presentation|forms|drawings)/(u/[0-9]+/)?d/[A-Za-z0-9_-]+([/?#].*)?$')
+          || u.matches('^https://drive[.]google[.]com/((u/[0-9]+/)?(file/d|drive/folders|drive/u/[0-9]+/folders)/[A-Za-z0-9_-]+|open[?]id=[A-Za-z0-9_-]+)([/?#&].*)?$'));
     }
     function optString(d, k) { return d.get(k, null) == null || d.get(k, null) is string; }
 
@@ -165,7 +167,7 @@ service cloud.firestore {
         && (resource.data.createdByUid == me() || isBoss())
         && fixed(['termId', 'createdByUid', 'createdAt'])
         && (fixed(['public']) || isAdmin())
-        && (!(resource.data.get('public', false) == true && changed().hasAny(['title', 'location'])) || isAdmin());
+        && (!(resource.data.get('public', false) == true && changed().hasAny(['title', 'type', 'date', 'start', 'end', 'location'])) || isAdmin());
     }
 
     match /rsvps/{id} {

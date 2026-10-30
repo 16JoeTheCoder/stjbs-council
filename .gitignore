@@ -5,3 +5,5 @@ dist
 *-debug.log
 .firebase
 qa/**/*.log
+.env
+.env.production

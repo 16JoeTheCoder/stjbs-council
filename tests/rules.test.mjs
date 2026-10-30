@@ -254,6 +254,7 @@ test('events: creator or exec edits; public flag and public text only by admins'
   await assertFails(updateDoc(doc(as(people.officer), 'events/e1'), { public: true }));
   await assertSucceeds(updateDoc(doc(as(people.vp), 'events/e1'), { public: true }));
   await assertFails(updateDoc(doc(as(people.treasurer), 'events/pub'), { title: 'Name of a student' }));
+  await assertFails(updateDoc(doc(as(people.treasurer), 'events/pub'), { date: '2026-12-01' }));
   await assertFails(updateDoc(doc(as(people.treasurer), 'events/pub'), { public: false }));
   await assertSucceeds(updateDoc(doc(as(people.treasurer), 'events/pub'), { notes: 'internal' }));
   await assertSucceeds(updateDoc(doc(as(people.president), 'events/pub'), { title: 'Carnival night' }));
@@ -301,9 +302,13 @@ test('ideas: only admins archive', async () => {
 test('docTemplates: admins write Google links only; a new url bumps the version', async () => {
   await assertSucceeds(getDoc(doc(as(people.teacher), 'docTemplates/d1')));
   await assertFails(setDoc(doc(as(people.treasurer), 'docTemplates/d2'), tpl({})));
-  await assertSucceeds(setDoc(doc(as(people.vp), 'docTemplates/d3'), tpl({ url: 'https://drive.google.com/file/d/abc/view' })));
+  for (const url of ['https://drive.google.com/file/d/abc/view', 'https://drive.google.com/drive/folders/abc_1-2',
+    'https://docs.google.com/spreadsheets/d/abc/edit#gid=0', 'https://docs.google.com/presentation/d/abc/edit?usp=sharing'].entries())
+    await assertSucceeds(setDoc(doc(as(people.vp), `docTemplates/ok${url[0]}`), tpl({ url: url[1] })));
   for (const url of ['https://docs.google.com.evil.com/document/d/x', 'https://docs.google.com/url?q=https://evil.example',
-    'http://docs.google.com/document/d/x', 'javascript:alert(1)', 'https://evil.example/https://docs.google.com/document/'])
+    'http://docs.google.com/document/d/x', 'javascript:alert(1)', 'https://evil.example/https://docs.google.com/document/',
+    'https://docs.google.com/document/../url?q=https://evil.com', 'https://docs.google.com/document/d/%2e%2e/url?q=x',
+    'https://docs.google.com/document/d/x\n', 'https://docs.google.com@evil.com/document/d/x', 'https://DOCS.google.com/document/d/x'])
     await assertFails(setDoc(doc(as(people.vp), 'docTemplates/d4'), tpl({ url })));
   await assertFails(updateDoc(doc(as(people.vp), 'docTemplates/d1'), { url: 'https://docs.google.com/document/d/new/edit' }));
   await assertSucceeds(updateDoc(doc(as(people.vp), 'docTemplates/d1'), { url: 'https://docs.google.com/document/d/new/edit', version: 2 }));

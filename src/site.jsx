@@ -19,17 +19,22 @@ const KEY = 'council-feed';
 // REST encodes numbers as strings, so read whichever value type came back.
 const num = (f) => Number(f?.integerValue ?? f?.doubleValue ?? (f?.timestampValue ? Date.parse(f.timestampValue) : 0));
 
+const FRESH_MS = 5 * 60e3;
+const cached = () => { try { const c = JSON.parse(localStorage.getItem(KEY)); return c?.v ? c : null; } catch { return null; } };
+
+// A visitor who reloads within 5 minutes reuses their copy: the free read quota is shared with the dashboard.
 async function loadFeed() {
+  const copy = cached();
+  if (copy && Date.now() - copy.fetchedAt < FRESH_MS) return { feed: copy };
   try {
     const r = await fetch(FEED_URL);
     if (!r.ok) throw new Error(String(r.status));
     const { fields } = await r.json();
-    const feed = { ...JSON.parse(fields.json.stringValue), updatedAt: num(fields.updatedAt) };
+    const feed = { ...JSON.parse(fields.json.stringValue), updatedAt: num(fields.updatedAt), fetchedAt: Date.now() };
     try { localStorage.setItem(KEY, JSON.stringify(feed)); } catch {}
     return { feed };
   } catch {
-    try { const feed = JSON.parse(localStorage.getItem(KEY)); if (feed?.v) return { feed, stale: true }; } catch {}
-    return {};
+    return copy ? { feed: copy, stale: true } : {};
   }
 }
 
