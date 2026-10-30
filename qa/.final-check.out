@@ -1,0 +1,6 @@
+
+> stjbs-council@1.0.0 check
+> bash design/fiatlux/design-check.sh && vite build --logLevel error && node scripts/check-site-bundle.mjs
+
+ok fiatlux check clean
+ok public page is Firebase-free (2 chunks)

@@ -1,0 +1,187 @@
+{
+  "templateName": "STJBS Carnival",
+  "version": 1,
+  "questions": [],
+  "items": [
+    {
+      "key": "carnival",
+      "parentKey": null,
+      "title": "STJBS Carnival",
+      "notes": "",
+      "type": "task",
+      "teamTag": "",
+      "offsetDays": 0
+    },
+    {
+      "key": "drinks",
+      "parentKey": "carnival",
+      "title": "Drinks",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -5
+    },
+    {
+      "key": "t1",
+      "parentKey": "drinks",
+      "title": "Order 400 cups",
+      "notes": "Working <b>on</b> it",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -42
+    },
+    {
+      "key": "Gsg8G3Rf8oPVWXC5KsSn",
+      "parentKey": "drinks",
+      "title": "Cup supplier call mvupkjrm",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -40
+    },
+    {
+      "key": "t0",
+      "parentKey": "drinks",
+      "title": "Secure Pocari Sweat booth contract",
+      "notes": "",
+      "type": "deal",
+      "teamTag": "Drinks",
+      "offsetDays": -38
+    },
+    {
+      "key": "t2",
+      "parentKey": "drinks",
+      "title": "Price list for drinks stall",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -34
+    },
+    {
+      "key": "WWvujtSWaQtHbREa3fop",
+      "parentKey": "drinks",
+      "title": "Buy ice <i>\"x\"</i> & long long long long long long long long long long long long",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -27
+    },
+    {
+      "key": "food",
+      "parentKey": "carnival",
+      "title": "Food",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Food",
+      "offsetDays": -5
+    },
+    {
+      "key": "t3",
+      "parentKey": "food",
+      "title": "Confirm three food vendors",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Food",
+      "offsetDays": -31
+    },
+    {
+      "key": "t4",
+      "parentKey": "food",
+      "title": "Hygiene briefing for vendors",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Food",
+      "offsetDays": -20
+    },
+    {
+      "key": "games",
+      "parentKey": "carnival",
+      "title": "Games",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Games",
+      "offsetDays": -5
+    },
+    {
+      "key": "t5",
+      "parentKey": "games",
+      "title": "Book inflatable castle",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Games",
+      "offsetDays": -39
+    },
+    {
+      "key": "t6",
+      "parentKey": "games",
+      "title": "Write game rules cards",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Games",
+      "offsetDays": -28
+    },
+    {
+      "key": "sponsors",
+      "parentKey": "carnival",
+      "title": "Sponsors",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Sponsors",
+      "offsetDays": -5
+    },
+    {
+      "key": "t9",
+      "parentKey": "sponsors",
+      "title": "Bank sponsorship pitch",
+      "notes": "",
+      "type": "deal",
+      "teamTag": "Sponsors",
+      "offsetDays": -35
+    },
+    {
+      "key": "t10",
+      "parentKey": "sponsors",
+      "title": "Thank-you letters",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Sponsors",
+      "offsetDays": -10
+    },
+    {
+      "key": "stage",
+      "parentKey": "carnival",
+      "title": "Stage",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Stage",
+      "offsetDays": -5
+    },
+    {
+      "key": "t7",
+      "parentKey": "stage",
+      "title": "Sound system quote",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Stage",
+      "offsetDays": -41
+    },
+    {
+      "key": "t8",
+      "parentKey": "stage",
+      "title": "Run sheet for performances",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Stage",
+      "offsetDays": -26
+    },
+    {
+      "key": "rBCZfzgeu85bUDj7Nxno",
+      "parentKey": "carnival",
+      "title": "Photography <script>alert(1)</script>",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Photography <script>alert(1)</script>",
+      "offsetDays": null
+    }
+  ]
+}

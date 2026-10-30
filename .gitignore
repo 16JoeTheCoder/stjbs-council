@@ -4,3 +4,8 @@ dist
 .env*.local
 *-debug.log
 .firebase
+qa/**/*.log
+.env
+.env.production
+qa/**/.*.out
+qa/**/*.out

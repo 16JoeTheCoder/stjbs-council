@@ -63,13 +63,13 @@ function Node({ t, it, setT }) {
   const add = () => setT({ ...t, items: [...t.items, { key: `k${Date.now().toString(36)}`, parentKey: it.key, title: 'New task', notes: '', type: 'task', teamTag: '', offsetDays: null }] });
   return (
     <li>
-      <div class="jy-row">
-        <label class="jy-field"><span class="jy-sr">Title</span><input class="jy-field__input" maxLength={80} value={it.title} onInput={(e) => patch({ title: e.target.value })} /></label>
-        <label class="jy-field jy-field--num"><span class="jy-sr">Offset days for {it.title}</span>
-          <input class="jy-field__input" type="number" placeholder="No date" value={it.offsetDays ?? ''} onInput={(e) => patch({ offsetDays: e.target.value === '' ? null : Math.round(Number(e.target.value)) })} /></label>
-        {it.type === 'deal' && <span class="jy-tag">Deal</span>}
-        <button class="jy-link" onClick={add}>Add item</button>
-        {it.parentKey != null && <button class="jy-link" onClick={remove}>Remove</button>}
+      <div class="fl-actions">
+        <label class="fl-field"><span class="fl-sr">Title</span><input class="fl-input" maxLength={80} value={it.title} onInput={(e) => patch({ title: e.target.value })} /></label>
+        <label class="fl-field"><span class="fl-sr">Offset days for {it.title}</span>
+          <input class="fl-input" type="number" placeholder="No date" value={it.offsetDays ?? ''} onInput={(e) => patch({ offsetDays: e.target.value === '' ? null : Math.round(Number(e.target.value)) })} /></label>
+        {it.type === 'deal' && <span class="fl-tag">Deal</span>}
+        <button class="fl-linkbtn" onClick={add}>Add item</button>
+        {it.parentKey != null && <button class="fl-linkbtn" onClick={remove}>Remove</button>}
       </div>
       {children(t, it.key).length > 0 && <ul>{children(t, it.key).map((c) => <Node key={c.key} t={t} it={c} setT={setT} />)}</ul>}
     </li>
@@ -117,38 +117,38 @@ export function Templates() {
   return (
     <>
       <Title light="Plan once." bold="Reuse it." title="Templates" />
-      <section class="jy-well" aria-labelledby="help-h">
-        <h2 id="help-h" class="jy-h2">Turn a planning document into a template</h2>
+      <section class="fl-panel" aria-labelledby="help-h">
+        <h2 id="help-h" class="fl-h2">Turn a planning document into a template</h2>
         <p>Copy the prompt, paste it into any AI chat with the PDF or document attached, then paste the JSON it returns below.</p>
-        <div class="jy-actions"><button class="jy-btn jy-btn--ghost" onClick={() => navigator.clipboard.writeText(PROMPT).then(() => toast('Prompt copied.'))}>Copy prompt</button></div>
+        <div class="fl-actions"><button class="fl-btn fl-btn--ghost" onClick={() => navigator.clipboard.writeText(PROMPT).then(() => toast('Prompt copied.'))}>Copy prompt</button></div>
       </section>
-      <section class="jy-section" aria-labelledby="saved-h"><h2 id="saved-h" class="jy-h2">Saved templates</h2>
-        {list.length ? <ul class="jy-list">{list.map((x) => (
-          <li key={x.id} class="jy-task"><span class="jy-task__body"><b>{x.name}</b><span class="jy-caption">{x.template.items.length} items</span></span>
-            <button class="jy-btn jy-btn--ghost jy-btn--s" onClick={() => { setT(x.template); setDocId(x.id); setErrs([]); }}>Open template</button></li>))}</ul>
-          : <p class="jy-empty">No templates yet. Paste one below.</p>}
+      <section class="fl-section" aria-labelledby="saved-h"><h2 id="saved-h" class="fl-h2">Saved templates</h2>
+        {list.length ? <ul class="fl-list">{list.map((x) => (
+          <li key={x.id} class="fl-row"><span class="fl-mono fl-small">{x.template.items.length}</span><span><b>{x.name}</b> <span class="fl-caption">items</span></span>
+            <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => { setT(x.template); setDocId(x.id); setErrs([]); }}>Open template</button></li>))}</ul>
+          : <p class="fl-empty">No templates yet. Paste one below.</p>}
       </section>
-      <section class="jy-section jy-form" aria-labelledby="imp-h"><h2 id="imp-h" class="jy-h2">Import</h2>
-        <label class="jy-field jy-field--wide"><span class="jy-field__label">Template JSON</span>
-          <textarea class="jy-field__input jy-mono" rows={6} value={raw} onInput={(e) => setRaw(e.target.value)} aria-describedby="imp-err" /></label>
-        <div class="jy-actions"><button class="jy-btn jy-btn--ghost" onClick={() => load(raw)}>Check template</button>
-          <label class="jy-btn jy-btn--ghost">Upload JSON file<input class="jy-sr" type="file" accept=".json,application/json" onChange={(e) => e.target.files[0]?.text().then(load)} /></label></div>
-        <ul id="imp-err" class="jy-error" role="alert">{errs.map((e) => <li key={e}>{e}</li>)}</ul>
+      <section class="fl-panel fl-form" aria-labelledby="imp-h"><h2 id="imp-h" class="fl-h2">Import</h2>
+        <label class="fl-field"><span class="fl-field__label">Template JSON</span>
+          <textarea class="fl-input fl-mono" rows={6} value={raw} onInput={(e) => setRaw(e.target.value)} aria-describedby="imp-err" /></label>
+        <div class="fl-actions"><button class="fl-btn fl-btn--ghost" onClick={() => load(raw)}>Check template</button>
+          <label class="fl-btn fl-btn--ghost">Upload JSON file<input class="fl-sr" type="file" accept=".json,application/json" onChange={(e) => e.target.files[0]?.text().then(load)} /></label></div>
+        <ul id="imp-err" class="fl-error" role="alert">{errs.map((e) => <li key={e}>{e}</li>)}</ul>
       </section>
       {t && (
-        <section class="jy-section" aria-labelledby="tree-h">
-          <h2 id="tree-h" class="jy-h2">{t.templateName} <span class="jy-caption">{t.items.length} items. Numbers are days from the event; empty means no due date.</span></h2>
-          {t.questions?.length > 0 && <div class="jy-well"><b>Questions from the AI</b>{t.questions.map((q) => <p key={q}>{q}</p>)}</div>}
-          <ul class="jy-org">{t.items.filter((x) => x.parentKey == null).map((it) => <Node key={it.key} t={t} it={it} setT={setT} />)}</ul>
-          <ul class="jy-error" role="alert">{check.map((e) => <li key={e}>{e}</li>)}</ul>
-          <div class="jy-actions">
-            <button class="jy-btn jy-btn--ghost" disabled={busy || check.length > 0} onClick={save}>Save template</button>
-            <button class="jy-btn jy-btn--ghost" onClick={() => download(`${t.templateName.replace(/\W+/g, '-').toLowerCase()}.json`, JSON.stringify(t, null, 2))}>Export JSON</button>
-            {docId && <button class="jy-btn jy-btn--ghost" onClick={() => putDoc(`templates/${docId}`, { archived: true }, 'Template archived.').then(() => setT(null))}>Archive template</button>}
+        <section class="fl-section" aria-labelledby="tree-h">
+          <h2 id="tree-h" class="fl-h2">{t.templateName} <span class="fl-caption">{t.items.length} items. Numbers are days from the event; empty means no due date.</span></h2>
+          {t.questions?.length > 0 && <div class="fl-panel"><b>Questions from the AI</b>{t.questions.map((q) => <p key={q}>{q}</p>)}</div>}
+          <ul class="fl-tree">{t.items.filter((x) => x.parentKey == null).map((it) => <Node key={it.key} t={t} it={it} setT={setT} />)}</ul>
+          <ul class="fl-error" role="alert">{check.map((e) => <li key={e}>{e}</li>)}</ul>
+          <div class="fl-actions">
+            <button class="fl-btn fl-btn--ghost" disabled={busy || check.length > 0} onClick={save}>Save template</button>
+            <button class="fl-btn fl-btn--ghost" onClick={() => download(`${t.templateName.replace(/\W+/g, '-').toLowerCase()}.json`, JSON.stringify(t, null, 2))}>Export JSON</button>
+            {docId && <button class="fl-btn fl-btn--ghost" onClick={() => putDoc(`templates/${docId}`, { archived: true }, 'Template archived.').then(() => setT(null))}>Archive template</button>}
           </div>
-          <div class="jy-form jy-panel">
-            <label class="jy-field"><span class="jy-field__label">Event date</span><input class="jy-field__input" type="date" value={event} onInput={(e) => setEvent(e.target.value)} /></label>
-            <button class="jy-btn" disabled={busy || check.length > 0 || !event} onClick={start}>Start project from template</button>
+          <div class="fl-panel fl-form">
+            <label class="fl-field"><span class="fl-field__label">Event date</span><input class="fl-input" type="date" value={event} onInput={(e) => setEvent(e.target.value)} /></label>
+            <button class="fl-btn fl-btn--red" disabled={busy || check.length > 0 || !event} onClick={start}>Start project from template</button>
           </div>
         </section>
       )}

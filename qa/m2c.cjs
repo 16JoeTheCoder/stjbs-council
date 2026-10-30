@@ -1,0 +1,11 @@
+const { chromium } = require('playwright');
+const SD='/home/user/stjbs-council/qa/screens-m2/';
+exports.mk=async(b,w=1280)=>{const ctx=await b.newContext({viewport:{width:w,height:900}});const p=await ctx.newPage();p.logs=[];
+ p.on('console',m=>{if(['error','warning'].includes(m.type()))p.logs.push(m.type()+': '+m.text().slice(0,200))});p.on('pageerror',e=>p.logs.push('pe '+e.message));
+ p.on('requestfailed',r=>p.logs.push('reqfailed '+r.url().slice(0,120)));p.on('response',r=>{if(r.status()>=400)p.logs.push('http'+r.status()+' '+r.url().slice(0,120))});
+ p.on('dialog',d=>d.accept());return {ctx,p};};
+exports.login=async(p,n)=>{await p.goto('http://localhost:5173/app/#/');await p.waitForTimeout(1000);await p.fill('input[type=email]',n+'@stjbs.sch.id');await p.fill('input[type=password]','council123');await p.click('form button[type=submit], form button.jy-btn');await p.waitForTimeout(2500);};
+if(require.main===module)(async()=>{const b=await chromium.launch();const {p}=await exports.mk(b);await exports.login(p,'michael');
+ await p.screenshot({path:SD+'app-michael-home.png'});console.log(p.url());
+ await p.goto('http://localhost:5173/app/#/p/carnival');await p.waitForTimeout(1500);await p.screenshot({path:SD+'app-carnival.png',fullPage:true});
+ console.log((await p.innerText('body')).slice(0,1800));console.log(p.logs);await b.close();})();

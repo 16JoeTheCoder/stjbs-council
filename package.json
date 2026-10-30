@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "demo": "firebase emulators:exec --only auth,firestore --project demo-council \"node scripts/seed-emulator.mjs && vite --mode emulator\"",
     "test:rules": "firebase emulators:exec --only firestore --project demo-council \"node --test tests/rules.test.mjs\"",
-    "check": "bash scripts/jy-check.sh",
+    "check": "bash design/fiatlux/design-check.sh && vite build --logLevel error && node scripts/check-site-bundle.mjs",
     "deploy": "vite build && firebase deploy --only hosting,firestore"
   },
   "dependencies": {
@@ -20,6 +20,8 @@
     "@firebase/rules-unit-testing": "^6.0.0",
     "@preact/preset-vite": "^2.10.6",
     "firebase-tools": "^15.34.1",
+    "lighthouse": "^13.6.0",
+    "playwright": "^1.63.0",
     "vite": "^8.3.5"
   }
 }

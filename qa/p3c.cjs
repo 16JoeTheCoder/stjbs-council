@@ -1,0 +1,13 @@
+const { chromium } = require('playwright'); const B='http://localhost:5173/app/';
+(async()=>{const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:1440,height:900}}); const p=await ctx.newPage(); p.on('dialog',d=>d.accept());
+await p.goto(B+'#/ideas'); await p.fill('#email',"budi@stjbs.sch.id"); await p.fill('#password','council123'); await p.click('form button.fl-btn--red'); await p.waitForSelector('.fl-app'); await p.waitForTimeout(1200);
+const v=p.locator('main button:has-text("▲")').first(); console.log('vote btn disabled?',await v.isDisabled(),await v.getAttribute('title'),await v.getAttribute('aria-label'));
+const before=await v.innerText(); await v.click({force:true}).catch(e=>console.log('click err',e.message.slice(0,60))); await p.waitForTimeout(1200);
+console.log(before,'->',await v.innerText(),'| toast:',await p.locator('[role=status]').allInnerTexts(),'| textarea pin form:',await p.locator('textarea').count());
+await p.goto(B+'#/people/raka%40stjbs.sch.id'); await p.waitForTimeout(900); console.log('budi sees person page:',(await p.locator('main').innerText()).replace(/\n+/g,' | ').slice(0,500));
+await p.goto(B+'#/meeting'); await p.waitForTimeout(800); console.log('meeting:',(await p.locator('main').innerText()).replace(/\n+/g,' | ').slice(0,300));
+await p.goto(B+'#/digest'); await p.waitForTimeout(800); console.log('digest as teacher:',(await p.locator('main').innerText()).replace(/\n+/g,' | ').slice(0,300));
+await p.goto(B+'#/workload'); await p.waitForTimeout(800); console.log('workload as teacher:',(await p.locator('main').innerText()).replace(/\n+/g,' | ').slice(0,200));
+await p.goto(B+'#/templates'); await p.waitForTimeout(800); console.log('templates as teacher:',(await p.locator('main').innerText()).replace(/\n+/g,' | ').slice(0,200));
+await b.close()})();

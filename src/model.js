@@ -5,7 +5,8 @@ import { addDays, dayStartMs, isoDay, monday, week, weekId } from './time.js';
 export const EXEC = ['president', 'vp', 'treasurer', 'secretary'];
 export const STAGES = ['Lead', 'Contacted', 'Negotiating', 'Signed'];
 export const isBoss = (m = S.me) => m?.role === 'advisor' || EXEC.includes(m?.role);
-export const canSeeStats = (m = S.me) => ['advisor', 'president', 'vp'].includes(m?.role);
+export const isAdmin = (m = S.me) => ['advisor', 'president', 'vp'].includes(m?.role);
+export const canSeeStats = isAdmin;
 export const canManage = (it) => S.me?.role !== 'teacher' && (isBoss() || !!it?.leadUids?.includes(S.me?.id));
 export const canWork = (t) => canManage(t) || (S.me?.role !== 'teacher' && t.assigneeUids?.includes(S.me?.id));
 export const isMine = (t) => !!t.assigneeUids?.includes(S.me?.id);
@@ -71,10 +72,19 @@ export function personStatus(email, w = week()) {
   return { cls, word, line, ci, blocked, overdue, done };
 }
 
-// Extra destinations by role: top nav on laptop, profile page at every width.
-export const roleLinks = () => [canSeeStats() && ['workload', 'Workload'], isBoss() && S.me.role !== 'teacher' && ['templates', 'Templates'],
-  ['advisor', 'president'].includes(S.me?.role) && ['admin', 'Admin'], ['digest', 'Digest']].filter(Boolean);
+// Exec in the roles table: may start root projects, edit the digest and project templates (the advisor too).
+export const isExec = (m = S.me) => isBoss(m) && m?.role !== 'teacher';
+const ROLE = { advisor: 'Advisor', president: 'President', vp: 'Vice president', treasurer: 'Treasurer', secretary: 'Secretary', officer: 'Officer', teacher: 'Teacher' };
+export const roleName = (r) => ROLE[r] || r;
+export const firstName = (email) => (S.members.find((m) => m.id === email)?.name || email || '').split(' ')[0];
 export const checksIn = (m) => !['teacher', 'advisor'].includes(m?.role);
 export const activeMembers = () => S.members.filter((m) => m.active).sort((a, b) => a.name.localeCompare(b.name));
 export const initials = (name = '') => (name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2) || '?').toUpperCase();
 export const safeUrl = (u) => (/^https?:\/\/\S+$/i.test(u || '') ? u : '');
+
+// Google Docs and Drive links, the same test as google() in firestore.rules.
+export const googleUrl = (u) => typeof u === 'string' && u.length <= 500 && /^[A-Za-z0-9._~:/?#&=%+!$()*,;@-]+$/.test(u) && !/(\.\.|%2[ef]|%5c)/i.test(u)
+  && (/^https:\/\/docs\.google\.com\/(document|spreadsheets|presentation|forms|drawings)\/(u\/\d+\/)?d\/[\w-]+([/?#].*)?$/.test(u)
+    || /^https:\/\/drive\.google\.com\/((u\/\d+\/)?(file\/d|drive\/folders|drive\/u\/\d+\/folders)\/[\w-]+|open\?id=[\w-]+)([/?#&].*)?$/.test(u));
+// "Make a copy" works for Docs, Sheets, Slides and Drawings; other links just open.
+export const copyUrl = (u) => u.match(/^https:\/\/docs\.google\.com\/(?:document|spreadsheets|presentation|drawings)\/(?:u\/\d+\/)?d\/[\w-]+/)?.[0]?.concat('/copy') || null;

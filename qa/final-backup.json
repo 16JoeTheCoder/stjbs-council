@@ -1,0 +1,2832 @@
+{
+ "members": [
+  {
+   "id": "alya@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Alya Rahman",
+   "initials": "AR",
+   "role": "officer",
+   "section": "Events",
+   "reportsTo": "kevin@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "ariel@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Ariel Santoso",
+   "initials": "AS",
+   "role": "advisor",
+   "section": "Advisor",
+   "reportsTo": null,
+   "active": true
+  },
+  {
+   "id": "bryan@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Bryan Hartono",
+   "initials": "BH",
+   "role": "officer",
+   "section": "Sports",
+   "reportsTo": "kevin@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "budi@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Budi Halim",
+   "initials": "BH",
+   "role": "teacher",
+   "section": "Teachers",
+   "reportsTo": null,
+   "active": true
+  },
+  {
+   "id": "clara@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Clara Gunawan",
+   "initials": "CG",
+   "role": "officer",
+   "section": "Arts",
+   "reportsTo": "kevin@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "dimas@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Dimas Pratama",
+   "initials": "DP",
+   "role": "secretary",
+   "section": "Exec",
+   "reportsTo": "nadia@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "kevin@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Kevin Wijaya",
+   "initials": "KW",
+   "role": "vp",
+   "section": "Exec",
+   "reportsTo": "nadia@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "michael@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Michael Tan",
+   "initials": "MT",
+   "role": "officer",
+   "section": "Events",
+   "reportsTo": "kevin@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "nadia@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Nadia Putri",
+   "initials": "NP",
+   "role": "president",
+   "section": "Exec",
+   "reportsTo": "ariel@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "raka@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Raka Siregar",
+   "initials": "RS",
+   "role": "officer",
+   "section": "Welfare",
+   "reportsTo": "dimas@stjbs.sch.id",
+   "active": true
+  },
+  {
+   "id": "sarah@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "name": "Sarah Lim",
+   "initials": "SL",
+   "role": "treasurer",
+   "section": "Exec",
+   "reportsTo": "nadia@stjbs.sch.id",
+   "active": true
+  }
+ ],
+ "items": [
+  {
+   "id": "11SxrAV7IhPUy4mmoj7n",
+   "termId": "2026-27",
+   "parentId": "8ItcZs0rvt8QBiHFCApl",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "8ItcZs0rvt8QBiHFCApl"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Write game rules cards",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-10-02",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "8ItcZs0rvt8QBiHFCApl",
+   "termId": "2026-27",
+   "parentId": "YFMeojfedWihWYvfnsxs",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Games",
+   "kind": "team",
+   "isDeal": false,
+   "dueDate": "2026-10-25",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "95LtejHVdf7xPr0qPFpE",
+   "termId": "2026-27",
+   "parentId": "AMVdgVhI3qJYPRnvAKCk",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "AMVdgVhI3qJYPRnvAKCk"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Hygiene briefing for vendors",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-10-10",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "AMVdgVhI3qJYPRnvAKCk",
+   "termId": "2026-27",
+   "parentId": "YFMeojfedWihWYvfnsxs",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Food",
+   "kind": "team",
+   "isDeal": false,
+   "dueDate": "2026-10-25",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "BcrycYjwgV4bri9gG3e7",
+   "termId": "2026-27",
+   "parentId": "fGHGDD6dnVH04VUHfFEw",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "fGHGDD6dnVH04VUHfFEw"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Cup supplier call mvupkjrm",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-09-20",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "Glkc5RqtSzsvtqkzlBzI",
+   "termId": "2026-27",
+   "parentId": "AMVdgVhI3qJYPRnvAKCk",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "AMVdgVhI3qJYPRnvAKCk"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Confirm three food vendors",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-09-29",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "Gsg8G3Rf8oPVWXC5KsSn",
+   "termId": "2026-27",
+   "parentId": "drinks",
+   "ancestors": [
+    "carnival",
+    "drinks"
+   ],
+   "leadUids": [
+    "michael@stjbs.sch.id"
+   ],
+   "leadUid": null,
+   "kind": "task",
+   "title": "Cup supplier call mvupkjrm",
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "raka@stjbs.sch.id"
+   ],
+   "createdByUid": "michael@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-10-30",
+   "assignedAt": 1793348880750,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348880750,
+   "updatedAt": 1793348880750,
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348880,
+    "nanoseconds": 774000000
+   }
+  },
+  {
+   "id": "HEvSQTU5BcJUmaTzy9na",
+   "termId": "2026-27",
+   "parentId": "YFMeojfedWihWYvfnsxs",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947641,
+   "updatedAt": 1793348947641,
+   "title": "Stage",
+   "kind": "team",
+   "isDeal": false,
+   "dueDate": "2026-10-25",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "UZi4KdO3mVTpM20lIKuE",
+   "termId": "2026-27",
+   "parentId": "fGHGDD6dnVH04VUHfFEw",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "fGHGDD6dnVH04VUHfFEw"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "Working <b>on</b> it",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Order 400 cups",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-09-18",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "WWvujtSWaQtHbREa3fop",
+   "termId": "2026-27",
+   "parentId": "drinks",
+   "ancestors": [
+    "carnival",
+    "drinks"
+   ],
+   "leadUids": [
+    "michael@stjbs.sch.id"
+   ],
+   "leadUid": null,
+   "kind": "task",
+   "title": "Buy ice <i>\"x\"</i> & long long long long long long long long long long long long",
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "michael@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": "2026-11-10",
+   "dueDate": "2026-11-12",
+   "assignedAt": null,
+   "completedAt": null,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348851612,
+   "archived": false,
+   "updatedAt": 1793348914307,
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348914,
+    "nanoseconds": 333000000
+   }
+  },
+  {
+   "id": "XW2YlMHtmetK3SK3G4cK",
+   "termId": "2026-27",
+   "parentId": "YFMeojfedWihWYvfnsxs",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Sponsors",
+   "kind": "team",
+   "isDeal": false,
+   "dueDate": "2026-10-25",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "YFMeojfedWihWYvfnsxs",
+   "termId": "2026-27",
+   "parentId": null,
+   "ancestors": [],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "STJBS Carnival",
+   "kind": "project",
+   "isDeal": false,
+   "dueDate": "2026-10-30",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "carnival",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "doing",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": "2026-09-30",
+   "dueDate": "2026-12-09",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "project",
+   "title": "STJBS Carnival",
+   "parentId": null,
+   "ancestors": [],
+   "leadUids": [],
+   "public": true,
+   "publicBlurb": "Our biggest event of the year: games, food and music on the school field for families."
+  },
+  {
+   "id": "drinks",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-12-04",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": "michael@stjbs.sch.id",
+   "kind": "team",
+   "title": "Drinks",
+   "parentId": "carnival",
+   "ancestors": [
+    "carnival"
+   ],
+   "leadUids": [
+    "michael@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "fD9B8EqkewImsiV0ozWK",
+   "termId": "2026-27",
+   "parentId": "fGHGDD6dnVH04VUHfFEw",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "fGHGDD6dnVH04VUHfFEw"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Buy ice <i>\"x\"</i> & long long long long long long long long long long long long",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-10-03",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "fGHGDD6dnVH04VUHfFEw",
+   "termId": "2026-27",
+   "parentId": "YFMeojfedWihWYvfnsxs",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Drinks",
+   "kind": "team",
+   "isDeal": false,
+   "dueDate": "2026-10-25",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "food",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-12-04",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": "alya@stjbs.sch.id",
+   "kind": "team",
+   "title": "Food",
+   "parentId": "carnival",
+   "ancestors": [
+    "carnival"
+   ],
+   "leadUids": [
+    "alya@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "games",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-12-04",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": "bryan@stjbs.sch.id",
+   "kind": "team",
+   "title": "Games",
+   "parentId": "carnival",
+   "ancestors": [
+    "carnival"
+   ],
+   "leadUids": [
+    "bryan@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "k6pactY2QTKFtvDvKdjW",
+   "termId": "2026-27",
+   "parentId": "fGHGDD6dnVH04VUHfFEw",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "fGHGDD6dnVH04VUHfFEw"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Secure Pocari Sweat booth contract",
+   "kind": "task",
+   "isDeal": true,
+   "dueDate": "2026-09-22",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "lf4wtl2tnVq7BRAPcPpy",
+   "termId": "2026-27",
+   "parentId": "XW2YlMHtmetK3SK3G4cK",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "XW2YlMHtmetK3SK3G4cK"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947641,
+   "updatedAt": 1793348947641,
+   "title": "Thank-you letters",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-10-20",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "n4Ozge78hkMtppVicaCC",
+   "termId": "2026-27",
+   "parentId": "HEvSQTU5BcJUmaTzy9na",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "HEvSQTU5BcJUmaTzy9na"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947641,
+   "updatedAt": 1793348947641,
+   "title": "Sound system quote",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-09-19",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "nm7n9AISRQ2N5xkysGxi",
+   "termId": "2026-27",
+   "parentId": "YFMeojfedWihWYvfnsxs",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947641,
+   "updatedAt": 1793348947641,
+   "title": "Photography <script>alert(1)</script>",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": null,
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "rBCZfzgeu85bUDj7Nxno",
+   "termId": "2026-27",
+   "parentId": "carnival",
+   "ancestors": [
+    "carnival"
+   ],
+   "leadUids": [
+    "clara@stjbs.sch.id"
+   ],
+   "leadUid": "clara@stjbs.sch.id",
+   "kind": "team",
+   "title": "Photography <script>alert(1)</script>",
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348860962,
+   "updatedAt": 1793348862912,
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348862,
+    "nanoseconds": 939000000
+   }
+  },
+  {
+   "id": "rFxqnkFOaxR8D4zrcf2Y",
+   "termId": "2026-27",
+   "parentId": "8ItcZs0rvt8QBiHFCApl",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "8ItcZs0rvt8QBiHFCApl"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Book inflatable castle",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-09-21",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "s1",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "raka@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-03",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Draft survey questions",
+   "parentId": "survey",
+   "ancestors": [
+    "survey"
+   ],
+   "leadUids": [
+    "raka@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "s2",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "raka@stjbs.sch.id",
+    "clara@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-07",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Ask the canteen manager for a meeting",
+   "parentId": "survey",
+   "ancestors": [
+    "survey"
+   ],
+   "leadUids": [
+    "raka@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "sHP1d0EalnaLYiee3uha",
+   "termId": "2026-27",
+   "parentId": "XW2YlMHtmetK3SK3G4cK",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "XW2YlMHtmetK3SK3G4cK"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947641,
+   "updatedAt": 1793348947641,
+   "title": "Bank sponsorship pitch",
+   "kind": "task",
+   "isDeal": true,
+   "dueDate": "2026-09-25",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "sponsors",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-12-04",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": "sarah@stjbs.sch.id",
+   "kind": "team",
+   "title": "Sponsors",
+   "parentId": "carnival",
+   "ancestors": [
+    "carnival"
+   ],
+   "leadUids": [
+    "sarah@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "stage",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-12-04",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": "clara@stjbs.sch.id",
+   "kind": "team",
+   "title": "Stage",
+   "parentId": "carnival",
+   "ancestors": [
+    "carnival"
+   ],
+   "leadUids": [
+    "clara@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "survey",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "dimas@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-24",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": "raka@stjbs.sch.id",
+   "kind": "project",
+   "title": "Canteen survey",
+   "parentId": null,
+   "ancestors": [],
+   "leadUids": [
+    "raka@stjbs.sch.id"
+   ],
+   "public": false,
+   "updatedAt": 1793348944576,
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348944,
+    "nanoseconds": 593000000
+   }
+  },
+  {
+   "id": "t0",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "michael@stjbs.sch.id",
+    "alya@stjbs.sch.id",
+    "raka@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "blocked": true,
+   "blockedReason": "Waiting on Pocari reply",
+   "blockedOnUid": "sarah@stjbs.sch.id",
+   "startDate": null,
+   "dueDate": "2026-11-01",
+   "assignedAt": 1793348653005,
+   "archived": false,
+   "isDeal": true,
+   "dealStage": "Negotiating",
+   "pledgedIdr": 15000000,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Secure Pocari Sweat booth contract",
+   "parentId": "drinks",
+   "ancestors": [
+    "carnival",
+    "drinks"
+   ],
+   "leadUids": [
+    "michael@stjbs.sch.id"
+   ],
+   "completedAt": null,
+   "status": "todo",
+   "updatedAt": 1793348795427,
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348795,
+    "nanoseconds": 455000000
+   }
+  },
+  {
+   "id": "t1",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "link": "",
+   "assigneeUids": [
+    "raka@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-10-28",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Order 400 cups",
+   "parentId": "drinks",
+   "ancestors": [
+    "carnival",
+    "drinks"
+   ],
+   "leadUids": [
+    "michael@stjbs.sch.id"
+   ],
+   "notes": "Working <b>on</b> it",
+   "status": "doing",
+   "updatedAt": 1793348908375,
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348908,
+    "nanoseconds": 414000000
+   }
+  },
+  {
+   "id": "t10",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "dimas@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "done",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-29",
+   "assignedAt": 1793348653005,
+   "completedAt": 1793089453005,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Thank-you letters",
+   "parentId": "sponsors",
+   "ancestors": [
+    "carnival",
+    "sponsors"
+   ],
+   "leadUids": [
+    "sarah@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t2",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "michael@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "done",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-05",
+   "assignedAt": 1793348653005,
+   "completedAt": 1793262253005,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Price list for drinks stall",
+   "parentId": "drinks",
+   "ancestors": [
+    "carnival",
+    "drinks"
+   ],
+   "leadUids": [
+    "michael@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t3",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "alya@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-08",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Confirm three food vendors",
+   "parentId": "food",
+   "ancestors": [
+    "carnival",
+    "food"
+   ],
+   "leadUids": [
+    "alya@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t4",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "dimas@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-19",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Hygiene briefing for vendors",
+   "parentId": "food",
+   "ancestors": [
+    "carnival",
+    "food"
+   ],
+   "leadUids": [
+    "alya@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t5",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "bryan@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-10-31",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Book inflatable castle",
+   "parentId": "games",
+   "ancestors": [
+    "carnival",
+    "games"
+   ],
+   "leadUids": [
+    "bryan@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t6",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "clara@stjbs.sch.id",
+    "bryan@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "doing",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-11",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Write game rules cards",
+   "parentId": "games",
+   "ancestors": [
+    "carnival",
+    "games"
+   ],
+   "leadUids": [
+    "bryan@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t7",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "clara@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-10-29",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Sound system quote",
+   "parentId": "stage",
+   "ancestors": [
+    "carnival",
+    "stage"
+   ],
+   "leadUids": [
+    "clara@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t8",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "kevin@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-13",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Run sheet for performances",
+   "parentId": "stage",
+   "ancestors": [
+    "carnival",
+    "stage"
+   ],
+   "leadUids": [
+    "clara@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "t9",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "sarah@stjbs.sch.id",
+    "nadia@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-11-04",
+   "assignedAt": 1793348653005,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": true,
+   "dealStage": "Contacted",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Bank sponsorship pitch",
+   "parentId": "sponsors",
+   "ancestors": [
+    "carnival",
+    "sponsors"
+   ],
+   "leadUids": [
+    "sarah@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "w1",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "alya@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "done",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-09-05",
+   "assignedAt": null,
+   "completedAt": 1788596653005,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Buddy list",
+   "parentId": "welcome",
+   "ancestors": [
+    "welcome"
+   ],
+   "leadUids": []
+  },
+  {
+   "id": "w2",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [
+    "bryan@stjbs.sch.id"
+   ],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "done",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-09-08",
+   "assignedAt": null,
+   "completedAt": 1788855853005,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "task",
+   "title": "Campus tour route",
+   "parentId": "welcome",
+   "ancestors": [
+    "welcome"
+   ],
+   "leadUids": []
+  },
+  {
+   "id": "w4LlOqBWakSfYIdp7iYl",
+   "termId": "2026-27",
+   "parentId": "fGHGDD6dnVH04VUHfFEw",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "fGHGDD6dnVH04VUHfFEw"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947640,
+   "updatedAt": 1793348947640,
+   "title": "Price list for drinks stall",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-09-26",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "wUYU0ThtiBA5QsKdL5Gv",
+   "termId": "2026-27",
+   "parentId": "HEvSQTU5BcJUmaTzy9na",
+   "ancestors": [
+    "YFMeojfedWihWYvfnsxs",
+    "HEvSQTU5BcJUmaTzy9na"
+   ],
+   "leadUids": [],
+   "leadUid": null,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "sarah@stjbs.sch.id",
+   "status": "todo",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "createdAt": 1793348947641,
+   "updatedAt": 1793348947641,
+   "title": "Run sheet for performances",
+   "kind": "task",
+   "isDeal": false,
+   "dueDate": "2026-10-04",
+   "touchedAt": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 1793348947,
+    "nanoseconds": 692000000
+   }
+  },
+  {
+   "id": "welcome",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "updatedAt": 1793348653005,
+   "notes": "",
+   "link": "",
+   "assigneeUids": [],
+   "createdByUid": "nadia@stjbs.sch.id",
+   "status": "done",
+   "blocked": false,
+   "blockedReason": "",
+   "blockedOnUid": null,
+   "startDate": null,
+   "dueDate": "2026-09-10",
+   "assignedAt": null,
+   "completedAt": null,
+   "archived": false,
+   "isDeal": false,
+   "dealStage": "Lead",
+   "pledgedIdr": 0,
+   "receivedIdr": 0,
+   "leadUid": null,
+   "kind": "project",
+   "title": "Welcome week",
+   "parentId": null,
+   "ancestors": [],
+   "leadUids": [],
+   "public": true,
+   "publicBlurb": "New students met their buddies and toured the school."
+  }
+ ],
+ "comments": [
+  {
+   "id": "KFGsPPnacdCs8YSQVd1o",
+   "termId": "2026-27",
+   "itemId": "t1",
+   "authorUid": "michael@stjbs.sch.id",
+   "text": "@Raka  no-mention-for-clara mvupkjrm",
+   "mentionUids": [
+    "raka@stjbs.sch.id"
+   ],
+   "createdAt": 1793348840243
+  },
+  {
+   "id": "c84PcYP2k6MywQH1kd8b",
+   "termId": "2026-27",
+   "itemId": "t1",
+   "authorUid": "michael@stjbs.sch.id",
+   "text": "@Raka  Cup supplier call mvupkjrm",
+   "mentionUids": [
+    "raka@stjbs.sch.id"
+   ],
+   "createdAt": 1793348878461
+  },
+  {
+   "id": "qaDqxEWpoxRLAFtC5Nu9",
+   "termId": "2026-27",
+   "itemId": "t1",
+   "authorUid": "michael@stjbs.sch.id",
+   "text": "@Raka mention check mvupkjrm",
+   "mentionUids": [
+    "raka@stjbs.sch.id"
+   ],
+   "createdAt": 1793348801314
+  }
+ ],
+ "checkins": [
+  {
+   "id": "2026-27_2026-W43_alya@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W43",
+   "uid": "alya@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W43_kevin@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W43",
+   "uid": "kevin@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W43_michael@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W43",
+   "uid": "michael@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W43_nadia@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W43",
+   "uid": "nadia@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W43_raka@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W43",
+   "uid": "raka@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W44_alya@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W44",
+   "uid": "alya@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W44_dimas@stjbs.sch.id",
+   "termId": "2026-27",
+   "weekId": "2026-W44",
+   "uid": "dimas@stjbs.sch.id",
+   "done": "QA check-in answer 0",
+   "doing": "QA check-in answer 1",
+   "blocked": "QA check-in answer 2",
+   "updatedAt": 1793348720071,
+   "createdAt": 1793348720071
+  },
+  {
+   "id": "2026-27_2026-W44_kevin@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W44",
+   "uid": "kevin@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W44_michael@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W44",
+   "uid": "michael@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": "Waiting on Pocari reply"
+  },
+  {
+   "id": "2026-27_2026-W44_nadia@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "weekId": "2026-W44",
+   "uid": "nadia@stjbs.sch.id",
+   "done": "Price list done",
+   "doing": "Follow up with partner",
+   "blocked": ""
+  },
+  {
+   "id": "2026-27_2026-W44_raka@stjbs.sch.id",
+   "termId": "2026-27",
+   "weekId": "2026-W44",
+   "uid": "raka@stjbs.sch.id",
+   "done": "Did <b>x</b> & \"y\" zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "doing": "Next",
+   "blocked": "",
+   "updatedAt": 1793348919774,
+   "createdAt": 1793348919774
+  }
+ ],
+ "activity": [
+  {
+   "id": "0IQWDnWxfsUGLJ4497Gk",
+   "termId": "2026-27",
+   "actorUid": "sarah@stjbs.sch.id",
+   "type": "created",
+   "itemId": "YFMeojfedWihWYvfnsxs",
+   "text": "started \"STJBS Carnival\" from a template",
+   "createdAt": 1793348948123
+  },
+  {
+   "id": "16vIVw1Y5pksCYrKBjM6",
+   "termId": "2026-27",
+   "actorUid": "nadia@stjbs.sch.id",
+   "type": "published",
+   "itemId": null,
+   "text": "published the public site",
+   "createdAt": 1793348859041
+  },
+  {
+   "id": "37hydXcWXKG1RfEQ7ZIH",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "comment",
+   "itemId": "t1",
+   "text": "commented on \"Order 400 cups\"",
+   "createdAt": 1793348878462
+  },
+  {
+   "id": "4rLCHiNf1KiWoe6dY2dv",
+   "termId": "2026-27",
+   "actorUid": "kevin@stjbs.sch.id",
+   "type": "made public",
+   "itemId": "survey",
+   "text": "made public \"Canteen survey\"",
+   "createdAt": 1793348936513
+  },
+  {
+   "id": "5imMTX83hjvsGmpX3s2a",
+   "termId": "2026-27",
+   "actorUid": "nadia@stjbs.sch.id",
+   "type": "lead",
+   "itemId": "rBCZfzgeu85bUDj7Nxno",
+   "text": "made bryan@stjbs.sch.id lead of \"Photography <script>alert(1)</script>\"",
+   "createdAt": 1793348863136
+  },
+  {
+   "id": "6b0Ua241mWh57prpgTjv",
+   "termId": "2026-27",
+   "actorUid": "kevin@stjbs.sch.id",
+   "type": "published",
+   "itemId": null,
+   "text": "published the public site",
+   "createdAt": 1793348922149
+  },
+  {
+   "id": "8XjTW8NKz0nwMQuAN688",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "completed",
+   "itemId": "t0",
+   "text": "completed \"Secure Pocari Sweat booth contract\"",
+   "createdAt": 1793348794696
+  },
+  {
+   "id": "AAwJTAXRa6W7URS9I3ig",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "reopened",
+   "itemId": "t0",
+   "text": "reopened \"Secure Pocari Sweat booth contract\"",
+   "createdAt": 1793348795427
+  },
+  {
+   "id": "ON9UHilErxc03vag197d",
+   "termId": "2026-27",
+   "actorUid": "raka@stjbs.sch.id",
+   "type": "updated",
+   "itemId": "t1",
+   "text": "updated \"Order 400 cups\"",
+   "createdAt": 1793348908376
+  },
+  {
+   "id": "PQgDcxjX64ROU0pTYiCF",
+   "termId": "2026-27",
+   "actorUid": "kevin@stjbs.sch.id",
+   "type": "published",
+   "itemId": null,
+   "text": "published the public site",
+   "createdAt": 1793348944742
+  },
+  {
+   "id": "R9OXaH2RSFlGnVsOCpbe",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "created",
+   "itemId": "WWvujtSWaQtHbREa3fop",
+   "text": "added \"Buy ice <i>\"x\"</i> & long long long long long long long long long long long long\"",
+   "createdAt": 1793348851613
+  },
+  {
+   "id": "SGEI0sTDt3AgOAQyaSgT",
+   "termId": "2026-27",
+   "actorUid": "kevin@stjbs.sch.id",
+   "type": "published",
+   "itemId": null,
+   "text": "published the public site",
+   "createdAt": 1793348945848
+  },
+  {
+   "id": "TxU3IU4RISzybidHH5pI",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "archived",
+   "itemId": "WWvujtSWaQtHbREa3fop",
+   "text": "archived \"Buy ice <i>\"x\"</i> & long long long long long long long long long long long long\"",
+   "createdAt": 1793348913287
+  },
+  {
+   "id": "UlbSOEclwKsy6KHhAH4K",
+   "termId": "2026-27",
+   "actorUid": "nadia@stjbs.sch.id",
+   "type": "updated",
+   "itemId": "rBCZfzgeu85bUDj7Nxno",
+   "text": "updated \"Photography <script>alert(1)</script>\"",
+   "createdAt": 1793348862912
+  },
+  {
+   "id": "UzR1lZTFbL9nfgt5EKhL",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "restored",
+   "itemId": "WWvujtSWaQtHbREa3fop",
+   "text": "restored \"Buy ice <i>\"x\"</i> & long long long long long long long long long long long long\"",
+   "createdAt": 1793348914511
+  },
+  {
+   "id": "VGaerdlsvsmtuWNpKsdE",
+   "termId": "2026-27",
+   "actorUid": "kevin@stjbs.sch.id",
+   "type": "published",
+   "itemId": null,
+   "text": "published the public site",
+   "createdAt": 1793348905024
+  },
+  {
+   "id": "Zv9cn0pFmqiO6bRJyZd7",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "comment",
+   "itemId": "t1",
+   "text": "commented on \"Order 400 cups\"",
+   "createdAt": 1793348840244
+  },
+  {
+   "id": "a1",
+   "termId": "2026-27",
+   "createdAt": 1793262253005,
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "completed",
+   "itemId": "t2",
+   "text": "completed \"Price list for drinks stall\""
+  },
+  {
+   "id": "a2",
+   "termId": "2026-27",
+   "createdAt": 1792916653005,
+   "actorUid": "nadia@stjbs.sch.id",
+   "type": "created",
+   "itemId": "carnival",
+   "text": "added \"STJBS Carnival\""
+  },
+  {
+   "id": "ftdtkI5uWMwFJNRTttSB",
+   "termId": "2026-27",
+   "actorUid": "kevin@stjbs.sch.id",
+   "type": "published",
+   "itemId": null,
+   "text": "published the public site",
+   "createdAt": 1793348937881
+  },
+  {
+   "id": "rBc8JBaZArh5v7F8vZVn",
+   "termId": "2026-27",
+   "actorUid": "raka@stjbs.sch.id",
+   "type": "checkin",
+   "itemId": null,
+   "text": "checked in for 2026-W44",
+   "createdAt": 1793348919775
+  },
+  {
+   "id": "rcmr98RFQbfF4yTkT4vT",
+   "termId": "2026-27",
+   "actorUid": "dimas@stjbs.sch.id",
+   "type": "checkin",
+   "itemId": null,
+   "text": "checked in for 2026-W44",
+   "createdAt": 1793348720073
+  },
+  {
+   "id": "ur1GWufOblPnhktzMAOH",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "idea",
+   "itemId": null,
+   "text": "pinned an idea: \"qa idea 1793348746156\"",
+   "createdAt": 1793348746235
+  },
+  {
+   "id": "vkDPlG0DuzLGHJ8FxFFy",
+   "termId": "2026-27",
+   "actorUid": "kevin@stjbs.sch.id",
+   "type": "made private",
+   "itemId": "survey",
+   "text": "made private \"Canteen survey\"",
+   "createdAt": 1793348944576
+  },
+  {
+   "id": "xNLXbIeUwiO6C2J6J5C2",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "comment",
+   "itemId": "t1",
+   "text": "commented on \"Order 400 cups\"",
+   "createdAt": 1793348801316
+  },
+  {
+   "id": "xPREUDkuzrr6TrUJm8vp",
+   "termId": "2026-27",
+   "actorUid": "michael@stjbs.sch.id",
+   "type": "created",
+   "itemId": "Gsg8G3Rf8oPVWXC5KsSn",
+   "text": "added \"Cup supplier call mvupkjrm\"",
+   "createdAt": 1793348880750
+  },
+  {
+   "id": "xWLkIPvwn1w4QqF6qAPR",
+   "termId": "2026-27",
+   "actorUid": "nadia@stjbs.sch.id",
+   "type": "created",
+   "itemId": "rBCZfzgeu85bUDj7Nxno",
+   "text": "added \"Photography <script>alert(1)</script>\"",
+   "createdAt": 1793348860963
+  }
+ ],
+ "templates": [
+  {
+   "id": "5WZcJFRSUl2heBsgWOLJ",
+   "template": {
+    "templateName": "Final test tpl <b>",
+    "questions": [],
+    "items": [
+     {
+      "key": "carnival",
+      "parentKey": null,
+      "title": "STJBS Carnival",
+      "notes": "",
+      "type": "task",
+      "teamTag": "",
+      "offsetDays": 0
+     },
+     {
+      "key": "drinks",
+      "parentKey": "carnival",
+      "title": "Drinks",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -5
+     },
+     {
+      "key": "t1",
+      "parentKey": "drinks",
+      "title": "Order 400 cups",
+      "notes": "Working <b>on</b> it",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -42
+     },
+     {
+      "key": "Gsg8G3Rf8oPVWXC5KsSn",
+      "parentKey": "drinks",
+      "title": "Cup supplier call mvupkjrm",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -40
+     },
+     {
+      "key": "t0",
+      "parentKey": "drinks",
+      "title": "Secure Pocari Sweat booth contract",
+      "notes": "",
+      "type": "deal",
+      "teamTag": "Drinks",
+      "offsetDays": -38
+     },
+     {
+      "key": "t2",
+      "parentKey": "drinks",
+      "title": "Price list for drinks stall",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -34
+     },
+     {
+      "key": "WWvujtSWaQtHbREa3fop",
+      "parentKey": "drinks",
+      "title": "Buy ice <i>\"x\"</i> & long long long long long long long long long long long long",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Drinks",
+      "offsetDays": -27
+     },
+     {
+      "key": "food",
+      "parentKey": "carnival",
+      "title": "Food",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Food",
+      "offsetDays": -5
+     },
+     {
+      "key": "t3",
+      "parentKey": "food",
+      "title": "Confirm three food vendors",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Food",
+      "offsetDays": -31
+     },
+     {
+      "key": "t4",
+      "parentKey": "food",
+      "title": "Hygiene briefing for vendors",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Food",
+      "offsetDays": -20
+     },
+     {
+      "key": "games",
+      "parentKey": "carnival",
+      "title": "Games",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Games",
+      "offsetDays": -5
+     },
+     {
+      "key": "t5",
+      "parentKey": "games",
+      "title": "Book inflatable castle",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Games",
+      "offsetDays": -39
+     },
+     {
+      "key": "t6",
+      "parentKey": "games",
+      "title": "Write game rules cards",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Games",
+      "offsetDays": -28
+     },
+     {
+      "key": "sponsors",
+      "parentKey": "carnival",
+      "title": "Sponsors",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Sponsors",
+      "offsetDays": -5
+     },
+     {
+      "key": "t9",
+      "parentKey": "sponsors",
+      "title": "Bank sponsorship pitch",
+      "notes": "",
+      "type": "deal",
+      "teamTag": "Sponsors",
+      "offsetDays": -35
+     },
+     {
+      "key": "t10",
+      "parentKey": "sponsors",
+      "title": "Thank-you letters",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Sponsors",
+      "offsetDays": -10
+     },
+     {
+      "key": "stage",
+      "parentKey": "carnival",
+      "title": "Stage",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Stage",
+      "offsetDays": -5
+     },
+     {
+      "key": "t7",
+      "parentKey": "stage",
+      "title": "Sound system quote",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Stage",
+      "offsetDays": -41
+     },
+     {
+      "key": "t8",
+      "parentKey": "stage",
+      "title": "Run sheet for performances",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Stage",
+      "offsetDays": -26
+     },
+     {
+      "key": "rBCZfzgeu85bUDj7Nxno",
+      "parentKey": "carnival",
+      "title": "Photography <script>alert(1)</script>",
+      "notes": "",
+      "type": "task",
+      "teamTag": "Photography <script>alert(1)</script>",
+      "offsetDays": null
+     }
+    ],
+    "version": 1
+   },
+   "archived": false,
+   "createdAt": 1793348946591,
+   "termId": "2026-27",
+   "name": "Final test tpl <b>",
+   "updatedAt": 1793348946591
+  }
+ ],
+ "announcements": [
+  {
+   "id": "ann1",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Carnival volunteer sign-ups are open",
+   "body": "We need 40 volunteers across booths, safety and clean-up.\nSign up with your section officer by Friday.",
+   "audience": "everyone",
+   "startDate": "2026-10-28",
+   "endDate": "2026-11-14",
+   "createdByUid": "nadia@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "ann2",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Weekly meeting moves to Friday",
+   "body": "This week only, 15:30 in Meeting Room 2. Bring your check-in answers.",
+   "audience": "members",
+   "startDate": "2026-10-30",
+   "endDate": "2026-11-05",
+   "createdByUid": "nadia@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "ann3",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Exam timetable posted",
+   "body": "The mid-term exam timetable is on the school site.",
+   "audience": "everyone",
+   "startDate": "2026-10-10",
+   "endDate": "2026-10-25",
+   "createdByUid": "nadia@stjbs.sch.id",
+   "archived": false
+  }
+ ],
+ "events": [
+  {
+   "id": "BDGZ4j87llamb4HXqqz9",
+   "title": "QA assembly mvupkjrm",
+   "type": "meeting",
+   "date": "2026-10-31",
+   "start": "10:00",
+   "end": "11:00",
+   "location": "",
+   "notes": "",
+   "public": false,
+   "itemId": null,
+   "updatedAt": 1793348896576,
+   "termId": "2026-27",
+   "createdByUid": "michael@stjbs.sch.id",
+   "archived": false,
+   "createdAt": 1793348896576
+  },
+  {
+   "id": "e1",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Council weekly meeting",
+   "type": "meeting",
+   "date": "2026-10-30",
+   "start": "15:30",
+   "end": "16:30",
+   "location": "Meeting Room 2",
+   "notes": "",
+   "public": false,
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "e2",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Booth walk-through",
+   "type": "project",
+   "date": "2026-10-31",
+   "start": "16:30",
+   "end": "17:30",
+   "location": "School field",
+   "notes": "",
+   "public": false,
+   "itemId": "carnival",
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "e3",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Media committee sync",
+   "type": "committee",
+   "date": "2026-11-01",
+   "start": "17:00",
+   "end": "18:00",
+   "location": "Online",
+   "notes": "",
+   "public": false,
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "e4",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Sponsor call with the bank",
+   "type": "project",
+   "date": "2026-11-02",
+   "start": "10:00",
+   "end": "10:30",
+   "location": "Office",
+   "notes": "",
+   "public": false,
+   "itemId": "carnival",
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "e5",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Open house tour",
+   "type": "other",
+   "date": "2026-11-07",
+   "start": "09:00",
+   "end": "12:00",
+   "location": "Main hall",
+   "notes": "",
+   "public": true,
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "e6",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Carnival night",
+   "type": "project",
+   "date": "2026-11-08",
+   "start": "18:00",
+   "end": "21:00",
+   "location": "School field",
+   "notes": "",
+   "public": true,
+   "itemId": "carnival",
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "e7",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "title": "Last week’s debrief",
+   "type": "meeting",
+   "date": "2026-10-27",
+   "start": "15:30",
+   "end": "16:15",
+   "location": "Meeting Room 2",
+   "notes": "",
+   "public": false,
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false
+  },
+  {
+   "id": "is7JhbBaLIGrSu7PbtQp",
+   "title": "QA far event mvupkjrm",
+   "type": "meeting",
+   "date": "2027-03-10",
+   "start": "09:00",
+   "end": "10:00",
+   "location": "",
+   "notes": "",
+   "public": false,
+   "itemId": null,
+   "updatedAt": 1793348908008,
+   "termId": "2026-27",
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false,
+   "createdAt": 1793348908008
+  },
+  {
+   "id": "oZfuWAIZEhXhbi3ZTLvY",
+   "title": "QA public event mvupkjrm",
+   "type": "meeting",
+   "date": "2026-11-14",
+   "start": "10:00",
+   "end": "12:00",
+   "location": "",
+   "notes": "",
+   "public": true,
+   "itemId": null,
+   "updatedAt": 1793348918741,
+   "termId": "2026-27",
+   "createdByUid": "kevin@stjbs.sch.id",
+   "archived": false,
+   "createdAt": 1793348918741
+  }
+ ],
+ "rsvps": [
+  {
+   "id": "e1_alya@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "eventId": "e1",
+   "uid": "alya@stjbs.sch.id",
+   "status": "going",
+   "archived": false
+  },
+  {
+   "id": "e1_kevin@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "eventId": "e1",
+   "uid": "kevin@stjbs.sch.id",
+   "status": "going",
+   "archived": false
+  },
+  {
+   "id": "e1_michael@stjbs.sch.id",
+   "termId": "2026-27",
+   "eventId": "e1",
+   "uid": "michael@stjbs.sch.id",
+   "status": "going",
+   "archived": false,
+   "createdAt": 1793348774247,
+   "updatedAt": 1793348774247
+  },
+  {
+   "id": "e1_raka@stjbs.sch.id",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "eventId": "e1",
+   "uid": "raka@stjbs.sch.id",
+   "status": "not",
+   "archived": false
+  }
+ ],
+ "ideas": [
+  {
+   "id": "ZrIg6Z3wd6tnxvIkPkbL",
+   "termId": "2026-27",
+   "text": "qa idea 1793348746156",
+   "authorUid": "michael@stjbs.sch.id",
+   "archived": false,
+   "createdAt": 1793348746234,
+   "voters": [
+    "michael@stjbs.sch.id"
+   ]
+  },
+  {
+   "id": "i1",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "text": "Movie night in the hall after exams",
+   "authorUid": "bryan@stjbs.sch.id",
+   "voters": [
+    "bryan@stjbs.sch.id",
+    "alya@stjbs.sch.id",
+    "raka@stjbs.sch.id",
+    "clara@stjbs.sch.id"
+   ],
+   "archived": false
+  },
+  {
+   "id": "i2",
+   "termId": "2026-27",
+   "createdAt": 1793345053005,
+   "text": "Healthier options at the canteen",
+   "authorUid": "raka@stjbs.sch.id",
+   "voters": [
+    "raka@stjbs.sch.id",
+    "nadia@stjbs.sch.id",
+    "kevin@stjbs.sch.id"
+   ],
+   "archived": false
+  },
+  {
+   "id": "i3",
+   "termId": "2026-27",
+   "createdAt": 1793341453005,
+   "text": "Open mic lunch on Fridays",
+   "authorUid": "clara@stjbs.sch.id",
+   "voters": [
+    "clara@stjbs.sch.id",
+    "michael@stjbs.sch.id"
+   ],
+   "archived": false
+  },
+  {
+   "id": "i4",
+   "termId": "2026-27",
+   "createdAt": 1793337853005,
+   "text": "More bike racks by the gate",
+   "authorUid": "michael@stjbs.sch.id",
+   "voters": [
+    "michael@stjbs.sch.id"
+   ],
+   "archived": false
+  },
+  {
+   "id": "i5",
+   "termId": "2026-27",
+   "createdAt": 1793334253005,
+   "text": "Quiet study room during exams",
+   "authorUid": "alya@stjbs.sch.id",
+   "voters": [
+    "alya@stjbs.sch.id",
+    "sarah@stjbs.sch.id",
+    "dimas@stjbs.sch.id",
+    "raka@stjbs.sch.id",
+    "bryan@stjbs.sch.id"
+   ],
+   "archived": false
+  }
+ ],
+ "docTemplates": [
+  {
+   "id": "brand-kit",
+   "name": "Logo and photo kit",
+   "kind": "Folder",
+   "url": "https://drive.google.com/drive/folders/1BrandKitFolder",
+   "version": 1,
+   "archived": false,
+   "createdAt": 1793348653005
+  },
+  {
+   "id": "budget",
+   "name": "Budget sheet",
+   "kind": "Sheet",
+   "url": "https://docs.google.com/spreadsheets/d/1BudgetSheetTemplate/edit",
+   "version": 1,
+   "archived": false,
+   "createdAt": 1793348653005
+  },
+  {
+   "id": "event-proposal",
+   "name": "Event proposal",
+   "kind": "Doc",
+   "url": "https://docs.google.com/document/d/1EventProposalTemplate/edit",
+   "version": 1,
+   "archived": false,
+   "createdAt": 1793348653005
+  },
+  {
+   "id": "minutes",
+   "name": "Meeting minutes",
+   "kind": "Doc",
+   "url": "https://docs.google.com/document/d/1MeetingMinutesTemplate/edit",
+   "version": 1,
+   "archived": false,
+   "createdAt": 1793348653005
+  },
+  {
+   "id": "pitch-deck",
+   "name": "Pitch deck",
+   "kind": "Slides",
+   "url": "https://docs.google.com/presentation/d/1PitchDeckTemplate/edit",
+   "version": 1,
+   "archived": false,
+   "createdAt": 1793348653005
+  },
+  {
+   "id": "sponsor-letter",
+   "name": "Sponsor letter",
+   "kind": "Doc",
+   "url": "https://docs.google.com/document/d/1SponsorLetterTemplate/edit",
+   "version": 1,
+   "archived": false,
+   "createdAt": 1793348653005
+  }
+ ],
+ "submissions": [
+  {
+   "id": "sub1",
+   "type": "new-template",
+   "name": "Volunteer rota",
+   "url": "https://docs.google.com/spreadsheets/d/1VolunteerRota/edit",
+   "note": "",
+   "byUid": "michael@stjbs.sch.id",
+   "status": "pending",
+   "archived": false,
+   "createdAt": 1793348653005
+  },
+  {
+   "id": "sub2",
+   "type": "template-edit",
+   "name": "Budget sheet with a contingency line",
+   "url": "https://docs.google.com/spreadsheets/d/1BudgetSheetV2/edit",
+   "note": "",
+   "byUid": "alya@stjbs.sch.id",
+   "status": "pending",
+   "archived": false,
+   "createdAt": 1793348653005,
+   "targetId": "budget"
+  },
+  {
+   "id": "sub3",
+   "type": "new-template",
+   "name": "Permission slip",
+   "url": "https://docs.google.com/document/d/1PermissionSlip/edit",
+   "note": "",
+   "byUid": "raka@stjbs.sch.id",
+   "status": "pending",
+   "archived": false,
+   "createdAt": 1793348653005
+  },
+  {
+   "id": "sub4",
+   "type": "archive",
+   "name": "Carnival 2025 final report",
+   "url": "https://drive.google.com/file/d/1Carnival2025Report/view",
+   "note": "",
+   "byUid": "sarah@stjbs.sch.id",
+   "status": "filed",
+   "archived": false,
+   "createdAt": 1793348653005,
+   "projectId": "carnival"
+  }
+ ],
+ "cache": [
+  {
+   "id": "2026-27",
+   "json": "[{\"id\":\"carnival\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"doing\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":\"2026-09-30\",\"dueDate\":\"2026-12-09\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"project\",\"title\":\"STJBS Carnival\",\"parentId\":null,\"ancestors\":[],\"leadUids\":[],\"public\":true,\"publicBlurb\":\"Our biggest event of the year: games, food and music on the school field for families.\",\"touchedAt\":null},{\"id\":\"drinks\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-12-04\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":\"michael@stjbs.sch.id\",\"kind\":\"team\",\"title\":\"Drinks\",\"parentId\":\"carnival\",\"ancestors\":[\"carnival\"],\"leadUids\":[\"michael@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"food\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-12-04\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":\"alya@stjbs.sch.id\",\"kind\":\"team\",\"title\":\"Food\",\"parentId\":\"carnival\",\"ancestors\":[\"carnival\"],\"leadUids\":[\"alya@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"games\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-12-04\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":\"bryan@stjbs.sch.id\",\"kind\":\"team\",\"title\":\"Games\",\"parentId\":\"carnival\",\"ancestors\":[\"carnival\"],\"leadUids\":[\"bryan@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"stage\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-12-04\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":\"clara@stjbs.sch.id\",\"kind\":\"team\",\"title\":\"Stage\",\"parentId\":\"carnival\",\"ancestors\":[\"carnival\"],\"leadUids\":[\"clara@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"sponsors\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-12-04\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":\"sarah@stjbs.sch.id\",\"kind\":\"team\",\"title\":\"Sponsors\",\"parentId\":\"carnival\",\"ancestors\":[\"carnival\"],\"leadUids\":[\"sarah@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t0\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"michael@stjbs.sch.id\",\"alya@stjbs.sch.id\",\"raka@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":true,\"blockedReason\":\"Waiting on Pocari reply\",\"blockedOnUid\":\"sarah@stjbs.sch.id\",\"startDate\":null,\"dueDate\":\"2026-11-01\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":true,\"dealStage\":\"Negotiating\",\"pledgedIdr\":15000000,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Secure Pocari Sweat booth contract\",\"parentId\":\"drinks\",\"ancestors\":[\"carnival\",\"drinks\"],\"leadUids\":[\"michael@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t1\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"raka@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-10-28\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Order 400 cups\",\"parentId\":\"drinks\",\"ancestors\":[\"carnival\",\"drinks\"],\"leadUids\":[\"michael@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t2\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"michael@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"done\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-05\",\"assignedAt\":1793348653005,\"completedAt\":1793262253005,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Price list for drinks stall\",\"parentId\":\"drinks\",\"ancestors\":[\"carnival\",\"drinks\"],\"leadUids\":[\"michael@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t3\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"alya@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-08\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Confirm three food vendors\",\"parentId\":\"food\",\"ancestors\":[\"carnival\",\"food\"],\"leadUids\":[\"alya@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t4\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"dimas@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-19\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Hygiene briefing for vendors\",\"parentId\":\"food\",\"ancestors\":[\"carnival\",\"food\"],\"leadUids\":[\"alya@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t5\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"bryan@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-10-31\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Book inflatable castle\",\"parentId\":\"games\",\"ancestors\":[\"carnival\",\"games\"],\"leadUids\":[\"bryan@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t6\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"clara@stjbs.sch.id\",\"bryan@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"doing\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-11\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Write game rules cards\",\"parentId\":\"games\",\"ancestors\":[\"carnival\",\"games\"],\"leadUids\":[\"bryan@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t7\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"clara@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-10-29\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Sound system quote\",\"parentId\":\"stage\",\"ancestors\":[\"carnival\",\"stage\"],\"leadUids\":[\"clara@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t8\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"kevin@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-13\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Run sheet for performances\",\"parentId\":\"stage\",\"ancestors\":[\"carnival\",\"stage\"],\"leadUids\":[\"clara@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t9\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"sarah@stjbs.sch.id\",\"nadia@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-04\",\"assignedAt\":1793348653005,\"completedAt\":null,\"archived\":false,\"isDeal\":true,\"dealStage\":\"Contacted\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Bank sponsorship pitch\",\"parentId\":\"sponsors\",\"ancestors\":[\"carnival\",\"sponsors\"],\"leadUids\":[\"sarah@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"t10\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"dimas@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"done\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-29\",\"assignedAt\":1793348653005,\"completedAt\":1793089453005,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Thank-you letters\",\"parentId\":\"sponsors\",\"ancestors\":[\"carnival\",\"sponsors\"],\"leadUids\":[\"sarah@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"survey\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"dimas@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-24\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":\"raka@stjbs.sch.id\",\"kind\":\"project\",\"title\":\"Canteen survey\",\"parentId\":null,\"ancestors\":[],\"leadUids\":[\"raka@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"s1\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"raka@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-03\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Draft survey questions\",\"parentId\":\"survey\",\"ancestors\":[\"survey\"],\"leadUids\":[\"raka@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"s2\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"raka@stjbs.sch.id\",\"clara@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"todo\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-11-07\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Ask the canteen manager for a meeting\",\"parentId\":\"survey\",\"ancestors\":[\"survey\"],\"leadUids\":[\"raka@stjbs.sch.id\"],\"touchedAt\":null},{\"id\":\"welcome\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"done\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-09-10\",\"assignedAt\":null,\"completedAt\":null,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"project\",\"title\":\"Welcome week\",\"parentId\":null,\"ancestors\":[],\"leadUids\":[],\"public\":true,\"publicBlurb\":\"New students met their buddies and toured the school.\",\"touchedAt\":null},{\"id\":\"w1\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"alya@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"done\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-09-05\",\"assignedAt\":null,\"completedAt\":1788596653005,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Buddy list\",\"parentId\":\"welcome\",\"ancestors\":[\"welcome\"],\"leadUids\":[],\"touchedAt\":null},{\"id\":\"w2\",\"termId\":\"2026-27\",\"createdAt\":1793348653005,\"updatedAt\":1793348653005,\"notes\":\"\",\"link\":\"\",\"assigneeUids\":[\"bryan@stjbs.sch.id\"],\"createdByUid\":\"nadia@stjbs.sch.id\",\"status\":\"done\",\"blocked\":false,\"blockedReason\":\"\",\"blockedOnUid\":null,\"startDate\":null,\"dueDate\":\"2026-09-08\",\"assignedAt\":null,\"completedAt\":1788855853005,\"archived\":false,\"isDeal\":false,\"dealStage\":\"Lead\",\"pledgedIdr\":0,\"receivedIdr\":0,\"leadUid\":null,\"kind\":\"task\",\"title\":\"Campus tour route\",\"parentId\":\"welcome\",\"ancestors\":[\"welcome\"],\"leadUids\":[],\"touchedAt\":null}]",
+   "at": {
+    "type": "firestore/timestamp/1.0",
+    "seconds": 0,
+    "nanoseconds": 0
+   },
+   "count": 23,
+   "updatedAt": 1793348653005
+  }
+ ],
+ "public": [
+  {
+   "id": "feed",
+   "json": "{\"v\":1,\"projects\":[{\"title\":\"STJBS Carnival\",\"stage\":\"In progress\",\"pct\":15,\"done\":2,\"total\":13,\"blurb\":\"Our biggest event of the year: games, food and music on the school field for families.\",\"updatedAt\":1793348653005},{\"title\":\"Welcome week\",\"stage\":\"Done\",\"pct\":100,\"done\":2,\"total\":2,\"blurb\":\"New students met their buddies and toured the school.\",\"updatedAt\":1793348653005}],\"events\":[{\"title\":\"Open house tour\",\"type\":\"other\",\"date\":\"2026-11-07\",\"start\":\"09:00\",\"end\":\"12:00\",\"location\":\"Main hall\"},{\"title\":\"Carnival night\",\"type\":\"project\",\"date\":\"2026-11-08\",\"start\":\"18:00\",\"end\":\"21:00\",\"location\":\"School field\"},{\"title\":\"QA public event mvupkjrm\",\"type\":\"meeting\",\"date\":\"2026-11-14\",\"start\":\"10:00\",\"end\":\"12:00\",\"location\":\"\"}],\"announcements\":[{\"title\":\"Carnival volunteer sign-ups are open\",\"body\":\"We need 40 volunteers across booths, safety and clean-up.\\nSign up with your section officer by Friday.\",\"startDate\":\"2026-10-28\",\"endDate\":\"2026-11-14\"}]}",
+   "hash": "e8618d8e",
+   "updatedAt": 1793348945848
+  }
+ ],
+ "settings": [
+  {
+   "id": "current",
+   "termId": "2026-27",
+   "createdAt": 1793348653005,
+   "termName": "2026-27",
+   "startDate": "2026-08-03",
+   "startWeekId": "2026-W32"
+  },
+  {
+   "id": "digest"
+  }
+ ]
+}

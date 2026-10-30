@@ -22,19 +22,19 @@ export function rows(termCheckins) {
 }
 
 function Chart({ snaps }) {
-  if (snaps.length < 2) return <p class="jy-caption">The line appears once two weekly snapshots exist. {snaps.length} saved so far.</p>;
+  if (snaps.length < 2) return <p class="fl-caption">The line appears once two weekly snapshots exist. {snaps.length} saved so far.</p>;
   const W = 600, H = 160, P = 32, max = Math.max(1, ...snaps.map((s) => s.totalOpen));
   const x = (i) => P + (i * (W - 2 * P)) / (snaps.length - 1), y = (v) => H - P - (v * (H - 2 * P)) / max;
   return (
-    <figure class="jy-scroll jy-figure">
-      <svg class="jy-chart" viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Open tasks per week, from ${snaps[0].totalOpen} to ${snaps.at(-1).totalOpen}`}>
+    <figure class="fl-scroll">
+      <svg class="fl-chart" viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Open tasks per week, from ${snaps[0].totalOpen} to ${snaps.at(-1).totalOpen}`}>
         <line class="grid" x1={P} x2={W - P} y1={y(max)} y2={y(max)} /><line class="axis" x1={P} x2={W - P} y1={y(0)} y2={y(0)} />
         <text x={4} y={y(max) + 4}>{max}</text><text x={4} y={y(0) + 4}>0</text>
         <polyline class="ser s1" points={snaps.map((s, i) => `${x(i)},${y(s.totalOpen)}`).join(' ')} />
         <text class="lab1" x={x(snaps.length - 1) - 40} y={y(snaps.at(-1).totalOpen) - 8}>Open</text>
         <text x={P} y={H - 8}>{snaps[0].weekId}</text><text x={W - P - 64} y={H - 8}>{snaps.at(-1).weekId}</text>
       </svg>
-      <figcaption class="jy-caption">Open tasks (count) per week, n = {snaps.length} snapshots. Source: saved weekly snapshots.</figcaption>
+      <figcaption class="fl-caption">Open tasks (count) per week, n = {snaps.length} snapshots. Source: saved weekly snapshots.</figcaption>
     </figure>
   );
 }
@@ -60,15 +60,15 @@ export function Workload() {
   return (
     <>
       <Title light="Who carries what." bold="Workload." title="Workload" />
-      <p class="jy-caption">Live numbers come from tasks every member can read. Only the weekly snapshots below are restricted to the advisor, president and vice president.</p>
-      {err && <p class="jy-alert" role="alert">{err}</p>}
-      <div class="jy-section jy-scroll"><table class="jy-table">
-        <thead><tr><th>Member</th><th class="num">Open</th><th class="num">Overdue</th><th class="num">Blocked</th><th class="num">Done this term</th><th class="num">Done, last 7 days</th><th class="num">Check-ins</th></tr></thead>
+      <p class="fl-caption">Live numbers come from tasks every member can read. Only the weekly snapshots below are restricted to the advisor, president and vice president.</p>
+      {err && <p class="fl-alert" role="alert">{err}</p>}
+      <div class="fl-scroll"><table class="fl-table">
+        <thead><tr><th>Member</th><th class="fl-num">Open</th><th class="fl-num">Overdue</th><th class="fl-num">Blocked</th><th class="fl-num">Done this term</th><th class="fl-num">Done, last 7 days</th><th class="fl-num">Check-ins</th></tr></thead>
         <tbody>{r.map((x) => (
-          <tr key={x.id}><td><a href={`#/people/${x.id}`}>{x.name}</a></td><td class="num">{x.open}</td><td class="num">{x.overdue}</td><td class="num">{x.blocked}</td>
-            <td class="num">{x.done}</td><td class="num">{x.done7}</td><td class="num">{x.checkins == null ? 'Loading' : `${x.checkins} of ${x.weeks ?? '?'}`}</td></tr>))}</tbody>
+          <tr key={x.id}><td><a href={`#/people/${x.id}`}>{x.name}</a></td><td class="fl-num">{x.open}</td><td class="fl-num">{x.overdue}</td><td class="fl-num">{x.blocked}</td>
+            <td class="fl-num">{x.done}</td><td class="fl-num">{x.done7}</td><td class="fl-num">{x.checkins == null ? 'Loading' : `${x.checkins} of ${x.weeks ?? '?'}`}</td></tr>))}</tbody>
       </table></div>
-      <section class="jy-section" aria-labelledby="trend-h"><h2 id="trend-h" class="jy-h2">Open tasks over the term</h2><Chart snaps={snaps} /></section>
+      <section class="fl-section" aria-labelledby="trend-h"><h2 id="trend-h" class="fl-h2">Open tasks over the term</h2><Chart snaps={snaps} /></section>
     </>
   );
 }
