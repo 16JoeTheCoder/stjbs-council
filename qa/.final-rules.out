@@ -43,3 +43,242 @@ ok 4 - assignee can mark done but not change due date or assignees
   duration_ms: 333.443193
   type: 'test'
   ...
+# [2026-10-30T08:15:26.400Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fad error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:26.468Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fae error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L82:24 for 'create' @ L82, evaluation error at L87:24 for 'update' @ L87, false for 'create' @ L82
+# Subtest: lead can assign inside their subtree but not outside
+ok 5 - lead can assign inside their subtree but not outside
+  ---
+  duration_ms: 290.004476
+  type: 'test'
+  ...
+# [2026-10-30T08:15:26.617Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fb0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:26.678Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fb1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L82:24 for 'create' @ L82, evaluation error at L87:24 for 'update' @ L87, false for 'create' @ L82
+# Subtest: leadUids cannot be forged
+ok 6 - leadUids cannot be forged
+  ---
+  duration_ms: 210.462766
+  type: 'test'
+  ...
+# [2026-10-30T08:15:26.905Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fb4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# Subtest: lead change propagates in one batch
+ok 7 - lead change propagates in one batch
+  ---
+  duration_ms: 226.564174
+  type: 'test'
+  ...
+# [2026-10-30T08:15:27.058Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fb6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:27.081Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fb7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L99
+# [2026-10-30T08:15:27.117Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fb8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L102:24 for 'delete' @ L102, false for 'delete' @ L102
+# Subtest: teacher can comment but not edit tasks
+ok 8 - teacher can comment but not edit tasks
+  ---
+  duration_ms: 227.791946
+  type: 'test'
+  ...
+# [2026-10-30T08:15:27.247Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fbb error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+# [2026-10-30T08:15:27.286Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fbc error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+# [2026-10-30T08:15:27.311Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fbd error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+# [2026-10-30T08:15:27.339Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fbe error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+# [2026-10-30T08:15:27.363Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fbf error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+# Subtest: nothing else can be deleted
+ok 9 - nothing else can be deleted
+  ---
+  duration_ms: 229.03798
+  type: 'test'
+  ...
+# [2026-10-30T08:15:27.491Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fc1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L132:23 for 'create' @ L132, evaluation error at L132:23 for 'update' @ L132, false for 'update' @ L132
+# Subtest: president cannot write settings/current; advisor can
+ok 10 - president cannot write settings/current; advisor can
+  ---
+  duration_ms: 175.492613
+  type: 'test'
+  ...
+# [2026-10-30T08:15:27.677Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fc4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L113:24 for 'create' @ L113, false for 'create' @ L113
+# [2026-10-30T08:15:27.729Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fc6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L113
+# Subtest: writes must carry the current termId
+ok 11 - writes must carry the current termId
+  ---
+  duration_ms: 190.531956
+  type: 'test'
+  ...
+# Subtest: stats readable only by advisor, president and vp
+ok 12 - stats readable only by advisor, president and vp
+  ---
+  duration_ms: 316.687987
+  type: 'test'
+  ...
+# [2026-10-30T08:15:28.248Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fcf error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L120, false for 'update' @ L119
+# Subtest: notifications readable only by their owner, sent only as yourself
+ok 13 - notifications readable only by their owner, sent only as yourself
+  ---
+  duration_ms: 299.403638
+  type: 'test'
+  ...
+# [2026-10-30T08:15:28.490Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fd5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L107, false for 'update' @ L107
+# Subtest: check-ins: own document only
+ok 14 - check-ins: own document only
+  ---
+  duration_ms: 144.549945
+  type: 'test'
+  ...
+# [2026-10-30T08:15:28.634Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fd7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L82:24 for 'create' @ L82, evaluation error at L87:24 for 'update' @ L87, false for 'create' @ L82
+# [2026-10-30T08:15:28.654Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fd8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L82:24 for 'create' @ L82, evaluation error at L87:24 for 'update' @ L87, false for 'create' @ L82
+# Subtest: naming yourself lead does not grant create rights (G1-01)
+ok 15 - naming yourself lead does not grant create rights (G1-01)
+  ---
+  duration_ms: 163.637121
+  type: 'test'
+  ...
+# [2026-10-30T08:15:28.750Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fda error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:28.792Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fdb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L42, false for 'update' @ L47
+# [2026-10-30T08:15:28.829Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fdc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:28.873Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fdd error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# Subtest: field values are validated (G1-10)
+ok 16 - field values are validated (G1-10)
+  ---
+  duration_ms: 220.558529
+  type: 'test'
+  ...
+# [2026-10-30T08:15:28.985Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fdf error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L42, evaluation error at L47:24 for 'update' @ L47, false for 'create' @ L42
+# [2026-10-30T08:15:29.043Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fe1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L42:24 for 'create' @ L42, evaluation error at L47:24 for 'update' @ L47, false for 'create' @ L42
+# Subtest: roster: school domain only; officers cannot add members
+ok 17 - roster: school domain only; officers cannot add members
+  ---
+  duration_ms: 168.162336
+  type: 'test'
+  ...
+# [2026-10-30T08:15:29.259Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fe7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L42:24 for 'create' @ L42, evaluation error at L47:24 for 'update' @ L47, false for 'create' @ L42
+# [2026-10-30T08:15:29.285Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fe8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L42:24 for 'create' @ L42, evaluation error at L47:24 for 'update' @ L47, false for 'create' @ L42
+# [2026-10-30T08:15:29.327Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fe9 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L42:24 for 'create' @ L42, evaluation error at L47:24 for 'update' @ L47, false for 'create' @ L42
+# Subtest: roster: president adds only non-admin roles
+ok 18 - roster: president adds only non-admin roles
+  ---
+  duration_ms: 284.48597
+  type: 'test'
+  ...
+# [2026-10-30T08:15:29.470Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13feb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# [2026-10-30T08:15:29.486Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fec error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# [2026-10-30T08:15:29.498Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fed error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# Subtest: roster: president edits name, section and reports-to only
+ok 19 - roster: president edits name, section and reports-to only
+  ---
+  duration_ms: 174.305317
+  type: 'test'
+  ...
+# [2026-10-30T08:15:29.626Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13fef error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# [2026-10-30T08:15:29.635Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ff0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# [2026-10-30T08:15:29.647Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ff1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# [2026-10-30T08:15:29.659Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ff2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# [2026-10-30T08:15:29.678Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ff3 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L42:24 for 'create' @ L42, evaluation error at L47:24 for 'update' @ L47, false for 'create' @ L42
+# Subtest: roster: vp changes any role and active flag except the advisor and their own
+ok 20 - roster: vp changes any role and active flag except the advisor and their own
+  ---
+  duration_ms: 176.947026
+  type: 'test'
+  ...
+# [2026-10-30T08:15:29.886Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ff8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# [2026-10-30T08:15:29.938Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ffa error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L47:24 for 'update' @ L47, false for 'update' @ L47
+# Subtest: roster: only the advisor assigns advisor; nobody changes their own role or active flag (G1-11)
+ok 21 - roster: only the advisor assigns advisor; nobody changes their own role or active flag (G1-11)
+  ---
+  duration_ms: 259.595938
+  type: 'test'
+  ...
+# [2026-10-30T08:15:30.178Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ffc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, Property touchedAt is undefined on object. for 'update' @ L87
+# [2026-10-30T08:15:30.204Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d13ffd error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# Subtest: item writes must stamp the server time
+ok 22 - item writes must stamp the server time
+  ---
+  duration_ms: 292.787078
+  type: 'test'
+  ...
+# Subtest: legacy items without the new fields stay editable (L1-27)
+ok 23 - legacy items without the new fields stay editable (L1-27)
+  ---
+  duration_ms: 143.90673
+  type: 'test'
+  ...
+# [2026-10-30T08:15:30.482Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14004 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:30.514Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14005 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:30.550Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14006 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:30.576Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14007 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# [2026-10-30T08:15:30.630Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14009 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L82:24 for 'create' @ L82, evaluation error at L87:24 for 'update' @ L87, false for 'create' @ L82
+# Subtest: only advisor, president and vp set public and publicBlurb, on root projects only
+ok 24 - only advisor, president and vp set public and publicBlurb, on root projects only
+  ---
+  duration_ms: 314.22577
+  type: 'test'
+  ...
+# [2026-10-30T08:15:30.824Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d1400e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L87:24 for 'update' @ L87, false for 'update' @ L87
+# Subtest: a public project can be retitled only by an admin (L1-11)
+ok 25 - a public project can be retitled only by an admin (L1-11)
+  ---
+  duration_ms: 220.558467
+  type: 'test'
+  ...
+# [2026-10-30T08:15:31.076Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14014 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L153:24 for 'create' @ L153, evaluation error at L155:24 for 'update' @ L155, false for 'create' @ L153
+# [2026-10-30T08:15:31.122Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14015 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L153:24 for 'create' @ L153, evaluation error at L155:24 for 'update' @ L155, false for 'create' @ L153
+# [2026-10-30T08:15:31.161Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14016 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L153, false for 'update' @ L155
+# [2026-10-30T08:15:31.195Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14017 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L153, false for 'update' @ L155
+# [2026-10-30T08:15:31.237Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14018 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L153, false for 'update' @ L155
+# [2026-10-30T08:15:31.332Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d1401a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L155:24 for 'update' @ L155, false for 'update' @ L155
+# Subtest: announcements: admins write, members read, teachers and officers cannot write
+ok 26 - announcements: admins write, members read, teachers and officers cannot write
+  ---
+  duration_ms: 422.403766
+  type: 'test'
+  ...
+# [2026-10-30T08:15:31.507Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d1401d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L169:24 for 'create' @ L169, evaluation error at L172:24 for 'update' @ L172, false for 'create' @ L169
+# [2026-10-30T08:15:31.562Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d1401e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# evaluation error at L169:24 for 'create' @ L169, evaluation error at L172:24 for 'update' @ L172, false for 'create' @ L169
+# [2026-10-30T08:15:31.644Z]  @firebase/firestore: Firestore (13.1.0): GrpcConnection RPC 'Write' stream 0x21d14020 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+# false for 'create' @ L169, false for 'update' @ L172
