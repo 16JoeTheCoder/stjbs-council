@@ -2,7 +2,8 @@
 const JKT_MS = 7 * 3600e3, DAY_MS = 86400e3;
 
 export const isoDay = (ms = Date.now()) => new Date(ms + JKT_MS).toISOString().slice(0, 10);
-export const stamp = (ms) => new Date(ms + JKT_MS).toISOString().slice(0, 16).replace('T', ' ');
+// "Thu 29 Oct, 15:30" in Jakarta time; a missing or damaged value renders as nothing rather than breaking the page.
+export const stamp = (ms) => (Number.isFinite(ms) ? `${fmtDay(isoDay(ms))}, ${new Date(ms + JKT_MS).toISOString().slice(11, 16)}` : '');
 export const addDays = (day, n) => new Date(Date.parse(day) + n * DAY_MS).toISOString().slice(0, 10);
 export const daysBetween = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
 const dow = (day) => (new Date(Date.parse(day)).getUTCDay() + 6) % 7; // Monday = 0

@@ -1,6 +1,6 @@
 // The shell: left rail on laptop, floating tab bar on phone, search, bell and avatar menu in the top bar,
 // and a member or admin view. Routes are hash routes under /app/.
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useErrorBoundary, useRef, useState } from 'preact/hooks';
 import { S, loaded, set, signOutHere, unreadCount, useStore } from './store.js';
 import { isAdmin, isExec, roleName } from './model.js';
 import { markRead } from './actions.js';
@@ -136,6 +136,17 @@ function More({ close, adminView, switchView }) {
   );
 }
 
+// One broken document must not blank the whole app: the page shows a way out instead.
+function Guard({ children }) {
+  const [err, reset] = useErrorBoundary();
+  if (!err) return children;
+  return (
+    <><Title light="Something broke." bold="This page could not load." title="Error" />
+      <p class="fl-muted">Some data on this page is damaged ({String(err.message || err).slice(0, 80)}). Other pages still work.</p>
+      <div class="fl-actions"><a class="fl-btn fl-btn--ghost" href="#/week" onClick={reset}>Go to Home</a><button class="fl-btn fl-btn--ghost" onClick={reset}>Try again</button></div></>
+  );
+}
+
 const readView = () => { try { return localStorage.getItem('council-view') || 'member'; } catch { return 'member'; } };
 
 export function App() {
@@ -169,7 +180,7 @@ export function App() {
           <div class="fl-tools"><Bell route={route} /><UserMenu route={route} adminView={adminView} switchView={switchView} /></div>
         </header>
         {S.error && <p class="fl-alert" role="alert">{S.error}</p>}
-        <main id="main" tabIndex={-1} class="fl-main"><Page key={`${route.name}/${route.id}`} id={route.id} q={route.q} /></main>
+        <main id="main" tabIndex={-1} class="fl-main"><Guard key={`${route.name}/${route.id}`}><Page id={route.id} q={route.q} /></Guard></main>
       </div>
       <nav class="fl-tabbar" aria-label="Tabs">
         {TABS.map(([k, label, icon]) => <a key={k} href={`#/${k}`} aria-label={label} aria-current={key === k ? 'page' : undefined}><Icon n={icon} /></a>)}

@@ -33,14 +33,18 @@ service cloud.firestore {
     }
     function optString(d, k) { return d.get(k, null) == null || d.get(k, null) is string; }
 
+    function memberOk(d) {
+      return d.role in roles() && d.active is bool && text(d.get('name', 'x'), 1, 60) && text(d.get('section', ''), 0, 60)
+        && (d.get('reportsTo', null) == null || d.get('reportsTo', null) is string);
+    }
     match /members/{email} {
       allow read: if active();
       allow create: if active() && termOk() && isAdmin()
         && email == email.lower() && email.matches('^[^@]+@stjbs[.]sch[.]id$')
-        && request.resource.data.active == true && request.resource.data.role in roles()
+        && request.resource.data.active == true && memberOk(request.resource.data)
         && (isAdvisor() || request.resource.data.role != 'advisor')
         && (role() != 'president' || request.resource.data.role in ['officer', 'treasurer', 'secretary', 'teacher']);
-      allow update: if active() && termOk() && request.resource.data.role in roles()
+      allow update: if active() && termOk() && memberOk(request.resource.data)
         && !(email == me() && changed().hasAny(['role', 'active']))
         && (isAdvisor()
           || (role() == 'vp' && resource.data.role != 'advisor' && request.resource.data.role != 'advisor')
@@ -93,7 +97,7 @@ service cloud.firestore {
     match /comments/{id} {
       allow read: if active();
       allow create: if active() && termOk() && request.resource.data.authorUid == me()
-        && request.resource.data.text is string && request.resource.data.text.size() <= 500
+        && request.resource.data.text is string && request.resource.data.text.size() <= 500 && request.resource.data.createdAt is number
         && request.resource.data.get('mentionUids', []) is list && request.resource.data.get('mentionUids', []).size() <= 10;
       allow delete: if active() && resource.data.authorUid == me();
     }
@@ -106,14 +110,16 @@ service cloud.firestore {
 
     match /activity/{id} {
       allow read: if active();
-      allow create: if active() && termOk() && request.resource.data.actorUid == me();
+      allow create: if active() && termOk() && request.resource.data.actorUid == me()
+        && request.resource.data.text is string && request.resource.data.text.size() <= 300 && request.resource.data.createdAt is number;
     }
 
     match /notifications/{uid}/items/{id} {
       allow read, delete: if active() && uid == me();
       allow update: if active() && uid == me() && changed().hasOnly(['read']);
       allow create: if active() && termOk() && request.resource.data.fromUid == me()
-        && request.resource.data.toUid == uid && request.resource.data.read == false;
+        && request.resource.data.toUid == uid && request.resource.data.read == false
+        && request.resource.data.text is string && request.resource.data.text.size() <= 300 && request.resource.data.createdAt is number;
     }
 
     match /templates/{id} {

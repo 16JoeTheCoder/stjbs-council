@@ -397,3 +397,16 @@ test('approving a new template creates it in the same batch', async () => {
   b.set(doc(db, 'docTemplates/new1'), tpl({ name: 'Budget sheet', url: 'https://docs.google.com/spreadsheets/d/x/edit' }));
   await assertSucceeds(b.commit());
 });
+
+test('comments, notifications and activity need a numeric createdAt and bounded text (M3-S1)', async () => {
+  const db = as(people.teacher);
+  await assertFails(setDoc(doc(db, 'comments/bad1'), { termId: T, itemId: 't1', authorUid: people.teacher, text: 'x' }));
+  await assertFails(setDoc(doc(db, 'comments/bad2'), { termId: T, itemId: 't1', authorUid: people.teacher, text: 'x', createdAt: 'soon' }));
+  await assertFails(setDoc(doc(db, `notifications/${people.officer}/items/bad`), { termId: T, toUid: people.officer, fromUid: people.teacher, type: 'comment', itemId: 't1', text: 'x', read: false }));
+  await assertFails(setDoc(doc(db, 'activity/bad'), { termId: T, actorUid: people.teacher, type: 'x', text: 'x'.repeat(301), createdAt: 1 }));
+});
+test('member fields are typed so a bad section cannot break screens', async () => {
+  await assertFails(updateDoc(doc(as(people.president), `members/${people.officer}`), { section: { evil: true }, termId: T }));
+  await assertFails(updateDoc(doc(as(people.president), `members/${people.officer}`), { name: '', termId: T }));
+  await assertSucceeds(updateDoc(doc(as(people.president), `members/${people.officer}`), { section: 'Welfare', termId: T }));
+});

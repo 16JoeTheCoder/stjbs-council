@@ -3,14 +3,14 @@
 // On a phone the open search fills the screen.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { S } from './store.js';
-import { roleName, tree } from './model.js';
+import { googleUrl, roleName, tree } from './model.js';
 import { fmtDay } from './time.js';
 import { AnnouncementSheet, Icon } from './shared.jsx';
 
 function results(q) {
   const t = q.trim().toLowerCase();
   if (t.length < 2) return [];
-  const has = (...xs) => xs.some((x) => x && x.toLowerCase().includes(t));
+  const has = (...xs) => xs.some((x) => typeof x === 'string' && x.toLowerCase().includes(t));
   const { byId } = tree(), kind = { project: 'Project', team: 'Subteam' };
   return [
     ['Projects and tasks', S.items.filter((i) => has(i.title)).slice(0, 6)
@@ -21,7 +21,7 @@ function results(q) {
       .map((e) => ({ key: e.id, label: e.title, meta: fmtDay(e.date), href: `#/calendar?d=${e.date}&e=${e.id}` }))],
     ['Announcements', S.announcements.filter((a) => has(a.title, a.body)).slice(0, 3)
       .map((a) => ({ key: a.id, label: a.title, meta: fmtDay(a.startDate), ann: a }))],
-    ['Templates', S.docTemplates.filter((d) => has(d.name, d.kind)).slice(0, 5)
+    ['Templates', S.docTemplates.filter((d) => googleUrl(d.url) && has(d.name, d.kind)).slice(0, 5)
       .map((d) => ({ key: d.id, label: d.name, meta: d.kind, href: d.url, ext: true }))],
   ].filter(([, list]) => list.length);
 }

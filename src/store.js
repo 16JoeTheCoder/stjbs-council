@@ -146,6 +146,7 @@ onAuthStateChanged(auth, boot);
 // another tab still has the app open, so it never blocks signing out.
 export async function signOutHere() {
   await signOut(auth).catch(() => {});
+  try { Object.keys(localStorage).filter((k) => k.startsWith('council-filter-')).forEach((k) => localStorage.removeItem(k)); } catch { /* storage blocked */ }
   try { await terminate(db); await clearIndexedDbPersistence(db); } catch { /* another tab holds the cache */ }
   location.reload();
 }
