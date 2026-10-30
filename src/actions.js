@@ -1,5 +1,5 @@
 // Every write. Each change carries termId and writes its activity entry and notifications in the same batch.
-import { collection, doc, writeBatch, deleteDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, collection, doc, writeBatch, deleteDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { S, fail, toast } from './store.js';
 import { isAdmin, tree } from './model.js';
@@ -143,3 +143,13 @@ export async function putDoc(path, data, msg) {
   try { await setDoc(doc(db, path), { ...data, termId: data.termId || T(), updatedAt: now() }, { merge: true }); if (msg) toast(msg); return true; }
   catch (e) { fail(e); return false; }
 }
+
+// ---- Ideas: anyone but teachers pins one and votes; votes add or remove only yourself (the rules check it).
+export const pinIdea = (text) => run((b) => {
+  b.set(newRef('ideas'), { termId: T(), text, authorUid: S.me.id, voters: [S.me.id], archived: false, createdAt: now() });
+  log(b, 'idea', null, `pinned an idea: "${text.slice(0, 60)}"`);
+}, 'Idea pinned.');
+export const toggleVote = (idea) =>
+  updateDoc(doc(db, 'ideas', idea.id), { voters: idea.voters.includes(S.me.id) ? arrayRemove(S.me.id) : arrayUnion(S.me.id) }).catch(fail);
+export const archiveIdea = (idea) =>
+  updateDoc(doc(db, 'ideas', idea.id), { archived: true, updatedAt: now() }).then(() => toast('Idea archived.'), fail);

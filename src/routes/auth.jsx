@@ -1,16 +1,20 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import {
   createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut,
 } from 'firebase/auth';
 import { auth } from '../firebase.js';
 import { S, boot } from '../store.js';
 import { Title } from '../ui.jsx';
+import { Install } from './settings.jsx';
+import sky from '../../design/fiatlux/img/campus-sky.webp';
+import crest from '../../design/fiatlux/img/crest-256.png';
 
 const MESSAGES = {
   'auth/invalid-credential': 'Email or password is wrong. Check both, or reset your password.',
   'auth/user-not-found': 'Email or password is wrong. Check both, or create an account.',
   'auth/wrong-password': 'Email or password is wrong. Check both, or reset your password.',
   'auth/invalid-email': 'That email address is not valid. Use your school email.',
+  'auth/missing-password': 'Type your password, then sign in.',
   'auth/email-already-in-use': 'That email already has an account. Sign in or reset your password.',
   'auth/weak-password': 'That password is too short. Use at least 8 characters.',
   'auth/too-many-requests': 'Too many attempts. Wait a few minutes, then try again.',
@@ -18,8 +22,14 @@ const MESSAGES = {
 };
 const say = (e) => MESSAGES[e.code] || `Something went wrong (${e.code || e.message}). Try again.`;
 
-let deferredInstall = null;
-addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
+// Split layout: the school on the left (a stage surface, dark in both themes), the form on the right.
+const Stage = () => (
+  <section class="fl-auth__stage fl-stage" aria-label="St. Johannes Berchmans Student Council">
+    <img src={sky} alt="" />
+    <div class="fl-brand"><img src={crest} alt="" width="44" height="44" /><div><b>Student Council</b><span>St. Johannes Berchmans</span></div></div>
+    <p class="fl-display">Lead. <span class="fl-light">Serve. Build.</span></p>
+  </section>
+);
 
 export function Login() {
   const [mode, setMode] = useState('in'), [email, setEmail] = useState(''), [pw, setPw] = useState('');
@@ -39,44 +49,34 @@ export function Login() {
     } catch (err) { setError({ msg: say(err), field: err.code === 'auth/invalid-email' || mode === 'reset' ? 'email' : 'password' }); }
     setBusy(false);
   };
-  return (
-    <main id="main" class="jy-auth">
-      <Title light={titles[mode][0]} bold={titles[mode][1]} />
-      {S.phase === 'no-roster' && <p class="jy-alert" role="alert">Your email isn't on the council roster. Ask the president to add it.</p>}
-      <form class="jy-form" onSubmit={submit} noValidate>
-        <label class={`jy-field${error.field === 'email' ? ' jy-field--error' : ''}`}><span class="jy-field__label">School email</span>
-          <input class="jy-field__input" type="email" autocomplete="username" required value={email} onInput={(e) => setEmail(e.target.value)} placeholder="name@stjbs.sch.id"
-            aria-invalid={error.field === 'email' || undefined} aria-describedby={error.field === 'email' ? 'auth-error' : undefined} /></label>
-        {mode !== 'reset' && (
-          <label class={`jy-field${error.field === 'password' ? ' jy-field--error' : ''}`}><span class="jy-field__label">Password</span>
-            <input class="jy-field__input" type="password" required minLength={8} autocomplete={mode === 'up' ? 'new-password' : 'current-password'}
-              value={pw} onInput={(e) => setPw(e.target.value)} aria-invalid={error.field === 'password' || undefined}
-              aria-describedby={error.field === 'password' ? 'auth-error' : undefined} /></label>
-        )}
-        <p id="auth-error" class="jy-error" role="alert">{error.msg}</p>
-        {note && <p class="jy-caption" role="status">{note}</p>}
-        <button class="jy-btn jy-btn--accent" disabled={busy}>{titles[mode][1]}</button>
-      </form>
-      <p class="jy-links">
-        {mode !== 'in' && <button class="jy-link" onClick={() => setMode('in')}>Sign in instead</button>}
-        {mode !== 'up' && <button class="jy-link" onClick={() => setMode('up')}>Create account</button>}
-        {mode !== 'reset' && <button class="jy-link" onClick={() => setMode('reset')}>Reset password</button>}
-      </p>
-      <Install />
-    </main>
+  const field = (id, label, input) => (
+    <div class={`fl-field${error.field === id ? ' fl-field--error' : ''}`}><label for={id}>{label}</label>{input}</div>
   );
-}
-
-function Install() {
-  const [can, setCan] = useState(!!deferredInstall);
-  useEffect(() => { const f = () => setCan(true); addEventListener('beforeinstallprompt', f); return () => removeEventListener('beforeinstallprompt', f); }, []);
   return (
-    <section class="jy-section" aria-labelledby="install-h">
-      <h2 id="install-h" class="jy-h2">Put it on your phone</h2>
-      {can && <button class="jy-btn jy-btn--ghost" onClick={() => { deferredInstall.prompt(); deferredInstall = null; setCan(false); }}>Install app</button>}
-      <p class="jy-caption">iPhone: open this page in Safari, tap Share.</p>
-      <p class="jy-caption">Then tap Add to Home Screen.</p>
-    </section>
+    <div class="fl-auth">
+      <Stage />
+      <main id="main" class="fl-auth__form">
+        <Title light={titles[mode][0]} bold={titles[mode][1]} />
+        {S.phase === 'no-roster' && <p class="fl-alert" role="alert">Your email isn't on the council roster, or your access was turned off. Ask the president or vice president.</p>}
+        <form class="fl-form" onSubmit={submit} noValidate>
+          {field('email', 'School email', <input id="email" class="fl-input" type="email" autocomplete="username" required value={email} onInput={(e) => setEmail(e.target.value)}
+            placeholder="name@stjbs.sch.id" aria-invalid={error.field === 'email' || undefined} aria-describedby={error.field === 'email' ? 'auth-error' : undefined} />)}
+          {mode !== 'reset' && field('password', 'Password', <input id="password" class="fl-input" type="password" required minLength={8}
+            autocomplete={mode === 'up' ? 'new-password' : 'current-password'} value={pw} onInput={(e) => setPw(e.target.value)}
+            aria-invalid={error.field === 'password' || undefined} aria-describedby={error.field === 'password' ? 'auth-error' : undefined} />)}
+          <p id="auth-error" class="fl-error" role="alert">{error.msg}</p>
+          {note && <p class="fl-small fl-muted" role="status">{note}</p>}
+          <button class="fl-btn fl-btn--red fl-btn--block" disabled={busy}>{titles[mode][1]}</button>
+        </form>
+        <p class="fl-actions">
+          {mode !== 'in' && <button class="fl-linkbtn" onClick={() => setMode('in')}>Sign in instead</button>}
+          {mode !== 'up' && <button class="fl-linkbtn" onClick={() => setMode('up')}>Create account</button>}
+          {mode !== 'reset' && <button class="fl-linkbtn" onClick={() => setMode('reset')}>Reset password</button>}
+        </p>
+        <p class="fl-small fl-muted">Only council members on the roster can open the dashboard. <a class="fl-link" href="/">Back to the public site</a></p>
+        <Install />
+      </main>
+    </div>
   );
 }
 
@@ -94,15 +94,18 @@ export function Verify() {
     catch (e) { setMsg(say(e)); }
   };
   return (
-    <main id="main" class="jy-auth">
-      <Title light="One step." bold="Verify your email" />
-      <p>We sent a link to <b>{S.user.email}</b>. Open it, then come back here.</p>
-      <div class="jy-actions">
-        <button class="jy-btn jy-btn--accent" disabled={busy} onClick={check}>Continue after verifying</button>
-        <button class="jy-btn jy-btn--ghost" onClick={resend}>Resend verification email</button>
-        <button class="jy-btn jy-btn--ghost" onClick={() => signOut(auth)}>Sign out</button>
-      </div>
-      <p class="jy-caption" role="status">{msg}</p>
-    </main>
+    <div class="fl-auth">
+      <Stage />
+      <main id="main" class="fl-auth__form">
+        <Title light="One step." bold="Verify your email" />
+        <p>We sent a link to <b>{S.user.email}</b>. Open it, then come back here.</p>
+        <div class="fl-actions">
+          <button class="fl-btn fl-btn--red" disabled={busy} onClick={check}>Continue after verifying</button>
+          <button class="fl-btn fl-btn--ghost" onClick={resend}>Resend verification email</button>
+          <button class="fl-btn fl-btn--ghost" onClick={() => signOut(auth)}>Sign out</button>
+        </div>
+        <p class="fl-small fl-muted" role="status">{msg}</p>
+      </main>
+    </div>
   );
 }

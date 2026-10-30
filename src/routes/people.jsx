@@ -1,59 +1,79 @@
-import { S, memberName, signOutHere } from '../store.js';
-import { activeMembers, checksIn, personStatus, roleLinks } from '../model.js';
-import { Badge, Chip, TaskList, Title } from '../ui.jsx';
+// Committees: people grouped by section, the org chart from reports-to, and the team chart of one project.
+// Tapping a person opens their page: weekly status, check-in answers, open and done tasks.
+import { useState } from 'preact/hooks';
+import { S, memberName } from '../store.js';
+import { activeMembers, checksIn, personStatus, roleName, tree } from '../model.js';
+import { Badge, Chip, Empty, Panel, TaskList, Title } from '../ui.jsx';
+import { TeamChart } from './views.jsx';
 
-const ROLE = { advisor: 'Advisor', president: 'President', vp: 'Vice president', treasurer: 'Treasurer', secretary: 'Secretary', officer: 'Officer', teacher: 'Teacher' };
-export const roleName = (r) => ROLE[r] || r;
+const PersonLink = ({ m, lead }) => (
+  <a class="fl-person" href={`#/people/${encodeURIComponent(m.id)}`}><Chip email={m.id} lead={lead} /><span>{m.name}<small> · {roleName(m.role)}</small></span></a>
+);
 
 function Org() {
   const members = activeMembers(), ids = new Set(members.map((m) => m.id));
   const node = (m, seen) => {
     const reports = members.filter((x) => x.reportsTo === m.id && !seen.has(x.id));
     return (
-      <li key={m.id}><a href={`#/people/${m.id}`} class="jy-person-named"><Chip email={m.id} lead={reports.length > 0} /><span>{m.name} <span class="jy-caption">{roleName(m.role)}</span></span></a>
+      <li key={m.id}><PersonLink m={m} lead={reports.length > 0} />
         {reports.length > 0 && <ul>{reports.map((r) => node(r, new Set([...seen, m.id])))}</ul>}</li>
     );
   };
   // A root has no active manager, or sits in a reportsTo loop (walking up returns to itself).
   const loops = (m) => { let x = m; for (let i = 0; i < members.length; i++) { x = members.find((y) => y.id === x.reportsTo); if (!x) return false; if (x.id === m.id) return true; } return false; };
   const roots = members.filter((m) => !m.reportsTo || !ids.has(m.reportsTo) || loops(m));
-  return <ul class="jy-org">{roots.map((m) => node(m, new Set(roots.map((r) => r.id))))}</ul>;
+  return <ul class="fl-org">{roots.map((m) => node(m, new Set(roots.map((r) => r.id))))}</ul>;
 }
 
 export function People({ id }) {
+  const { kids } = tree(), roots = kids.root || [];
+  const busiest = [...roots].sort((a, b) => (kids[b.id] || []).filter((k) => k.kind === 'team').length - (kids[a.id] || []).filter((k) => k.kind === 'team').length)[0];
+  const [team, setTeam] = useState(busiest?.id || '');
   if (id) return <Person email={id} />;
-  const members = activeMembers();
+  const members = activeMembers(), sections = {};
+  for (const m of members) (sections[m.section || 'No section'] ||= []).push(m);
   return (
     <>
-      <Title light="The council." bold={`${members.length} people.`} title="People" />
-      <section aria-label="People list"><ul class="jy-list">{members.map((m) => {
-        const s = personStatus(m.id);
-        return (
-          <li key={m.id} class="jy-task"><Chip email={m.id} />
-            <span class="jy-task__body"><a class="jy-task__title" href={`#/people/${m.id}`}>{m.name}</a>
-              <span class="jy-meta"><span>{roleName(m.role)}{m.section ? ` · ${m.section}` : ''}</span>{checksIn(m) && <Badge s={s} />}</span>
-              {checksIn(m) && <span class="jy-caption">{s.line}</span>}</span></li>
-        );
-      })}</ul></section>
-      <section class="jy-section" aria-labelledby="org-h"><h2 id="org-h" class="jy-h2">Org chart</h2><Org /></section>
+      <Title light="Committees." bold={`${members.length} people.`} title="Committees" />
+      <div class="fl-grid">
+        {Object.entries(sections).sort(([a], [b]) => a.localeCompare(b)).map(([name, list]) => (
+          <Panel key={name} title={name} id={`sec-${name.replace(/\W+/g, '-')}`}>
+            <ul class="fl-list">{list.map((m) => {
+              const s = checksIn(m) && personStatus(m.id);
+              return <li key={m.id} class="fl-member"><PersonLink m={m} />{s && <Badge s={s} />}</li>;
+            })}</ul>
+          </Panel>
+        ))}
+      </div>
+      <Panel title="Org chart" id="org-h"><Org /></Panel>
+      <Panel title="Team chart" id="team-h" link={roots.length > 1 && (
+        <label class="fl-field"><span class="fl-sr">Project</span>
+          <select class="fl-input" value={team} onChange={(e) => setTeam(e.target.value)}>{roots.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</select></label>)}>
+        {tree().byId[team] ? <TeamChart root={tree().byId[team]} /> : <Empty>No projects yet, so there is no team chart.</Empty>}
+      </Panel>
     </>
   );
 }
 
 function Person({ email }) {
   const m = S.members.find((x) => x.id === email);
-  if (!m) return <><Title light="Not found." bold="No such member" /><a href="#/people">Go to People</a></>;
+  if (!m) return <><Title light="Not found." bold="No such member" /><a class="fl-link" href="#/committees">Go to Committees</a></>;
   const s = personStatus(email), mine = S.items.filter((t) => t.kind === 'task' && t.assigneeUids.includes(email));
   const open = mine.filter((t) => t.status !== 'done'), done = mine.filter((t) => t.status === 'done');
   return (
     <>
+      <nav class="fl-crumbs" aria-label="Breadcrumb"><a href="#/committees">Committees</a><span aria-hidden="true">/</span><span aria-current="page">{m.name}</span></nav>
       <Title light={`${roleName(m.role)}.`} bold={m.name} title={m.name} />
-      <p class="jy-meta"><Chip email={email} big />{m.section && <span>{m.section}</span>}{m.reportsTo && <span>Reports to {memberName(m.reportsTo)}</span>}{checksIn(m) && <Badge s={s} />}</p>
-      {checksIn(m) && <p class="jy-section">{s.line}</p>}
-      {s.ci && <dl class="jy-section">{['done', 'doing', 'blocked'].map((k) => s.ci[k] && <div key={k}><dt class="jy-eyebrow">{k}</dt><dd class="jy-pre">"{s.ci[k]}"</dd></div>)}</dl>}
-      <section class="jy-section" aria-labelledby="open-h"><h2 id="open-h" class="jy-h2">Open tasks</h2><TaskList list={open} path empty="No open tasks." /></section>
-      <section class="jy-section" aria-labelledby="done-h"><h2 id="done-h" class="jy-h2">Done</h2><TaskList list={done} path empty="Nothing done yet this term." /></section>
-      {email === S.me.id && <div class="jy-actions jy-section">{roleLinks().map(([k, label]) => <a key={k} class="jy-btn jy-btn--ghost" href={`#/${k}`}>Open {label.toLowerCase()}</a>)}<a class="jy-btn jy-btn--ghost" href="#/about">About this app</a><button class="jy-btn jy-btn--ghost" onClick={signOutHere}>Sign out</button></div>}
+      <div class="fl-stats"><Chip email={email} big />{m.section && <span>{m.section}</span>}{m.reportsTo && <span class="fl-muted">Reports to {memberName(m.reportsTo)}</span>}{checksIn(m) && <Badge s={s} />}</div>
+      {checksIn(m) && (
+        <Panel title="This week" id="week-h">
+          <p>{s.line}</p>
+          {s.ci ? <dl class="fl-dl">{['done', 'doing', 'blocked'].map((k) => s.ci[k] && <div key={k}><dt class="fl-eyebrow">{k}</dt><dd class="fl-pre">"{s.ci[k]}"</dd></div>)}</dl>
+            : <p class="fl-muted">No check-in yet this week.</p>}
+        </Panel>
+      )}
+      <Panel title="Open tasks" id="open-h"><TaskList list={open} path empty="No open tasks." /></Panel>
+      <Panel title="Done" id="done-h"><TaskList list={done} path empty="Nothing done yet this term." /></Panel>
     </>
   );
 }

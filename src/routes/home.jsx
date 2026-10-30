@@ -45,7 +45,7 @@ export function Steps({ root }) {
 
 const greeting = (h = jktHour()) => (h < 12 ? 'Good morning,' : h < 18 ? 'Good afternoon,' : 'Good evening,');
 const longDate = () => new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' });
-const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const plural = (n, word) => `${n || 'No'} ${word}${n === 1 ? '' : 's'}`;
 
 function useWide() {
   const [wide, setWide] = useState(() => matchMedia('(min-width: 900px)').matches);

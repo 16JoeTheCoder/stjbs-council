@@ -2,11 +2,10 @@ import { useState } from 'preact/hooks';
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase.js';
 import { S, memberName } from '../store.js';
-import { initials, isAdmin } from '../model.js';
+import { initials, isAdmin, roleName } from '../model.js';
 import { putDoc } from '../actions.js';
 import { isoDay, monday, weekId } from '../time.js';
 import { Title, useAutofocus, useReturnFocus } from '../ui.jsx';
-import { roleName } from './people.jsx';
 import { download } from './views.jsx';
 
 const ROLES = ['president', 'vp', 'treasurer', 'secretary', 'officer', 'teacher', 'advisor'];
@@ -41,21 +40,21 @@ function MemberForm({ m, done }) {
     if (await putDoc(`members/${email}`, data, `${data.name} saved.`)) done(); else setBusy(false);
   };
   const field = (k, label, extra) => (
-    <label class={`jy-field${err.field === k ? ' jy-field--error' : ''}`}><span class="jy-field__label">{label}</span>
-      <input class="jy-field__input" name={k} value={v[k]} onInput={on(k)} {...extra} aria-invalid={err.field === k || undefined} aria-describedby={err.field === k ? 'm-err' : undefined} /></label>
+    <label class={`fl-field${err.field === k ? ' fl-field--error' : ''}`}><span class="fl-field__label">{label}</span>
+      <input class="fl-input" name={k} value={v[k]} onInput={on(k)} {...extra} aria-invalid={err.field === k || undefined} aria-describedby={err.field === k ? 'm-err' : undefined} /></label>
   );
   return (
-    <form class="jy-form jy-panel" onSubmit={submit} ref={ref} noValidate>
-      <h2 class="jy-h2">{m ? `Edit ${m.name}` : 'Add member'}</h2>
+    <form class="fl-panel fl-form" onSubmit={submit} ref={ref} noValidate>
+      <h2 class="fl-h2">{m ? `Edit ${m.name}` : 'Add member'}</h2>
       {field('id', 'School email', { type: 'email', disabled: !!m })}
       {field('name', 'Name', { maxLength: 60 })}
-      <label class="jy-field"><span class="jy-field__label">Role</span><select class="jy-field__input" value={v.role} onChange={on('role')} disabled={!can.role}>
+      <label class="fl-field"><span class="fl-field__label">Role</span><select class="fl-input" value={v.role} onChange={on('role')} disabled={!can.role}>
         {(can.role ? can.roles : [v.role]).map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
       {field('section', 'Section', { maxLength: 60, placeholder: 'For example sec 1 to sec 3' })}
-      <label class="jy-field"><span class="jy-field__label">Reports to</span><select class="jy-field__input" value={v.reportsTo || ''} onChange={on('reportsTo')}>
+      <label class="fl-field"><span class="fl-field__label">Reports to</span><select class="fl-input" value={v.reportsTo || ''} onChange={on('reportsTo')}>
         <option value="">Nobody</option>{S.members.filter((x) => x.active && x.id !== v.id).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
-      <p id="m-err" class="jy-error" role="alert">{err.msg}</p>
-      <div class="jy-actions"><button class="jy-btn" disabled={busy}>Save member</button><button type="button" class="jy-btn jy-btn--ghost" onClick={done}>Cancel</button></div>
+      <p id="m-err" class="fl-error" role="alert">{err.msg}</p>
+      <div class="fl-actions"><button class="fl-btn fl-btn--red" disabled={busy}>Save member</button><button type="button" class="fl-btn fl-btn--ghost" onClick={done}>Cancel</button></div>
     </form>
   );
 }
@@ -91,15 +90,15 @@ function CloseTerm() {
     setBusy(false);
   };
   return (
-    <section class="jy-section jy-form" aria-labelledby="close-h">
-      <h2 id="close-h" class="jy-h2">Close term</h2>
-      <p>Current term: <b class="jy-mono">{S.term.termId}</b>. Closing changes only the current term. Nothing is deleted; set the old name back to undo.</p>
-      <div class="jy-actions"><button class="jy-btn jy-btn--ghost" disabled={busy} onClick={backup}>Download backup</button></div>
-      <p class="jy-caption" role="status">{msg}</p>
-      <label class="jy-field"><span class="jy-field__label">New term name</span>
-        <input class="jy-field__input jy-mono" value={name} placeholder="2027-28" disabled={!saved} onInput={(e) => setName(e.target.value)} aria-describedby="close-help" />
-        <span id="close-help" class="jy-field__help">{saved ? 'Type the new term name to confirm.' : 'Locked until the backup has downloaded.'}</span></label>
-      <div class="jy-actions"><button class="jy-btn jy-btn--ghost" disabled={!saved || busy || !/^[\w-]{4,20}$/.test(name.trim()) || name.trim() === S.term.termId} onClick={close}>Close term and start {name.trim() || 'the new one'}</button></div>
+    <section class="fl-panel fl-form" aria-labelledby="close-h">
+      <h2 id="close-h" class="fl-h2">Close term</h2>
+      <p>Current term: <b class="fl-mono">{S.term.termId}</b>. Closing changes only the current term. Nothing is deleted; set the old name back to undo.</p>
+      <div class="fl-actions"><button class="fl-btn fl-btn--ghost" disabled={busy} onClick={backup}>Download backup</button></div>
+      <p class="fl-caption" role="status">{msg}</p>
+      <label class="fl-field"><span class="fl-field__label">New term name</span>
+        <input class="fl-input fl-mono" value={name} placeholder="2027-28" disabled={!saved} onInput={(e) => setName(e.target.value)} aria-describedby="close-help" />
+        <span id="close-help" class="fl-help">{saved ? 'Type the new term name to confirm.' : 'Locked until the backup has downloaded.'}</span></label>
+      <div class="fl-actions"><button class="fl-btn fl-btn--ghost" disabled={!saved || busy || !/^[\w-]{4,20}$/.test(name.trim()) || name.trim() === S.term.termId} onClick={close}>Close term and start {name.trim() || 'the new one'}</button></div>
     </section>
   );
 }
@@ -110,16 +109,17 @@ export function Admin() {
   const members = [...S.members].sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name));
   return (
     <>
-      <Title light="The roster." bold="Admin." title="Admin" />
-      {edit ? <MemberForm m={edit === 'new' ? null : edit} done={() => setEdit(null)} /> :
-        <div class="jy-actions" ref={back}><button class="jy-btn jy-btn--ghost" onClick={() => setEdit('new')}>Add member</button></div>}
-      <div class="jy-section jy-scroll"><table class="jy-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Section</th><th>Reports to</th><th>Status</th><th><span class="jy-sr">Actions</span></th></tr></thead>
+      <Title light="The roster." bold="Members and roles." title="Members and roles">
+        {!edit && <span ref={back}><button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setEdit('new')}>Add member</button></span>}
+      </Title>
+      {edit && <MemberForm m={edit === 'new' ? null : edit} done={() => setEdit(null)} />}
+      <div class="fl-panel fl-scroll"><table class="fl-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Section</th><th>Reports to</th><th>Status</th><th><span class="fl-sr">Actions</span></th></tr></thead>
         <tbody>{members.map((m) => (
-          <tr key={m.id}><td>{m.name}</td><td class="jy-mono">{m.id}</td><td>{roleName(m.role)}</td><td>{m.section}</td><td>{m.reportsTo ? memberName(m.reportsTo) : ''}</td>
-            <td>{m.active ? 'Active' : 'Deactivated'}</td>
-            <td>{rosterPowers(m).edit && <button class="jy-link" onClick={() => setEdit(m)}>Edit {m.name}</button>}{' '}
-              {rosterPowers(m).active && <button class="jy-link" onClick={() => putDoc(`members/${m.id}`, { active: !m.active }, `${m.name} ${m.active ? 'deactivated' : 'reactivated'}.`)}>{m.active ? 'Deactivate' : 'Reactivate'}</button>}</td></tr>))}</tbody>
+          <tr key={m.id}><td>{m.name}</td><td class="fl-small fl-muted">{m.id}</td><td>{roleName(m.role)}</td><td>{m.section}</td><td>{m.reportsTo ? memberName(m.reportsTo) : ''}</td>
+            <td><span class={`fl-badge fl-badge--${m.active ? 'ok' : 'warn'}`}>{m.active ? 'Active' : 'Deactivated'}</span></td>
+            <td class="fl-actions">{rosterPowers(m).edit && <button class="fl-btn fl-btn--ghost fl-btn--sm" aria-label={`Edit ${m.name}`} onClick={() => setEdit(m)}>Edit</button>}
+              {rosterPowers(m).active && <button class="fl-btn fl-btn--ghost fl-btn--sm" aria-label={`${m.active ? 'Deactivate' : 'Reactivate'} ${m.name}`} onClick={() => putDoc(`members/${m.id}`, { active: !m.active }, `${m.name} ${m.active ? 'deactivated' : 'reactivated'}.`)}>{m.active ? 'Deactivate' : 'Reactivate'}</button>}</td></tr>))}</tbody>
       </table></div>
       {advisor && <CloseTerm />}
     </>

@@ -33,22 +33,22 @@ export function Digest() {
   return (
     <>
       <Title light="For the chats." bold="Weekly digest." title="Digest" />
-      <div class="jy-actions">
-        <button class="jy-btn jy-btn--accent" onClick={copy}>Copy digest</button>
-        <a class="jy-btn jy-btn--ghost" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">Open in WhatsApp</a>
+      <div class="fl-actions">
+        <button class="fl-btn fl-btn--red" onClick={copy}>Copy digest</button>
+        <a class="fl-btn fl-btn--ghost" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">Open in WhatsApp</a>
       </div>
-      <section class="jy-section" aria-labelledby="pv-h"><h2 id="pv-h" class="jy-h2">Preview</h2>
-        <pre class="jy-well jy-pre jy-digest">{text}</pre></section>
+      <section class="fl-section" aria-labelledby="pv-h"><h2 id="pv-h" class="fl-h2">Preview</h2>
+        <pre class="fl-digest">{text}</pre></section>
       {edit && (
-        <section class="jy-section jy-form" aria-labelledby="tpl-h"><h2 id="tpl-h" class="jy-h2">Template</h2>
-          <p class="jy-caption">Placeholders: {'{week} {done} {overdue} {blocked} {deals}'}. Use *stars* for bold; WhatsApp and Google Chat both show it.</p>
-          <fieldset class="jy-fieldset"><legend class="jy-field__label">Sections</legend>
-            {Object.keys(LABELS).map((k) => <label key={k} class="jy-check-row"><input type="checkbox" checked={d.sections[k]}
+        <section class="fl-panel fl-form" aria-labelledby="tpl-h"><h2 id="tpl-h" class="fl-h2">Template</h2>
+          <p class="fl-caption">Placeholders: {'{week} {done} {overdue} {blocked} {deals}'}. Use *stars* for bold; WhatsApp and Google Chat both show it.</p>
+          <fieldset class="fl-fieldset"><legend class="fl-field__label">Sections</legend>
+            {Object.keys(LABELS).map((k) => <label key={k} class="fl-checkrow"><input type="checkbox" checked={d.sections[k]}
               onChange={(e) => setD({ ...d, sections: { ...d.sections, [k]: e.target.checked } })} />{LABELS[k]}</label>)}</fieldset>
-          <label class="jy-field jy-field--wide"><span class="jy-field__label">Template text</span>
-            <textarea class="jy-field__input jy-mono" rows={10} value={d.template} onInput={(e) => setD({ ...d, template: e.target.value })} /></label>
-          <div class="jy-actions"><button class="jy-btn jy-btn--ghost" onClick={() => putDoc('settings/digest', { template: d.template, sections: d.sections }, 'Template saved.')}>Save template</button>
-            <button class="jy-btn jy-btn--ghost" onClick={() => setD(DEFAULT_DIGEST)}>Reset to default</button></div>
+          <label class="fl-field"><span class="fl-field__label">Template text</span>
+            <textarea class="fl-input fl-mono" rows={10} value={d.template} onInput={(e) => setD({ ...d, template: e.target.value })} /></label>
+          <div class="fl-actions"><button class="fl-btn fl-btn--ghost" onClick={() => putDoc('settings/digest', { template: d.template, sections: d.sections }, 'Template saved.')}>Save template</button>
+            <button class="fl-btn fl-btn--ghost" onClick={() => setD(DEFAULT_DIGEST)}>Reset to default</button></div>
         </section>
       )}
     </>

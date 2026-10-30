@@ -7,8 +7,8 @@ import { stamp } from '../time.js';
 import { Chip, Title } from '../ui.jsx';
 
 const Entry = ({ who, text, at, itemId, children }) => (
-  <li class="jy-entry"><Chip email={who} />
-    <p><span>{memberName(who)} {itemId ? <a href={`#/p/${itemId}`}>{text}</a> : text}</span> <span class="jy-mono jy-caption">{stamp(at)}</span></p>{children}</li>
+  <li class="fl-entry"><Chip email={who} />
+    <p><span>{memberName(who)} {itemId ? <a href={`#/p/${itemId}`}>{text}</a> : text}</span> <span class="fl-mono fl-caption">{stamp(at)}</span></p>{children}</li>
 );
 
 // Activity loads only where it is shown, so a cold open of the app does not pay for it.
@@ -24,21 +24,21 @@ export function Feed({ compact }) {
   const list = useActivity(compact ? 12 : 50);
   return (
     <>
-      {compact ? <h2 class="jy-h2">Activity</h2> : <Title light="What changed." bold="Feed" title="Feed" />}
+      {compact ? <h2 class="fl-h2">Activity</h2> : <Title light="What changed." bold="Feed" title="Feed" />}
       {!compact && (
-        <section class="jy-section" aria-labelledby="fy-h">
-          <h2 id="fy-h" class="jy-h2">For you <span class="jy-caption">{unreadCount()} unread</span></h2>
-          {unread.length > 1 && <button class="jy-link" onClick={() => unread.forEach(markRead)}>Mark all as read</button>}
-          {S.notes.length ? <ul class="jy-feed">{S.notes.map((n) => (
+        <section class="fl-section" aria-labelledby="fy-h">
+          <h2 id="fy-h" class="fl-h2">For you <span class="fl-caption">{unreadCount()} unread</span></h2>
+          {unread.length > 1 && <button class="fl-linkbtn" onClick={() => unread.forEach(markRead)}>Mark all as read</button>}
+          {S.notes.length ? <ul class="fl-feed">{S.notes.map((n) => (
             <Entry key={n.id} who={n.fromUid} text={n.text} at={n.createdAt} itemId={n.itemId}>
-              {!n.read && <button class="jy-btn jy-btn--ghost jy-btn--s" onClick={() => markRead(n)}>Mark as read</button>}
-            </Entry>))}</ul> : <p class="jy-empty">Nothing for you yet. Comments, assignments and blocks on you show up here.</p>}
+              {!n.read && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => markRead(n)}>Mark as read</button>}
+            </Entry>))}</ul> : <p class="fl-empty">Nothing for you yet. Comments, assignments and blocks on you show up here.</p>}
         </section>
       )}
-      <section class={compact ? '' : 'jy-section'} aria-label="Activity">
-        {!compact && <h2 class="jy-h2">Activity</h2>}
-        {list === null ? <p class="jy-caption">Loading activity.</p> : list === false ? <p class="jy-error" role="alert">Activity did not load. Reload the page to try again.</p> : list.length ? <ul class="jy-feed">{list.map((a) => <Entry key={a.id} who={a.actorUid} text={a.text} at={a.createdAt} itemId={a.itemId} />)}</ul>
-          : <p class="jy-empty">No activity this term yet.</p>}
+      <section class={compact ? '' : 'fl-section'} aria-label="Activity">
+        {!compact && <h2 class="fl-h2">Activity</h2>}
+        {list === null ? <p class="fl-caption">Loading activity.</p> : list === false ? <p class="fl-error" role="alert">Activity did not load. Reload the page to try again.</p> : list.length ? <ul class="fl-feed">{list.map((a) => <Entry key={a.id} who={a.actorUid} text={a.text} at={a.createdAt} itemId={a.itemId} />)}</ul>
+          : <p class="fl-empty">No activity this term yet.</p>}
       </section>
     </>
   );

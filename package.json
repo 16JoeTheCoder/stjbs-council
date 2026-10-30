@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "demo": "firebase emulators:exec --only auth,firestore --project demo-council \"node scripts/seed-emulator.mjs && vite --mode emulator\"",
     "test:rules": "firebase emulators:exec --only firestore --project demo-council \"node --test tests/rules.test.mjs\"",
-    "check": "bash scripts/jy-check.sh",
+    "check": "bash design/fiatlux/design-check.sh && vite build --logLevel error && node scripts/check-site-bundle.mjs",
     "deploy": "vite build && firebase deploy --only hosting,firestore"
   },
   "dependencies": {

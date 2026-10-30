@@ -20,6 +20,7 @@ import { Templates } from './routes/templates.jsx';
 import { Workload } from './routes/workload.jsx';
 import { Admin } from './routes/admin.jsx';
 import { Settings } from './routes/settings.jsx';
+import { Ideas } from './routes/ideas.jsx';
 import crest from '../design/fiatlux/img/crest-256.png';
 import building from '../design/fiatlux/img/building.webp';
 
@@ -28,11 +29,6 @@ const parse = () => {
   const [name = 'week', id = null] = path.split('/').filter(Boolean).map(decodeURIComponent);
   return { name, id, q: new URLSearchParams(qs) };
 };
-
-export function setTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem('council-theme', theme); } catch {}
-}
 
 const Missing = () => <><Title light="Not here." bold="Page not found" /><p><a class="fl-link" href="#/week">Go to Home</a></p></>;
 const NotForYou = () => <><Title light="Not for you." bold="Admin" /><p>Only the advisor, the president and the vice president open the admin view.</p></>;
@@ -44,7 +40,7 @@ const AdminRoute = ({ id }) => {
 };
 const ROUTES = {
   week: Home, tasks: AllTasks, checkin: Checkin, projects: Projects, p: Item, meeting: Meeting, people: People, committees: People,
-  activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
+  ideas: Ideas, activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
 };
 
 const MEMBER_NAV = [['week', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];
@@ -124,7 +120,7 @@ function More({ close, adminView, switchView }) {
         {link('#/committees', 'Committees', 'committees')}
         {link('#/resources', 'Resources', 'resources')}
         {link('#/activity', 'All activity', 'activity')}
-        {isExec() && link('#/digest', 'Digest', 'digest')}
+        {isExec() && !isAdmin() && link('#/digest', 'Digest', 'digest')}
         {isExec() && link('#/templates', 'Project templates', 'copy')}
         {isAdmin() && <>
           <h2 class="fl-eyebrow">Admin</h2>
