@@ -7,3 +7,5 @@ dist
 qa/**/*.log
 .env
 .env.production
+qa/**/.*.out
+qa/**/*.out
