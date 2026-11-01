@@ -1,9 +1,11 @@
-import { useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase.js';
 import { S, memberName } from '../store.js';
 import { initials, isAdmin, roleName } from '../model.js';
-import { putDoc } from '../actions.js';
+import { bulkAddMembers, bulkDeactivate, putDoc } from '../actions.js';
+import { confirmed, confirmPhrase, importable, parseBulk, sectionsOf } from '../bulk-roster.js';
+import { Sheet } from '../shared.jsx';
 import { isoDay, monday, weekId } from '../time.js';
 import { Title, useAutofocus, useReturnFocus } from '../ui.jsx';
 import { download } from './views.jsx';
@@ -103,15 +105,92 @@ function CloseTerm() {
   );
 }
 
+// Typed confirmation: the button stays locked until the whole sentence (with the count) is typed.
+function TypeToConfirm({ phrase, value, set }) {
+  return (
+    <label class="fl-field"><span class="fl-field__label">To continue, type: <b class="fl-mono">{phrase}</b></span>
+      <input class="fl-input" value={value} onInput={(e) => set(e.target.value)} autocomplete="off" spellcheck={false} aria-describedby="bulk-help" />
+      <span id="bulk-help" class="fl-help">This is hard to undo, so the button unlocks only when the sentence matches.</span></label>
+  );
+}
+
+const PLACEHOLDER = 'adelyn.liu@stjbs.sch.id\nAdelyn Liu\nPresident\nSec 4\n\njosef.yang@stjbs.sch.id\nJosef Yang\nVice President\nJC 2';
+
+// Paste blocks of email, name, role, section (blank line between people). Existing emails are skipped, never overwritten.
+function BulkAdd({ done }) {
+  const [text, setText] = useState(''), [typed, setTyped] = useState(''), [busy, setBusy] = useState(false);
+  const rows = useMemo(() => parseBulk(text, rosterPowers(null).roles, S.members.map((m) => m.id)), [text]);
+  const ok = importable(rows), bad = rows.filter((r) => r.errors.length).length, skipped = rows.filter((r) => !r.errors.length && r.skip).length;
+  const phrase = confirmPhrase('add', ok.length);
+  const go = async () => { setBusy(true); if (await bulkAddMembers(ok)) done(); else setBusy(false); };
+  return (
+    <Sheet label="Bulk add members" onClose={done}>
+      <h2 class="fl-h2">Bulk add members</h2>
+      <p>One person per block, four lines: email, name, role, section. Leave a blank line between people. Roles you may add: {rosterPowers(null).roles.map(roleName).join(', ')}.</p>
+      <label class="fl-field"><span class="fl-field__label">Pasted list</span>
+        <textarea class="fl-input fl-mono" rows={8} value={text} placeholder={PLACEHOLDER} onInput={(e) => setText(e.target.value)} /></label>
+      {rows.length > 0 && <div class="fl-panel fl-scroll"><table class="fl-table">
+        <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Section</th><th>Result</th></tr></thead>
+        <tbody>{rows.map((r, i) => (
+          <tr key={i}><td class="fl-small">{r.email}</td><td>{r.name}</td><td>{r.role ? roleName(r.role) : ''}</td><td>{r.section}</td>
+            <td>{r.errors.length ? <span class="fl-badge fl-badge--warn">{r.errors.join(' ')}</span>
+              : r.skip ? <span class="fl-badge fl-badge--warn">{r.skip}</span> : <span class="fl-badge fl-badge--ok">Will add</span>}</td></tr>))}</tbody>
+      </table></div>}
+      <p class="fl-caption" role="status">{rows.length ? `${ok.length} to add, ${skipped} skipped, ${bad} with problems.${bad ? ' Fix the problems or delete those blocks to continue.' : ''}` : 'Nothing pasted yet.'}</p>
+      {ok.length > 0 && bad === 0 && <TypeToConfirm phrase={phrase} value={typed} set={setTyped} />}
+      <div class="fl-actions"><button class="fl-btn fl-btn--red" disabled={busy || !ok.length || bad > 0 || !confirmed(typed, phrase)} onClick={go}>Add {ok.length} member{ok.length === 1 ? '' : 's'}</button>
+        <button type="button" class="fl-btn fl-btn--ghost" onClick={done}>Cancel</button></div>
+    </Sheet>
+  );
+}
+
+// Pick active members by name, narrowed by role and section. Only the rows you can see and have ticked are deactivated.
+// Members are never deleted; Reactivate on the roster undoes this.
+function BulkRemove({ done }) {
+  const pool = S.members.filter((m) => m.active && rosterPowers(m).active).sort((a, b) => a.name.localeCompare(b.name));
+  const [role, setRole] = useState(''), [section, setSection] = useState('__all'), [pick, setPick] = useState(new Set()), [typed, setTyped] = useState(''), [busy, setBusy] = useState(false);
+  const shown = pool.filter((m) => (!role || m.role === role) && (section === '__all' || (m.section || '') === section));
+  const chosen = shown.filter((m) => pick.has(m.id)), all = shown.length > 0 && chosen.length === shown.length;
+  const flip = (id) => setPick((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const flipAll = () => setPick((p) => { const n = new Set(p); shown.forEach((m) => (all ? n.delete(m.id) : n.add(m.id))); return n; });
+  const phrase = confirmPhrase('deactivate', chosen.length);
+  const go = async () => { setBusy(true); if (await bulkDeactivate(chosen.map((m) => m.id))) done(); else setBusy(false); };
+  return (
+    <Sheet label="Bulk remove members" onClose={done}>
+      <h2 class="fl-h2">Bulk remove members</h2>
+      <p>Removed members are deactivated: they lose access but their history stays, and Reactivate on the roster brings them back.</p>
+      <div class="fl-form">
+        <label class="fl-field"><span class="fl-field__label">Role</span><select class="fl-input" value={role} onChange={(e) => setRole(e.target.value)}>
+          <option value="">All roles</option>{[...new Set(pool.map((m) => m.role))].map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
+        <label class="fl-field"><span class="fl-field__label">Section</span><select class="fl-input" value={section} onChange={(e) => setSection(e.target.value)}>
+          <option value="__all">All sections</option>{sectionsOf(pool).map((x) => <option key={x} value={x}>{x || 'No section'}</option>)}</select></label>
+      </div>
+      <label class="fl-checkrow"><input type="checkbox" class="fl-check" checked={all} disabled={!shown.length} onChange={flipAll} />Select all shown ({shown.length})</label>
+      <div class="fl-panel">{shown.map((m) => (
+        <label key={m.id} class="fl-checkrow"><input type="checkbox" class="fl-check" checked={pick.has(m.id)} onChange={() => flip(m.id)} />
+          {m.name}<span class="fl-muted fl-small">{roleName(m.role)}{m.section ? `, ${m.section}` : ''}</span></label>))}
+        {!shown.length && <p class="fl-empty">No active members match.</p>}</div>
+      <p class="fl-caption" role="status">{chosen.length} selected.</p>
+      {chosen.length > 0 && <TypeToConfirm phrase={phrase} value={typed} set={setTyped} />}
+      <div class="fl-actions"><button class="fl-btn fl-btn--red" disabled={busy || !chosen.length || !confirmed(typed, phrase)} onClick={go}>Deactivate {chosen.length} member{chosen.length === 1 ? '' : 's'}</button>
+        <button type="button" class="fl-btn fl-btn--ghost" onClick={done}>Cancel</button></div>
+    </Sheet>
+  );
+}
+
 export function Admin() {
-  const [edit, setEdit] = useState(null), advisor = S.me.role === 'advisor', back = useReturnFocus(!!edit);
+  const [edit, setEdit] = useState(null), [bulk, setBulk] = useState(null), advisor = S.me.role === 'advisor', back = useReturnFocus(!!edit);
   if (!isAdmin()) return <><Title light="Not for you." bold="Admin" /><p>Only the advisor, the president and the vice president manage the roster.</p></>;
   const members = [...S.members].sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name));
   return (
     <>
       <Title light="The roster." bold="Members and roles." title="Members and roles">
         {!edit && <span ref={back}><button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setEdit('new')}>Add member</button></span>}
+        {!edit && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => setBulk('add')}>Bulk add</button>}
+        {!edit && members.some((m) => m.active && rosterPowers(m).active) && <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => setBulk('remove')}>Bulk remove</button>}
       </Title>
+      {bulk === 'add' && <BulkAdd done={() => setBulk(null)} />}
+      {bulk === 'remove' && <BulkRemove done={() => setBulk(null)} />}
       {edit && <MemberForm m={edit === 'new' ? null : edit} done={() => setEdit(null)} />}
       <div class="fl-panel fl-scroll"><table class="fl-table">
         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Section</th><th>Reports to</th><th>Status</th><th><span class="fl-sr">Actions</span></th></tr></thead>
