@@ -2,6 +2,7 @@
 // Writes use the same SDK calls as src/actions.js (serverTimestamp, arrayUnion, exact key sets).
 import { test, before, after, beforeEach } from 'node:test';
 import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import {
   doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, writeBatch, collection, query, where,
@@ -417,4 +418,31 @@ test('teachers and the advisor do not write check-ins; new documents need a nume
   await assertFails(setDoc(doc(as(people.advisor), `checkins/${T}_2026-W44_${people.advisor}`), c(people.advisor)));
   await assertFails(setDoc(doc(as(people.officer), 'events/nodate'), { ...event({}), createdAt: 'now' }));
   await assertFails(setDoc(doc(as(people.vp), 'announcements/nodate'), { ...ann({ createdByUid: people.vp }), createdAt: null }));
+});
+
+// ---- Bulk roster: the app writes these as one batch each (src/actions.js bulkAddMembers and bulkDeactivate).
+const bulkMember = (role, extra = {}) => ({ name: 'N', initials: 'N', role, section: 'Sec 3', reportsTo: null, active: true, createdAt: 1, termId: T, updatedAt: 1, ...extra });
+test('bulk add: one batch of many members works for advisor and vp, president only for allowed roles, officers never', async () => {
+  const mk = (who, roleFor, tag) => { const db = as(who), b = writeBatch(db); for (let i = 0; i < 40; i++) b.set(doc(db, `members/${tag}${i}@stjbs.sch.id`), bulkMember(roleFor(i))); return b; };
+  await assertSucceeds(mk(people.advisor, (i) => (i % 2 ? 'president' : 'officer'), 'adv').commit());
+  await assertSucceeds(mk(people.vp, (i) => (i % 2 ? 'vp' : 'secretary'), 'vp').commit());
+  await assertSucceeds(mk(people.president, () => 'officer', 'pr').commit());
+  await assertFails(mk(people.president, (i) => (i === 7 ? 'vp' : 'officer'), 'badpr-').commit()); // one bad row refuses the whole batch
+  await assertFails(mk(people.vp, (i) => (i === 3 ? 'advisor' : 'officer'), 'badvp-').commit());
+  await assertFails(mk(people.officer, () => 'officer', 'of').commit());
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    assert.equal((await getDoc(doc(ctx.firestore(), 'members/badpr-0@stjbs.sch.id'))).exists(), false);
+    assert.equal((await getDoc(doc(ctx.firestore(), 'members/pr0@stjbs.sch.id'))).exists(), true);
+  });
+});
+
+test('bulk deactivate: advisor and vp batch-deactivate, never an advisor for a vp, never yourself, never as president or officer', async () => {
+  const off = (db, ids) => { const b = writeBatch(db); for (const id of ids) b.update(doc(db, `members/${id}`), { active: false, termId: T, updatedAt: 1 }); return b; };
+  const ids = [people.officer, people.lead, people.teacher];
+  await assertFails(off(as(people.president), ids).commit());
+  await assertFails(off(as(people.officer), ids).commit());
+  await assertFails(off(as(people.vp), [people.officer, people.advisor]).commit());
+  await assertFails(off(as(people.vp), [people.officer, people.vp]).commit());
+  await assertSucceeds(off(as(people.vp), ids).commit());
+  await assertSucceeds(off(as(people.advisor), [people.vp, people.treasurer, people.president]).commit());
 });

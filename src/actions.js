@@ -2,7 +2,7 @@
 import { arrayRemove, arrayUnion, collection, doc, writeBatch, deleteDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { S, fail, toast } from './store.js';
-import { isAdmin, tree } from './model.js';
+import { initials, isAdmin, tree } from './model.js';
 import { publish, refreshCache } from './publish.js';
 import { week } from './time.js';
 
@@ -145,6 +145,15 @@ export async function putDoc(path, data, msg) {
   try { await setDoc(doc(db, path), { ...data, termId: data.termId || T(), updatedAt: now() }, { merge: true }); if (msg) toast(msg); return true; }
   catch (e) { fail(e); return false; }
 }
+
+// ---- Bulk roster (admin). One batch each, so a refused row writes nothing. "Remove" deactivates: members are never deleted.
+export const bulkAddMembers = (rows) => run((b) => {
+  for (const r of rows)
+    b.set(doc(db, 'members', r.email), { name: r.name, initials: initials(r.name), role: r.role, section: r.section, reportsTo: null, active: true, createdAt: now(), termId: T(), updatedAt: now() });
+}, `${rows.length} member${rows.length === 1 ? '' : 's'} added.`);
+export const bulkDeactivate = (ids) => run((b) => {
+  for (const id of ids) b.update(doc(db, 'members', id), { active: false, termId: T(), updatedAt: now() });
+}, `${ids.length} member${ids.length === 1 ? '' : 's'} deactivated.`);
 
 // ---- Ideas: anyone but teachers pins one and votes; votes add or remove only yourself (the rules check it).
 export const pinIdea = (text) => run((b) => {
