@@ -24,6 +24,10 @@ import { Settings } from './routes/settings.jsx';
 import { Ideas } from './routes/ideas.jsx';
 import { Calendar } from './routes/calendar.jsx';
 import { Resources } from './routes/resources.jsx';
+import { MeetingHub } from './routes/meeting-hub.jsx';
+import { EventSettings } from './routes/event-settings.jsx';
+import { Attention } from './routes/attention.jsx';
+import { useAttention } from './attention.js';
 import crest from '../design/fiatlux/img/crest-256.png';
 import building from '../design/fiatlux/img/building.webp';
 
@@ -42,13 +46,13 @@ const AdminRoute = ({ id }) => {
   return <Page nav={ADMIN_NAV} />;
 };
 const ROUTES = {
-  week: Home, tasks: AllTasks, checkin: Checkin, projects: Projects, p: Item, meeting: Meeting, people: People, committees: People,
+  attention: Attention, 'meeting-hub': MeetingHub, 'meeting-room': (props) => <MeetingHub {...props} room />, 'event-settings': EventSettings, week: Home, tasks: AllTasks, checkin: Checkin, projects: Projects, p: Item, meeting: Meeting, people: People, committees: People,
   ideas: Ideas, calendar: Calendar, resources: Resources, activity: Feed, feed: Feed, digest: Digest, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
 };
 
-const MEMBER_NAV = [['week', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];
+const MEMBER_NAV = [['week', 'Home', 'home'], ['attention', 'For you', 'bell'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];
 export const ADMIN_NAV = [['admin', 'Overview', 'shield'], ['admin/announcements', 'Announcements', 'megaphone'], ['admin/members', 'Members and roles', 'committees'],
-  ['admin/workload', 'Check-ins and workload', 'chart'], ['admin/public', 'Public site', 'globe'], ['admin/approvals', 'Approvals and archive', 'inbox'], ['admin/digest', 'Digest', 'digest']];
+  ['admin/workload', 'Check-ins and workload', 'chart'], ['admin/public', 'Public site', 'globe'], ['admin/approvals', 'Approvals and archive', 'inbox'], ['admin/digest', 'Digest', 'digest'], ['event-settings', 'Event templates and defaults', 'calendar']];
 const TABS = [['week', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['ideas', 'Ideas', 'ideas']];
 // Which nav entry a route lights up.
 const ALIAS = { tasks: 'week', checkin: 'week', p: 'projects', meeting: 'projects', people: 'committees', feed: 'activity', about: 'settings' };
@@ -70,7 +74,7 @@ function usePop(route) {
 
 function Bell({ route }) {
   const [open, setOpen, ref] = usePop(route);
-  const n = unreadCount(), label = n >= 50 ? '50+' : String(n);
+  const n = unreadCount() + (S.attentionUnread || 0), label = n >= 50 ? '50+' : String(n);
   return (
     <div class="fl-search-host" ref={ref}>
       <button class="fl-iconbtn" aria-label={`Notifications, ${label} unread`} aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -78,7 +82,7 @@ function Bell({ route }) {
       </button>
       {open && (
         <div class="fl-pop fl-pop--wide" role="region" aria-label="Notifications">
-          <h4>For you</h4>
+          <h4>For you</h4><a href="#/attention"><Icon n="bell" />Council updates{S.attentionUnread ? ` · ${S.attentionUnread} unread` : ""}</a>
           {S.notes.length ? S.notes.slice(0, 6).map((x) => (
             <a key={x.id} class={`fl-note-item${x.read ? '' : ' is-unread'}`} href={x.itemId ? `#/p/${x.itemId}` : '#/activity'} onClick={() => !x.read && markRead(x)}>
               <Chip email={x.fromUid} /><span>{S.members.find((m) => m.id === x.fromUid)?.name.split(' ')[0] || 'Someone'} {x.text} <small>{stamp(x.createdAt)}</small></span>
@@ -123,6 +127,7 @@ function More({ close, adminView, switchView }) {
         {link('#/committees', 'Committees', 'committees')}
         {link('#/resources', 'Resources', 'resources')}
         {link('#/activity', 'All activity', 'activity')}
+        {link('#/attention', 'For you', 'bell')}
         {isExec() && !isAdmin() && link('#/digest', 'Digest', 'digest')}
         {isExec() && link('#/templates', 'Project templates', 'copy')}
         {isAdmin() && <>
@@ -151,6 +156,7 @@ const readView = () => { try { return localStorage.getItem('council-view') || 'm
 
 export function App() {
   useStore();
+  useAttention(!location.hash.startsWith('#/meeting-room/'));
   const [route, setRoute] = useState(parse), [more, setMore] = useState(false);
   useEffect(() => { const f = () => setRoute(parse()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   const admin = S.phase === 'ready' && isAdmin();
@@ -166,6 +172,7 @@ export function App() {
   const switchView = (v) => { try { localStorage.setItem('council-view', v); } catch {} location.hash = v === 'admin' ? '#/admin' : '#/week'; };
   const key = navKey(route), Page = ROUTES[route.name] || Missing;
   const navLink = ([k, label, icon]) => <a key={k} href={`#/${k}`} aria-current={key === k ? 'page' : undefined}><Icon n={icon} />{label}</a>;
+  if (route.name === 'meeting-room') return <Guard><MeetingHub id={route.id} room /></Guard>;
   return (
     <div class="fl-app">
       <a class="fl-skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main').focus(); }}>Skip to content</a>

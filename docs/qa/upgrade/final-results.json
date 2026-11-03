@@ -1,0 +1,319 @@
+{
+  "environment": "local Auth/Firestore emulators and Chromium",
+  "at": "2026-11-03T23:04:24.453Z",
+  "journeys": [
+    {
+      "name": "Admin maps a participant group without granting authorization roles",
+      "result": "passed",
+      "detail": "Admin selected actual roster people; no authorization role was modified."
+    },
+    {
+      "name": "Member publishes an unrestricted ordinary event",
+      "result": "passed",
+      "detail": "Submitted actual creation form; server read confirmed persistence and group union/section narrowing/addition/exclusion resolved exactly Alya."
+    },
+    {
+      "name": "Member submits a meeting request and sees awaiting status",
+      "result": "passed",
+      "detail": "Form submitted; awaiting request visible; confirmed calendar store excludes it."
+    },
+    {
+      "name": "Admin approves the exact request without returning it",
+      "result": "passed",
+      "detail": "Admin edited the request and scheduled the revised proposal in one form; phone client rendered the accepted revision without a return loop."
+    },
+    {
+      "name": "Existing major routes and deep links remain usable",
+      "result": "passed",
+      "detail": [
+        {
+          "path": "week",
+          "heading": "Good morning, Nadia."
+        },
+        {
+          "path": "tasks",
+          "heading": "All tasks. Find anything."
+        },
+        {
+          "path": "checkin",
+          "heading": "Week 45. Check in."
+        },
+        {
+          "path": "calendar?v=agenda",
+          "heading": "Calendar. Mon 2 Nov to Sun 8 Nov"
+        },
+        {
+          "path": "calendar?v=month",
+          "heading": "Calendar. November 2026"
+        },
+        {
+          "path": "calendar?v=week",
+          "heading": "Calendar. Mon 2 Nov to Sun 8 Nov"
+        },
+        {
+          "path": "projects",
+          "heading": "All projects. 2 running."
+        },
+        {
+          "path": "projects?view=pipeline",
+          "heading": "All projects. 2 running."
+        },
+        {
+          "path": "p/carnival",
+          "heading": "STJBS Carnival. 18% done."
+        },
+        {
+          "path": "p/carnival?view=timeline",
+          "heading": "STJBS Carnival. 18% done."
+        },
+        {
+          "path": "p/carnival?view=team",
+          "heading": "STJBS Carnival. 18% done."
+        },
+        {
+          "path": "p/t0",
+          "heading": "Secure Pocari Sweat booth contract"
+        },
+        {
+          "path": "meeting/carnival",
+          "heading": "STJBS Carnival. Meeting."
+        },
+        {
+          "path": "committees",
+          "heading": "Committees. 11 people."
+        },
+        {
+          "path": "people",
+          "heading": "Committees. 11 people."
+        },
+        {
+          "path": "people/raka@stjbs.sch.id",
+          "heading": "Officer. Raka Siregar"
+        },
+        {
+          "path": "resources",
+          "heading": "Resources. Templates and handover."
+        },
+        {
+          "path": "ideas",
+          "heading": "Ideas. Pin one, vote for the best."
+        },
+        {
+          "path": "activity",
+          "heading": "What changed. Feed"
+        },
+        {
+          "path": "feed",
+          "heading": "What changed. Feed"
+        },
+        {
+          "path": "settings",
+          "heading": "Your app. Settings."
+        },
+        {
+          "path": "about",
+          "heading": "Your app. Settings."
+        },
+        {
+          "path": "digest",
+          "heading": "For the chats. Weekly digest."
+        },
+        {
+          "path": "templates",
+          "heading": "Plan once. Reuse it."
+        },
+        {
+          "path": "workload",
+          "heading": "Who carries what. Workload."
+        },
+        {
+          "path": "admin",
+          "heading": "Admin. Needs attention."
+        },
+        {
+          "path": "admin/announcements",
+          "heading": "Announcements. Say it once."
+        },
+        {
+          "path": "admin/members",
+          "heading": "The roster. Members and roles."
+        },
+        {
+          "path": "admin/workload",
+          "heading": "Who carries what. Workload."
+        },
+        {
+          "path": "admin/approvals",
+          "heading": "Approvals. And the archive."
+        },
+        {
+          "path": "admin/public",
+          "heading": "Public site. What visitors see."
+        },
+        {
+          "path": "admin/digest",
+          "heading": "For the chats. Weekly digest."
+        },
+        {
+          "path": "event-settings",
+          "heading": "Event settings."
+        },
+        {
+          "path": "attention",
+          "heading": "For you."
+        }
+      ]
+    },
+    {
+      "name": "Assigned cohost starts the meeting without the president or VP",
+      "result": "passed",
+      "detail": "Raka (officer/cohost) starts; independent room client receives live lifecycle."
+    },
+    {
+      "name": "Host actions render remotely on member and room within five seconds",
+      "result": "passed",
+      "detail": "Five real host actions rendered by independent authenticated room and phone member browsers."
+    },
+    {
+      "name": "Phone member contributes while host presents",
+      "result": "passed",
+      "detail": "Submitted from 390px phone; host rendered contribution; room omitted unconfirmed contribution."
+    },
+    {
+      "name": "Continuous minutes autosave reaches another authorized browser and keeps focus",
+      "result": "passed",
+      "detail": {
+        "firstRemoteRenderMs": 1931.0587840000007,
+        "finalTextRetained": true,
+        "focusRetainedDuringHostAdvance": true
+      }
+    },
+    {
+      "name": "Offline minutes and unsent phone drafts survive reconnect and host navigation",
+      "result": "passed",
+      "detail": "Minutes remain in local draft storage while offline and reach the authorized second view after reconnect; unsent phone text survives a host phase change."
+    },
+    {
+      "name": "Minutes taker captures an action in approved project scope",
+      "result": "passed",
+      "detail": "Task created by Dimas (temporary minutes editor), linked to meeting; member task listener receives it."
+    },
+    {
+      "name": "Meeting closes separately; minutes reviewed, published, and downloaded",
+      "result": "passed",
+      "detail": {
+        "editableDownload": "docs/qa/upgrade/Demo-council-planning-meeting-v1.doc",
+        "printDocumentOpened": true,
+        "google": "No OAuth client configured; real school-account export not exercised."
+      }
+    },
+    {
+      "name": "Automated WCAG checks, keyboard skip navigation and reduced motion",
+      "result": "passed",
+      "detail": [
+        {
+          "surface": "desktop minutes",
+          "violations": [],
+          "reducedMotion": true
+        },
+        {
+          "surface": "phone overview",
+          "violations": [],
+          "reducedMotion": true
+        },
+        {
+          "surface": "room display",
+          "violations": [],
+          "reducedMotion": true
+        }
+      ]
+    },
+    {
+      "name": "Representative desktop, phone, light/dark and room views",
+      "result": "passed",
+      "detail": [
+        {
+          "name": "meeting-desktop-dark",
+          "width": 1440,
+          "scrollWidth": 1440,
+          "overflow": false
+        },
+        {
+          "name": "meeting-phone-dark",
+          "width": 390,
+          "scrollWidth": 390,
+          "overflow": false
+        },
+        {
+          "name": "meeting-presentation-dark",
+          "width": 1920,
+          "scrollWidth": 1920,
+          "overflow": false
+        }
+      ]
+    }
+  ],
+  "timing": [
+    {
+      "path": "host phase \u2192 independent room and phone member DOM",
+      "phase": "agenda",
+      "ms": 131.59097499999916
+    },
+    {
+      "path": "host phase \u2192 independent room and phone member DOM",
+      "phase": "updates",
+      "ms": 94.85757000000012
+    },
+    {
+      "path": "host phase \u2192 independent room and phone member DOM",
+      "phase": "tasks",
+      "ms": 105.2699999999968
+    },
+    {
+      "path": "host phase \u2192 independent room and phone member DOM",
+      "phase": "recap",
+      "ms": 96.76819199999954
+    },
+    {
+      "path": "host phase \u2192 independent room and phone member DOM",
+      "phase": "attendance",
+      "ms": 100.14173999999912
+    },
+    {
+      "path": "continuous typing \u2192 authorized second-view textarea",
+      "ms": 1931.0587840000007
+    }
+  ],
+  "timingSummary": {
+    "count": 6,
+    "maxMs": 1931.0587840000007,
+    "p95Ms": 1931.0587840000007,
+    "limitation": "Local emulator application evidence; not production network latency. Timing includes browser action overhead."
+  },
+  "accessibility": [
+    {
+      "surface": "desktop minutes",
+      "violations": [],
+      "reducedMotion": true
+    },
+    {
+      "surface": "phone overview",
+      "violations": [],
+      "reducedMotion": true
+    },
+    {
+      "surface": "room display",
+      "violations": [],
+      "reducedMotion": true
+    }
+  ],
+  "screenshots": [
+    "docs/qa/upgrade/meeting-desktop-dark.jpg",
+    "docs/qa/upgrade/meeting-phone-dark.jpg",
+    "docs/qa/upgrade/meeting-presentation-dark.jpg",
+    "docs/qa/upgrade/meeting-phone-light.jpg",
+    "docs/qa/upgrade/meeting-desktop-light.jpg"
+  ],
+  "finalFocusedPageErrors": [],
+  "verificationNote": "The full browser pass identified event assertion errors and the Attention composite-filter error. The corrected focused event recheck supersedes those failed paths. Other successful journeys and timings come from the full pass; they were not rerun unnecessarily."
+}

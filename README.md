@@ -140,6 +140,14 @@ Then follow the deploy steps above.
 - **Close term** changes only `settings/current.termId` after a forced backup download of every collection. Templates, submissions (the handover archive) and the public feed are cross-term and survive it.
 - **Data kept about students:** name, school email, role, section, reports-to and their council work. Nothing else.
 
+## Meeting and communication upgrade
+
+Calendar includes event requests, admin templates/defaults, participant groups and an explicit preview before applying defaults to scheduled events. The meeting hub separates preparation, host controls, presentation, contributions, attendance and versioned minutes. **For you** collects actionable requests, invitations, responsibilities and published minutes.
+
+From the VS Code terminal in the repo root, run `npm run check`, `npm run test:rules`, and `npm run test:upgrade`. For browser verification, run `npm run demo`, then in a second terminal run `node scripts/seed-meeting-demo.mjs` and `node qa/upgrade-browser.mjs`. These fixtures target local emulators only.
+
+See [acceptance and verification](docs/upgrade-checklist.md), [operations and usage estimates](docs/meeting-operations.md), and [Google export setup](docs/google-meeting-export.md). Google export needs the school's OAuth configuration; print/PDF and editable document download work independently. No production deployment is part of this implementation.
+
 ## Layout
 
 ```

@@ -17,7 +17,7 @@ export function feedPayload({ projects, events, announcements, day }) {
   return {
     v: 1,
     projects: projects.map((p) => ({ title: p.title, stage: p.stage, pct: p.pct, done: p.done, total: p.total, blurb: p.blurb || '', updatedAt: p.updatedAt || 0 })),
-    events: events.filter((e) => e.public === true && !e.archived && e.date >= day)
+    events: events.filter((e) => e.public === true && !e.archived && (!e.requestState || e.requestState === 'scheduled') && (!e.state || e.state === 'scheduled') && e.date >= day)
       .sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start))
       .map((e) => ({ title: e.title, type: e.type, date: e.date, start: e.start, end: e.end, location: e.location || '' })),
     announcements: announcements.filter((a) => a.audience === 'everyone' && !a.archived && a.endDate >= day)

@@ -3,11 +3,26 @@
 import { test, before, after, beforeEach } from 'node:test';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
+import { makeProposal } from '../src/event-model.js';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import {
-  doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, writeBatch, collection, query, where,
+  doc, setDoc as sdkSetDoc, getDoc, getDocs, updateDoc as sdkUpdateDoc, deleteDoc, writeBatch as sdkWriteBatch, collection, query, where,
   serverTimestamp, arrayUnion, arrayRemove, Timestamp,
 } from 'firebase/firestore';
+
+// Requests carry an immutable, separately validated proposal for each workflow revision.
+// These SDK helpers stage both writes atomically, as event-actions.js does; raw SDK writes test bypass denial below.
+const requestPath = (ref) => /^eventRequests\/[^/]+$/.test(ref.path);
+function writeBatch(db) {
+  const batch = sdkWriteBatch(db), requests=[];
+  const api = {set(ref,data,...options) {batch.set(ref,data,...options);if(requestPath(ref))requests.push({ref,data,create:true});if(/^meetings\/[^/]+\/versions\/[^/]+$/.test(ref.path)){batch.set(doc(db,ref.path,'sections','agenda-0'),{entries:data.record.agenda.slice(0,6)});batch.set(doc(db,ref.path,'sections','agenda-1'),{entries:data.record.agenda.slice(6)});}if(ref.path==='settings/eventDefaults')batch.set(doc(db,ref.path,'versions',data.termId+'_'+data.version),data);return api;},
+    update(ref,data) {batch.update(ref,data);if(requestPath(ref))requests.push({ref,data});return api;},
+    delete(ref) {batch.delete(ref);return api;},
+    async commit() {for(const {ref,data,create} of requests){const proposal=data.proposal || (await getDoc(ref)).data().proposal;batch.set(doc(db,ref.path,'proposals',String(data.revision)),proposal);}return batch.commit();}};
+  return api;
+}
+function setDoc(ref,data,...options) {if(!requestPath(ref) && ref.path!=='settings/eventDefaults')return sdkSetDoc(ref,data,...options);const b=writeBatch(ref.firestore);b.set(ref,data,...options);return b.commit();}
+async function updateDoc(ref,data) {if(ref.path==='settings/eventDefaults'){const previous=(await getDoc(ref)).data();return setDoc(ref,{...previous,...data});}if(!requestPath(ref))return sdkUpdateDoc(ref,data);const b=writeBatch(ref.firestore);b.update(ref,data);return b.commit();}
 
 const T = '2026-27';
 let env;
@@ -37,7 +52,7 @@ const tpl = (o) => ({ name: 'Proposal', kind: 'Doc', url: 'https://docs.google.c
 const sub = (o) => ({ type: 'new-template', name: 'Budget sheet', url: 'https://docs.google.com/spreadsheets/d/x/edit', note: '', byUid: people.officer, status: 'pending', archived: false, createdAt: 1, ...o });
 
 before(async () => {
-  env = await initializeTestEnvironment({ projectId: 'demo-council', firestore: { rules: readFileSync('firestore.rules', 'utf8') } });
+  env = await initializeTestEnvironment({ projectId: 'demo-council-rules-upgrade', firestore: { rules: readFileSync(process.env.FIRESTORE_RULES_FILE || 'firestore.rules', 'utf8') } });
 });
 after(() => env.cleanup());
 beforeEach(async () => {
@@ -240,8 +255,10 @@ test('announcements: admins write, members read, teachers and officers cannot wr
 
 // ---- Events and RSVPs
 
-test('events: any non-teacher creates private events; only admins make them public', async () => {
-  await assertSucceeds(setDoc(doc(as(people.officer), 'events/e2'), event({})));
+test('events: ordinary events are private; meetings require admin scheduling', async () => {
+  const ordinary=makeProposal({settings:null,template:null,edits:{title:'Ordinary',type:'other',date:'2026-11-02',start:'15:30',end:'16:30',location:'Hall',notes:'',public:false,itemId:null,participantSelection:{groupIds:[],sections:[],includeUids:[],excludeUids:[]}},members:[],groups:[]});
+  await assertSucceeds(setDoc(doc(as(people.officer), 'events/e2'), event({...ordinary,revision:1,requestId:null})));
+  await assertFails(setDoc(doc(as(people.officer),'events/forged-default-role'),event({...ordinary,configSnapshot:{...ordinary.configSnapshot,defaults:{...ordinary.configSnapshot.defaults,minutesUid:people.officer}}})));
   await assertFails(setDoc(doc(as(people.officer), 'events/e3'), event({ public: true })));
   await assertFails(setDoc(doc(as(people.teacher), 'events/e4'), event({ createdByUid: people.teacher })));
   await assertSucceeds(setDoc(doc(as(people.vp), 'events/e5'), event({ createdByUid: people.vp, public: true })));
@@ -251,7 +268,7 @@ test('events: any non-teacher creates private events; only admins make them publ
 test('events: creator or exec edits; public flag and public text only by admins', async () => {
   await assertSucceeds(updateDoc(doc(as(people.officer), 'events/e1'), { location: 'Hall' }));
   await assertFails(updateDoc(doc(as(people.lead), 'events/e1'), { location: 'Hall' }));
-  await assertSucceeds(updateDoc(doc(as(people.treasurer), 'events/e1'), { location: 'Hall 2' }));
+  await assertFails(updateDoc(doc(as(people.treasurer), 'events/e1'), { location: 'Hall 2' }));
   await assertFails(updateDoc(doc(as(people.officer), 'events/e1'), { public: true }));
   await assertSucceeds(updateDoc(doc(as(people.vp), 'events/e1'), { public: true }));
   await assertFails(updateDoc(doc(as(people.treasurer), 'events/pub'), { title: 'Name of a student' }));
@@ -445,4 +462,165 @@ test('bulk deactivate: advisor and vp batch-deactivate, never an advisor for a v
   await assertFails(off(as(people.vp), [people.officer, people.vp]).commit());
   await assertSucceeds(off(as(people.vp), ids).commit());
   await assertSucceeds(off(as(people.advisor), [people.vp, people.treasurer, people.president]).commit());
+});
+
+// ---- Meeting/event upgrade: actor boundaries, private partitions, exact revisions and live grants.
+const meetingData = (o = {}) => ({termId:T,eventId:'e1',createdByUid:people.president,createdAt:1,title:'Council',date:'2026-11-02',startTime:'15:30',endTime:'16:30',venue:'Hall',participantUids:[people.officer,people.lead],projectIds:['p'],chairUid:people.president,hostUid:people.lead,cohostUids:[],minutesUid:people.officer,minutesBackupUid:null,revision:1,status:'prepared',actualStart:null,actualEnd:null,...o});
+const sessionData = (o = {}) => ({termId:T,revision:1,hostUid:people.lead,phase:'attendance',activeTopicId:null,presenterUid:null,queue:[],timerStartedAt:null,timerDuration:0,updatedAt:1,sessionId:'session-1',...o});
+const minutesData = (o = {}) => ({termId:T,revision:1,editorUid:people.officer,status:'draft',summary:'',decisions:'',actions:[],closing:'',nextMeeting:'',preparedBy:people.officer,reviewedBy:'',publishedVersion:0,updatedAt:1,...o});
+const selection = {groupIds:[],sections:[],includeUids:[],excludeUids:[]};
+const snapshot = (approval = 'required') => ({settingsVersion:0,templateId:null,templateVersion:0,approval});
+const proposalData = (o = {}) => ({title:'Council',type:'meeting',date:'2026-11-02',start:'15:30',end:'16:30',location:'Hall',notes:'',public:false,itemId:null,participantSelection:selection,participantUids:[people.officer],configSnapshot:snapshot(),...o});
+const requestData = (o = {}) => ({termId:T,createdByUid:people.officer,state:'awaiting',revision:1,proposal:proposalData(),eventId:null,reviewedByUid:null,reviewNote:'',createdAt:1,updatedAt:1,replacesEventId:null,baseEventRevision:null,...o});
+async function seedMeeting(o = {}) {await env.withSecurityRulesDisabled(async ctx=>{const db=ctx.firestore();await setDoc(doc(db,'meetings/m'),meetingData(o));await setDoc(doc(db,'meetings/m/session/control'),sessionData());await setDoc(doc(db,'meetings/m/minutes/draft'),minutesData());});}
+
+test('meetings: only admins initialize bounded documents; batch initializes the assigned secretary', async()=>{
+  await assertFails(setDoc(doc(as(people.officer),'meetings/m'),meetingData({createdByUid:people.officer})));
+  const db=as(people.president), b=writeBatch(db);b.set(doc(db,'meetings/m'),meetingData());b.set(doc(db,'meetings/m/session/control'),sessionData());b.set(doc(db,'meetings/m/minutes/draft'),minutesData());await assertSucceeds(b.commit());
+  await assertFails(updateDoc(doc(db,'meetings/m'),{revision:2,attendanceReasons:'secret'}));
+  await assertFails(updateDoc(doc(db,'meetings/m'),{revision:4,title:'Stale'}));
+  await assertSucceeds(updateDoc(doc(db,'meetings/m'),{revision:2,chairUid:people.vp}));
+});
+test('meetings: signed out, unverified, inactive, unknown and uninvited teacher reads are denied', async()=>{
+  await seedMeeting();await env.withSecurityRulesDisabled(ctx=>setDoc(doc(ctx.firestore(),'members/inactive@stjbs.sch.id'),{role:'officer',active:false}));
+  for(const db of [anon(),as(people.officer,false),as('inactive@stjbs.sch.id'),as('unknown@stjbs.sch.id')])await assertFails(getDoc(doc(db,'meetings/m')));
+  await assertFails(getDoc(doc(as(people.teacher),'meetings/m')));
+});
+test('meeting session: only current host/cohost/admin controls, revision CAS and lifecycle are enforced',async()=>{
+  await seedMeeting();
+  await assertFails(updateDoc(doc(as(people.officer),'meetings/m/session/control'),{phase:'agenda',revision:2}));
+  await assertFails(updateDoc(doc(as(people.teacher),'meetings/m/session/control'),{phase:'agenda',revision:2}));
+  await assertSucceeds(updateDoc(doc(as(people.lead),'meetings/m/session/control'),{phase:'agenda',revision:2}));
+  await assertFails(updateDoc(doc(as(people.lead),'meetings/m/session/control'),{phase:'updates',revision:2}));
+  await assertSucceeds(updateDoc(doc(as(people.lead),'meetings/m'),{status:'live',actualStart:2,revision:2}));
+  await assertFails(updateDoc(doc(as(people.lead),'meetings/m'),{status:'prepared',revision:3}));
+  await assertSucceeds(updateDoc(doc(as(people.lead),'meetings/m'),{status:'closed',actualEnd:3,revision:3}));
+  await assertFails(updateDoc(doc(as(people.lead),'meetings/m/session/control'),{phase:'recap',revision:3}));
+});
+test('meeting sensitive attendance never leaks to teacher, participant, host, or collection-group read',async()=>{
+  await seedMeeting();const data={termId:T,uid:people.officer,reason:'Private',followup:'Contact home',designation:'Officer'};
+  await assertSucceeds(setDoc(doc(as(people.officer),`meetings/m/sensitive/${people.officer}`),data));
+  for(const uid of [people.teacher,people.lead,people.treasurer])await assertFails(getDoc(doc(as(uid),`meetings/m/sensitive/${people.officer}`)));
+  await assertSucceeds(getDoc(doc(as(people.president),`meetings/m/sensitive/${people.officer}`)));
+  await assertFails(setDoc(doc(as(people.officer),'meetings/m/attendance/'+people.officer),{termId:T,uid:people.officer,status:'present',reason:'Private'}));
+});
+test('meeting contributions: teacher may submit bounded text, never mutate session or another author',async()=>{
+  await seedMeeting({participantUids:[people.officer,people.lead,people.teacher]});const data={termId:T,authorUid:people.teacher,topicId:null,type:'suggestion',text:'Consider another date',createdAt:1,status:'submitted'};
+  await assertSucceeds(setDoc(doc(as(people.teacher),'meetings/m/contributions/a'),data));
+  await assertFails(setDoc(doc(as(people.teacher),'meetings/m/contributions/b'),{...data,authorUid:people.lead}));
+  await assertFails(updateDoc(doc(as(people.teacher),'meetings/m/contributions/a'),{status:'accepted'}));
+  await assertSucceeds(updateDoc(doc(as(people.lead),'meetings/m/contributions/a'),{status:'accepted'}));
+});
+test('temporary minutes grant: prepared and out-of-scope denied; live scoped edit allowed; handoff and close revoke',async()=>{
+  await seedMeeting();const update={title:'Captured action',meetingId:'m',...touch};
+  await assertFails(updateDoc(doc(as(people.officer),'items/t2'),update));
+  await env.withSecurityRulesDisabled(async ctx=>{await updateDoc(doc(ctx.firestore(),'meetings/m'),{status:'live',actualStart:2});await setDoc(doc(ctx.firestore(),'items/outsider'),item({parentId:'q',ancestors:['q']}));});
+  await assertSucceeds(updateDoc(doc(as(people.officer),'items/t2'),update));
+  await assertFails(updateDoc(doc(as(people.officer),'items/outsider'),update));
+  await assertFails(updateDoc(doc(as(people.officer),'items/t2'),{...update,pledgedIdr:90}));
+  await env.withSecurityRulesDisabled(ctx=>updateDoc(doc(ctx.firestore(),'meetings/m'),{minutesUid:people.lead}));
+  await assertFails(updateDoc(doc(as(people.officer),'items/t2'),{...update,title:'Old editor'}));
+  await env.withSecurityRulesDisabled(ctx=>updateDoc(doc(ctx.firestore(),'meetings/m'),{minutesUid:people.officer,status:'closed'}));
+  await assertFails(updateDoc(doc(as(people.officer),'items/t2'),{...update,title:'Closed'}));
+});
+test('minutes: current editor only, strict revision and atomic admin publication',async()=>{
+  await seedMeeting();
+  await assertFails(updateDoc(doc(as(people.lead),'meetings/m/minutes/draft'),{summary:'Host cannot overwrite',revision:2}));
+  await assertFails(updateDoc(doc(as(people.officer),'meetings/m/minutes/draft'),{summary:'Stale',revision:3}));
+  await assertSucceeds(updateDoc(doc(as(people.officer),'meetings/m/minutes/draft'),{summary:'Summary',status:'review',revision:2}));
+  await assertFails(updateDoc(doc(as(people.officer),'meetings/m/minutes/draft'),{status:'published',publishedVersion:1,revision:3}));
+  await assertFails(updateDoc(doc(as(people.president),'meetings/m/minutes/draft'),{status:'published',publishedVersion:1,revision:3}));
+  const db=as(people.president),b=writeBatch(db);b.update(doc(db,'meetings/m/minutes/draft'),{status:'published',publishedVersion:1,revision:3,reviewedBy:people.president});
+  b.set(doc(db,'meetings/m/versions/1'),{termId:T,revision:1,draftRevision:3,publishedAt:5,publishedByUid:people.president,record:{id:'m',termId:T,status:'published',revision:1,publishedVersion:1,publishedAt:5,name:'Council',date:'2026-11-02',startTime:'15:30',endTime:'16:30',actualStart:null,actualEnd:null,venue:'Hall',chairUid:people.president,editorUid:people.officer,attendance:{},agenda:[],summary:'Summary',decisions:'',actions:[],closing:'',nextMeeting:'',preparedBy:people.officer,reviewedBy:people.president}});
+  await assertSucceeds(b.commit());await assertFails(updateDoc(doc(db,'meetings/m/versions/1'),{publishedAt:6}));
+});
+test('event policies: admins only, bounded defaults and exact version CAS',async()=>{
+  const data={termId:T,version:1,defaults:{approval:'required'},updatedAt:1,updatedByUid:people.president};
+  await assertFails(setDoc(doc(as(people.treasurer),'settings/eventDefaults'),{...data,updatedByUid:people.treasurer}));
+  await assertSucceeds(setDoc(doc(as(people.president),'settings/eventDefaults'),data));
+  await assertFails(updateDoc(doc(as(people.president),'settings/eventDefaults'),{version:3}));
+  await assertSucceeds(updateDoc(doc(as(people.president),'settings/eventDefaults'),{version:2,defaults:{approval:'immediate'}}));
+  await assertFails(updateDoc(doc(as(people.president),'settings/eventDefaults'),{version:3,defaults:{approval:'immediate',secret:'no'}}));
+});
+test('approval requests: owner privacy, forged immediate bypass denied, review cannot schedule without matching event',async()=>{
+  await assertSucceeds(setDoc(doc(as(people.officer),'eventRequests/r'),requestData()));
+  await assertFails(getDoc(doc(as(people.lead),'eventRequests/r')));
+  await assertSucceeds(getDoc(doc(as(people.president),'eventRequests/r')));
+  await assertFails(getDocs(collection(as(people.officer),'eventRequests')));
+  await assertSucceeds(getDocs(query(collection(as(people.officer),'eventRequests'),where('createdByUid','==',people.officer))));
+  await assertFails(setDoc(doc(as(people.officer),'events/bypass'),event({...proposalData({configSnapshot:snapshot('immediate')}),revision:1,requestId:null})));
+  await assertFails(updateDoc(doc(as(people.officer),'eventRequests/r'),{state:'scheduled',eventId:'r',revision:2}));
+  await assertFails(updateDoc(doc(as(people.president),'eventRequests/r'),{state:'scheduled',eventId:'r',reviewedByUid:people.president,revision:2}));
+});
+test('approval atomically creates exact proposal, stale changes cannot overwrite approved event',async()=>{
+  await assertSucceeds(setDoc(doc(as(people.officer),'eventRequests/r'),requestData()));
+  const db=as(people.president),b=writeBatch(db);b.update(doc(db,'eventRequests/r'),{state:'scheduled',eventId:'r',reviewedByUid:people.president,revision:2});
+  b.set(doc(db,'events/r'),event({...proposalData(),revision:1,requestId:'r'}));await assertSucceeds(b.commit());
+  await assertFails(updateDoc(doc(as(people.officer),'events/r'),{title:'Bypass review',revision:2}));
+  await assertFails(updateDoc(doc(as(people.officer),'eventRequests/r'),{state:'awaiting',revision:3}));
+});
+test('private topic minutes: reader partition, sole editor, bounded CAS, parent term anchored',async()=>{
+  await seedMeeting();const data={termId:T,revision:1,discussion:'Private deliberation',outcome:'Draft decision',updatedAt:1};
+  await assertSucceeds(setDoc(doc(as(people.officer),'meetings/m/topicMinutes/a'),data));
+  for(const who of [people.lead,people.teacher,people.treasurer])await assertFails(getDoc(doc(as(who),'meetings/m/topicMinutes/a')));
+  await assertSucceeds(getDoc(doc(as(people.president),'meetings/m/topicMinutes/a')));
+  await assertFails(updateDoc(doc(as(people.president),'meetings/m/topicMinutes/a'),{discussion:'Admin overwrite',revision:2}));
+  await assertFails(updateDoc(doc(as(people.officer),'meetings/m/topicMinutes/a'),{discussion:'Stale',revision:3}));
+  await env.withSecurityRulesDisabled(ctx=>updateDoc(doc(ctx.firestore(),'meetings/m'),{termId:'old'}));
+  await assertFails(updateDoc(doc(as(people.officer),'meetings/m/topicMinutes/a'),{discussion:'Old term',revision:2}));
+});
+test('host and minutes handoff require atomic scoped revision update; old authority expires',async()=>{
+  await seedMeeting({status:'live',actualStart:2,cohostUids:[people.officer]});const db=as(people.lead);
+  await assertFails(updateDoc(doc(db,'meetings/m'),{hostUid:people.officer,revision:2}));
+  const b=writeBatch(db);b.update(doc(db,'meetings/m'),{hostUid:people.officer,revision:2});b.update(doc(db,'meetings/m/session/control'),{hostUid:people.officer,revision:2});await assertSucceeds(b.commit());
+  await assertFails(updateDoc(doc(db,'meetings/m/session/control'),{phase:'tasks',revision:3}));
+  await assertSucceeds(updateDoc(doc(as(people.officer),'meetings/m/session/control'),{phase:'tasks',revision:3}));
+});
+test('notices are canonical lifecycle events; own read state cannot forge another account',async()=>{
+  await seedMeeting();const db=as(people.lead),data={termId:T,type:'started',revision:2,targetUid:null,createdAt:2,actorUid:people.lead,href:'#/meeting-hub/m'};
+  await assertFails(setDoc(doc(db,'meetings/m/notices/started-2'),data));
+  const b=writeBatch(db);b.update(doc(db,'meetings/m'),{status:'live',actualStart:2,revision:2});b.set(doc(db,'meetings/m/notices/started-2'),data);await assertSucceeds(b.commit());
+  await assertSucceeds(getDoc(doc(as(people.officer),'meetings/m/notices/started-2')));
+  await assertFails(getDoc(doc(as(people.teacher),'meetings/m/notices/started-2')));
+  const read={termId:T,uid:people.officer,meetingId:'m',revision:2,updatedAt:2};
+  await assertSucceeds(setDoc(doc(as(people.officer),`meetingReads/m_${people.officer}`),read));
+  await assertFails(setDoc(doc(as(people.lead),`meetingReads/m_${people.officer}`),read));
+});
+test('full template snapshots and custom fields stay within rules budget and archive exact immutable versions',async()=>{
+  const {makeProposal}=await import('../src/event-model.js');
+  const template={id:'meeting',name:'Working meeting',description:'Council planning',type:'meeting',available:true,version:1,archived:false,createdAt:1,updatedAt:1,createdByUid:people.president,
+    defaults:{title:'Council',type:'meeting',start:'15:00',end:'16:00',location:'Assembly Room',notes:'',itemId:null,approval:'required',participantSelection:selection,duration:60,instructions:'Read agenda',agenda:'Reports',minutes:'Summary',chairUid:people.president,minutesUid:people.officer,minutesBackupUid:null,cohostUids:[],customFields:Array.from({length:4},(_,i)=>({id:'purpose'+i,label:'Purpose '+i,type:'text',required:true,options:[]}))}};
+  const {id,...body}=template,db=as(people.president),b=writeBatch(db);b.set(doc(db,'eventTemplates',id),body);b.set(doc(db,'eventTemplates',id,'versions','1'),body);await assertSucceeds(b.commit());
+  await assertFails(updateDoc(doc(db,'eventTemplates',id,'versions','1'),{name:'Rewritten history'}));
+  const proposal=makeProposal({template,edits:{title:'Council',date:'2026-11-02',customValues:Object.fromEntries(Array.from({length:4},(_,i)=>['purpose'+i,'Plan service day']))},members:[{id:people.officer,active:true,role:'officer'}],groups:[]});
+  await assertSucceeds(setDoc(doc(as(people.officer),'eventRequests/full'),requestData({proposal})));
+  await assertFails(setDoc(doc(as(people.officer),'eventRequests/stale'),requestData({proposal:{...proposal,configSnapshot:{...proposal.configSnapshot,templateVersion:0}}})));
+});
+test('requested events reject purpose or policy edits, revision removal, and unaudited admin overwrite',async()=>{
+  await env.withSecurityRulesDisabled(async ctx=>{await setDoc(doc(ctx.firestore(),'events/approved'),event({...proposalData(),revision:1,requestId:'r'}));await setDoc(doc(ctx.firestore(),'eventRequests/r'),requestData({state:'scheduled',eventId:'approved',revision:2}));});
+  await assertFails(updateDoc(doc(as(people.officer),'events/approved'),{notes:'Changed purpose',revision:2}));
+  await assertFails(updateDoc(doc(as(people.officer),'events/approved'),{configSnapshot:snapshot('immediate'),revision:2}));
+  await assertFails(setDoc(doc(as(people.officer),'events/approved'),event({...proposalData(),requestId:'r'})));
+  await assertFails(updateDoc(doc(as(people.president),'events/approved'),{notes:'Admin edited purpose',revision:2}));
+  const db=as(people.president),b=writeBatch(db);b.update(doc(db,'events/approved'),{notes:'Admin edited purpose',revision:2});b.set(doc(db,'activity/event_approved_2'),{termId:T,actorUid:people.president,type:'event',itemId:'approved',text:'Updated event',createdAt:2});await assertSucceeds(b.commit());
+});
+test('publication supports fifty attendees and rejects a hidden private field in the last row',async()=>{
+  const attendees=Array.from({length:50},(_,i)=>({uid:`member${i}@stjbs.sch.id`,name:`Member ${i}`,status:'present'}));await seedMeeting({participantUids:attendees.map(x=>x.uid)});
+  const record={id:'m',termId:T,status:'published',revision:1,publishedVersion:1,publishedAt:5,name:'Council',date:'2026-11-02',startTime:'15:30',endTime:'16:30',actualStart:null,actualEnd:null,venue:'Hall',chairUid:people.president,editorUid:people.officer,attendance:Object.fromEntries(attendees.map(x=>[x.uid,x.status])),agenda:Array.from({length:12},(_,i)=>({id:'topic'+i,title:'Topic '+i,presenterUid:null,duration:5,discussion:'Summary',outcome:'Agreed',status:'done'})),summary:'',decisions:'',actions:Array.from({length:10},(_,i)=>({text:'Action '+i,ownerUid:people.officer,dueDate:'2026-11-02',status:'todo',taskId:null})),closing:'',nextMeeting:'',preparedBy:people.officer,reviewedBy:people.president};
+  for(let i=0;i<record.actions.length;i++)await assertSucceeds(updateDoc(doc(as(people.officer),'meetings/m/minutes/draft'),{actions:record.actions.slice(0,i+1),revision:i+2}));
+  await assertSucceeds(updateDoc(doc(as(people.officer),'meetings/m/minutes/draft'),{status:'review',revision:12}));
+  const publish=(r)=>{const db=as(people.president),b=writeBatch(db);b.update(doc(db,'meetings/m/minutes/draft'),{status:'published',publishedVersion:1,revision:13,reviewedBy:people.president});b.set(doc(db,'meetings/m/versions/1'),{termId:T,revision:1,draftRevision:13,publishedAt:5,publishedByUid:people.president,record:r});return b.commit();};
+  await assertFails(publish({...record,attendance:attendees.map((x,i)=>i===49?{...x,reason:'PRIVATE'}:x)}));
+  await assertFails(publish({...record,attendance:{...record.attendance,[attendees[49].uid]:{status:'absent',reason:'PRIVATE'}}}));
+  await assertSucceeds(publish(record));
+});
+
+test('request companions are mandatory, exact, immutable and owner-scoped',async()=>{
+  const db=as(people.officer),r=requestData();
+  await assertFails(sdkSetDoc(doc(db,'eventRequests/no-companion'),r));
+  const b=sdkWriteBatch(db);b.set(doc(db,'eventRequests/mismatched'),r);b.set(doc(db,'eventRequests/mismatched/proposals/1'),proposalData({title:'Forged'}));await assertFails(b.commit());
+  await assertSucceeds(setDoc(doc(db,'eventRequests/canonical'),r));
+  await assertFails(sdkUpdateDoc(doc(db,'eventRequests/canonical/proposals/1'),{title:'Rewritten history'}));
+  await assertFails(deleteDoc(doc(db,'eventRequests/canonical/proposals/1')));
+  await assertFails(getDoc(doc(as(people.lead),'eventRequests/canonical/proposals/1')));
 });

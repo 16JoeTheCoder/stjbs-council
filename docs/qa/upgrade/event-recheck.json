@@ -1,0 +1,35 @@
+{
+  "environment": "local Auth/Firestore emulators and Chromium",
+  "at": "2026-11-03T23:04:24.453Z",
+  "journeys": [
+    {
+      "name": "Admin maps a participant group without granting authorization roles",
+      "result": "passed",
+      "detail": "Admin selected actual roster people; no authorization role was modified."
+    },
+    {
+      "name": "Member publishes an unrestricted ordinary event",
+      "result": "passed",
+      "detail": "Submitted actual creation form; server read confirmed persistence and group union/section narrowing/addition/exclusion resolved exactly Alya."
+    },
+    {
+      "name": "Member submits a meeting request and sees awaiting status",
+      "result": "passed",
+      "detail": "Form submitted; awaiting request visible; confirmed calendar store excludes it."
+    },
+    {
+      "name": "Admin approves the exact request without returning it",
+      "result": "passed",
+      "detail": "Admin edited the request and scheduled the revised proposal in one form; phone client rendered the accepted revision without a return loop."
+    }
+  ],
+  "timing": [],
+  "errors": [],
+  "screenshots": [],
+  "timingSummary": {
+    "count": 0,
+    "maxMs": null,
+    "p95Ms": null,
+    "limitation": "Local emulator application evidence; not production network latency. Timing includes browser action overhead."
+  }
+}
