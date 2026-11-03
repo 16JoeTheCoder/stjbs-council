@@ -45,20 +45,24 @@ export const Icon = ({ n, label }) => (
 
 // Full-screen detail. Focus moves in, Tab stays inside, Esc and the backdrop close it, focus returns to the trigger.
 export function Sheet({ label, onClose, children }) {
-  const ref = useRef();
+  const ref = useRef(), close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     const back = document.activeElement, card = ref.current;
     card.querySelector('.fl-sheet__close').focus();
     const key = (e) => {
-      if (e.key === 'Escape') { e.stopPropagation(); onClose(); }
+      if (!document.querySelectorAll('.fl-sheet').item(document.querySelectorAll('.fl-sheet').length - 1)?.contains(card)) return;
+      if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); close.current(); }
       if (e.key !== 'Tab') return;
-      const f = [...card.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex="0"]')];
+      const f = [...card.querySelectorAll('a[href], button, input, select, textarea, [tabindex="0"]')]
+        .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length);
+      if (!f.length) { e.preventDefault(); return; }
       if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f.at(-1).focus(); }
       else if (!e.shiftKey && document.activeElement === f.at(-1)) { e.preventDefault(); f[0].focus(); }
     };
     addEventListener('keydown', key, true);
     document.body.classList.add('fl-locked');
-    return () => { removeEventListener('keydown', key, true); document.body.classList.remove('fl-locked'); back?.focus?.(); };
+    return () => { removeEventListener('keydown', key, true); if (document.querySelectorAll('.fl-sheet').length <= 1) document.body.classList.remove('fl-locked'); if (back?.isConnected) back.focus?.(); };
   }, []);
   return (
     <div class="fl-sheet" role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.target === e.currentTarget && onClose()}>

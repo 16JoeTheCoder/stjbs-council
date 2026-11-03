@@ -203,3 +203,80 @@ a.fl-ev { display: inline-block; }
 @media (max-width: 899px) {
   .fl-tools .fl-pop { position: fixed; top: calc(var(--top-h) + env(safe-area-inset-top)); left: var(--s-4); right: var(--s-4); width: auto; max-height: calc(100dvh - var(--top-h) - var(--tabbar-h) - var(--s-9)); }
 }
+
+/* Shared interaction floor: compact typography still has a full touch target. */
+::selection { background: var(--red); color: var(--on-red); }
+html { scrollbar-color: var(--line-strong) var(--surface-sunken); }
+input, textarea { caret-color: var(--red-text); }
+a { text-underline-offset: var(--s-1); }
+.fl-btn--sm, .fl-seg button, .fl-seg a { min-height: var(--hit); }
+.fl-user { min-width: var(--hit); justify-content: center; }
+.fl-search label:focus-within { border-color: var(--line-strong); outline: 2px solid var(--focus); outline-offset: 2px; }
+.fl-up .fl-linkbtn { min-height: var(--hit); }
+.fl-btn, .fl-filter, .fl-iconbtn, .fl-input, .fl-linkbtn { touch-action: manipulation; }
+.fl-filter:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--surface-high); color: var(--ink); }
+button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; }
+.fl-btn[aria-busy="true"] { cursor: progress; }
+.fl-task-toggle { display: grid; place-items: center; width: var(--hit); min-height: var(--hit); cursor: pointer; }
+.fl-task-toggle:has(:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-sm); }
+.fl-task-toggle .fl-check:focus-visible { outline: 0; }
+.fl-row--task, .fl-lane .fl-row--task { grid-template-columns: var(--hit) minmax(0, 1fr) auto auto; }
+.fl-lane .fl-row--task { grid-template-columns: var(--hit) minmax(0, 1fr); }
+.fl-row--task[aria-busy="true"] { color: var(--ink-muted); }
+.fl-row--task[aria-busy="true"] .fl-task-toggle { cursor: progress; }
+.fl-main > *, .fl-panel, .fl-card, .fl-pagehead > *, .fl-split > *, .fl-fields > *, .fl-person > span:last-child { min-width: 0; }
+.fl-h3, .fl-h2, .fl-title, .fl-display, .fl-person, .fl-toast, .fl-empty, .fl-error { overflow-wrap: anywhere; }
+.fl-title, .fl-display { text-wrap: balance; }
+.fl-panel__head, .fl-card__meta { flex-wrap: wrap; }
+.fl-scroll { max-width: 100%; overscroll-behavior-x: contain; }
+.fl-scroll:focus-visible { outline: 2px solid var(--focus); outline-offset: var(--s-1); }
+.fl-teamchart { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.fl-mentions .fl-pop { max-width: 100%; }
+.fl-sheet__card { overscroll-behavior: contain; }
+.fl-toast { width: max-content; }
+
+/* Meeting preparation and the dedicated room use the same quiet workspace. */
+.fl-meeting-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr); gap: var(--s-6); align-items: start; }
+.fl-meeting-layout > *, .fl-meeting-columns > * { min-width: 0; }
+.fl-meeting-room { display: flex; flex-direction: column; gap: var(--s-6); width: 100%; max-width: var(--page-max); min-height: 100dvh; margin: 0 auto; padding: var(--s-7) var(--s-9); background: var(--surface); }
+.fl-meeting-room__topic { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-7); border: var(--border) solid var(--line); border-radius: var(--r-lg); background: var(--surface-raised); }
+.fl-meeting-room__topic h2 { font: 700 var(--fs-title)/1.2 var(--font-sans); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.fl-meeting-tabs { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.fl-meeting-tabs button, .fl-meeting-tabs a { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--hit); padding: var(--s-2) var(--s-4); border: var(--border) solid var(--line-strong); border-radius: var(--r-md); background: var(--surface-raised); color: var(--ink-muted); font: 700 var(--fs-small)/20px var(--font-sans); cursor: pointer; }
+.fl-meeting-tabs [aria-selected="true"], .fl-meeting-tabs [aria-pressed="true"], .fl-meeting-tabs [aria-current="page"] { background: var(--red); border-color: var(--red); color: var(--on-red); }
+.fl-save-state { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--hit); color: var(--ink-muted); font: 500 var(--fs-small)/20px var(--font-sans); }
+.fl-save-state[data-state="error"] { color: var(--bad); }
+.fl-save-state[data-state="saved"] { color: var(--ok); }
+.fl-agenda-list { display: flex; flex-direction: column; }
+.fl-agenda-list > li, .fl-agenda-list > article { padding: var(--s-4) 0; border-top: var(--border) solid var(--line); overflow-wrap: anywhere; }
+.fl-agenda-list > :first-child { border-top: 0; }
+.fl-meeting-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6); align-items: start; }
+@media (max-width: 1099px) {
+  .fl-meeting-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 899px) {
+  .fl-meeting-room { padding: calc(var(--s-5) + env(safe-area-inset-top)) var(--s-4) calc(var(--s-6) + env(safe-area-inset-bottom)); }
+  .fl-meeting-room__topic { padding: var(--s-5); }
+  .fl-meeting-columns { grid-template-columns: minmax(0, 1fr); }
+  .fl-input { font-size: var(--s-4); }
+}
+@media (max-width: 599px) {
+  .fl-row--task { grid-template-columns: var(--hit) minmax(0, 1fr); }
+  .fl-pagehead .fl-actions { width: 100%; }
+  .fl-site-top .fl-brand { min-width: 0; }
+  .fl-site-top .fl-brand strong { overflow-wrap: anywhere; }
+  .fl-feed li { grid-template-columns: 32px minmax(0, 1fr); }
+  .fl-feed li > :last-child { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Presentation controls remain separate, readable targets at mirrored-screen sizes. */
+.fl-meeting-room > header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4, 1rem); }
+.fl-meeting-room > header label { display: flex; align-items: center; gap: var(--s-3, .75rem); }
+.fl-check input[type="checkbox"] { flex: 0 0 auto; }
+.fl-check { align-items: center; }
+/* A checkbox label is a 44px row; the existing fl-check input keeps its native square. */
+label.fl-check { display: flex; align-items: center; gap: var(--s-3, .75rem); width: auto; min-height: 44px; height: auto; padding: 0; border: 0; background: transparent; appearance: auto; -webkit-appearance: auto; }
+label.fl-check input { flex: 0 0 auto; width: 20px; height: 20px; }

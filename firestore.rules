@@ -77,11 +77,17 @@ service cloud.firestore {
     }
     // Every item write stamps the server time, so clients can load a snapshot and listen only to later changes.
     function touched() { return request.resource.data.touchedAt == request.time; }
+    function temporaryMinutesTask(d) {
+      let m = meeting(d.get('meetingId','__none__'));
+      return notTeacher() && m.termId == curTerm() && m.status == 'live' && m.minutesUid == me()
+        && d.kind == 'task' && d.isDeal == false && d.parentId != null && d.archived == false && emails(d.assigneeUids,30)
+        && (d.parentId in m.projectIds || d.ancestors.toSet().hasAny(m.projectIds));
+    }
     match /items/{id} {
       allow read: if active();
       allow create: if active() && termOk() && touched() && request.resource.data.createdByUid == me()
         && request.resource.data.archived == false && valid(request.resource.data) && leadsOk(request.resource.data)
-        && (request.resource.data.parentId == null ? isBoss() && notTeacher() : manages(request.resource.data))
+        && (request.resource.data.parentId == null ? isBoss() && notTeacher() : (manages(request.resource.data) || temporaryMinutesTask(request.resource.data)))
         && ((request.resource.data.get('public', false) == false && request.resource.data.get('publicBlurb', '') == '')
           || (isAdmin() && request.resource.data.parentId == null));
       allow update: if active() && termOk() && touched() && valid(request.resource.data) && leadsOk(request.resource.data)
@@ -91,7 +97,9 @@ service cloud.firestore {
         && ((notTeacher() && (isBoss() || me() in resource.data.leadUids))
           || (notTeacher() && me() in resource.data.assigneeUids && changed().hasOnly(
             ['status', 'blocked', 'blockedReason', 'blockedOnUid', 'notes', 'link', 'completedAt', 'updatedAt', 'touchedAt']
-            .concat(resource.data.isDeal == true ? ['dealStage', 'pledgedIdr', 'receivedIdr'] : []))));
+            .concat(resource.data.isDeal == true ? ['dealStage', 'pledgedIdr', 'receivedIdr'] : [])))
+          || (temporaryMinutesTask(request.resource.data) && changed().hasOnly(['title','notes','assigneeUids','dueDate','status',
+            'blocked','blockedReason','blockedOnUid','completedAt','updatedAt','touchedAt','meetingId'])));
     }
 
     match /comments/{id} {
@@ -141,6 +149,259 @@ service cloud.firestore {
       allow create: if active() && isAdmin() && termOk();
     }
 
+    // Meeting documents deliberately exclude attendance reasons and private follow-up.
+    function emails(v, n) { return v is list && v.size() <= n && v.toSet().size() == v.size(); }
+    function meeting(id) { return get(/databases/$(db)/documents/meetings/$(id)).data; }
+    function meetingAfter(id) { return getAfter(/databases/$(db)/documents/meetings/$(id)).data; }
+    function meetingControl(m) { return notTeacher() && m.hostUid == me(); }
+    function meetingVisible(m) { return m.termId == curTerm() && (isAdmin() || me() in m.participantUids || m.hostUid == me() || me() in m.cohostUids || m.minutesUid == me()); }
+    function meetingEditor(m) { return notTeacher() && (isAdmin() || me() == m.minutesUid); }
+    function currentMeeting(id) { return meeting(id).termId == curTerm(); }
+    // Action shape is validated when the sole editor changes the draft. Publication binds the exact stored actions.
+    function publicEntryOk(d,kind) {
+      return d is map && d.keys().hasOnly(['text','ownerUid','dueDate','status','taskId'])
+        && d.text is string && d.text.size() <= 2000 && (d.ownerUid == null || d.ownerUid is string)
+        && (d.dueDate == null || d.dueDate is string) && d.status is string && (d.taskId == null || d.taskId is string);
+    }
+    function publicRange0(v,kind) { return (v.size() <= 0 || (publicEntryOk(v[0],kind) && (v.size() <= 1 || (publicEntryOk(v[1],kind) && (v.size() <= 2 || (publicEntryOk(v[2],kind) && (v.size() <= 3 || (publicEntryOk(v[3],kind) && (v.size() <= 4 || (publicEntryOk(v[4],kind) && (v.size() <= 5 || (publicEntryOk(v[5],kind) && (v.size() <= 6 || (publicEntryOk(v[6],kind) && (v.size() <= 7 || (publicEntryOk(v[7],kind) && (v.size() <= 8 || (publicEntryOk(v[8],kind) && (v.size() <= 9 || (publicEntryOk(v[9],kind) && true)))))))))))))))))))); }
+    function publicRange10(v,kind) { return (v.size() <= 10 || (publicEntryOk(v[10],kind) && (v.size() <= 11 || (publicEntryOk(v[11],kind) && (v.size() <= 12 || (publicEntryOk(v[12],kind) && (v.size() <= 13 || (publicEntryOk(v[13],kind) && (v.size() <= 14 || (publicEntryOk(v[14],kind) && (v.size() <= 15 || (publicEntryOk(v[15],kind) && (v.size() <= 16 || (publicEntryOk(v[16],kind) && (v.size() <= 17 || (publicEntryOk(v[17],kind) && (v.size() <= 18 || (publicEntryOk(v[18],kind) && (v.size() <= 19 || (publicEntryOk(v[19],kind) && true)))))))))))))))))))); }
+    function publicRange20(v,kind) { return (v.size() <= 20 || (publicEntryOk(v[20],kind) && (v.size() <= 21 || (publicEntryOk(v[21],kind) && (v.size() <= 22 || (publicEntryOk(v[22],kind) && (v.size() <= 23 || (publicEntryOk(v[23],kind) && (v.size() <= 24 || (publicEntryOk(v[24],kind) && (v.size() <= 25 || (publicEntryOk(v[25],kind) && (v.size() <= 26 || (publicEntryOk(v[26],kind) && (v.size() <= 27 || (publicEntryOk(v[27],kind) && (v.size() <= 28 || (publicEntryOk(v[28],kind) && (v.size() <= 29 || (publicEntryOk(v[29],kind) && true)))))))))))))))))))); }
+    function publicRange30(v,kind) { return (v.size() <= 30 || (publicEntryOk(v[30],kind) && (v.size() <= 31 || (publicEntryOk(v[31],kind) && (v.size() <= 32 || (publicEntryOk(v[32],kind) && (v.size() <= 33 || (publicEntryOk(v[33],kind) && (v.size() <= 34 || (publicEntryOk(v[34],kind) && (v.size() <= 35 || (publicEntryOk(v[35],kind) && (v.size() <= 36 || (publicEntryOk(v[36],kind) && (v.size() <= 37 || (publicEntryOk(v[37],kind) && (v.size() <= 38 || (publicEntryOk(v[38],kind) && (v.size() <= 39 || (publicEntryOk(v[39],kind) && true)))))))))))))))))))); }
+    function publicRange40(v,kind) { return (v.size() <= 40 || (publicEntryOk(v[40],kind) && (v.size() <= 41 || (publicEntryOk(v[41],kind) && (v.size() <= 42 || (publicEntryOk(v[42],kind) && (v.size() <= 43 || (publicEntryOk(v[43],kind) && (v.size() <= 44 || (publicEntryOk(v[44],kind) && (v.size() <= 45 || (publicEntryOk(v[45],kind) && (v.size() <= 46 || (publicEntryOk(v[46],kind) && (v.size() <= 47 || (publicEntryOk(v[47],kind) && (v.size() <= 48 || (publicEntryOk(v[48],kind) && (v.size() <= 49 || (publicEntryOk(v[49],kind) && true)))))))))))))))))))); }
+    function publishedAgendaEntry(d) {
+      return d is map && d.keys().hasOnly(['id','title','presenterUid','presenterName','duration','discussion','outcome','status'])
+        && d.id is string && d.title is string && d.title.size() <= 120
+        && (d.presenterUid == null || d.presenterUid is string) && d.get('presenterName','') is string
+        && d.duration is number && d.discussion is string && d.discussion.size() <= 10000 && d.outcome is string && d.outcome.size() <= 5000 && d.status is string;
+    }
+    function agendaSectionOk(v) { return v is list && v.size() <= 6
+      && (v.size() < 1 || publishedAgendaEntry(v[0])) && (v.size() < 2 || publishedAgendaEntry(v[1]))
+      && (v.size() < 3 || publishedAgendaEntry(v[2])) && (v.size() < 4 || publishedAgendaEntry(v[3]))
+      && (v.size() < 5 || publishedAgendaEntry(v[4])) && (v.size() < 6 || publishedAgendaEntry(v[5])); }
+    function appendedActionOk() {
+      let prior=resource.data.actions;
+      let next=request.resource.data.actions;
+      return next.size() == prior.size() + 1 && next == prior.concat([next[prior.size()]]) && publicEntryOk(next[prior.size()],'action');
+    }
+    function publicListOk(v,kind) { return v is list && v.size() <= 10 && publicRange0(v,kind); }
+    function publicationOk(id,v) {
+      let r = v.record;
+      let m = meeting(id);
+      let draft = getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data;
+      let expected = {'id':id,'termId':m.termId,'status':'published','revision':v.revision,'publishedVersion':v.revision,'publishedAt':v.publishedAt,
+        'name':m.title,'date':m.date,'startTime':m.startTime,'endTime':m.endTime,'actualStart':m.actualStart,'actualEnd':m.actualEnd,
+        'venue':m.venue,'chairUid':m.chairUid,'editorUid':m.minutesUid,'summary':draft.summary,'decisions':draft.decisions,'actions':draft.actions,
+        'closing':draft.closing,'nextMeeting':draft.nextMeeting,'preparedBy':draft.preparedBy,'reviewedBy':me()};
+      return v.keys().hasOnly(['termId','revision','draftRevision','publishedAt','publishedByUid','record'])
+        && v.termId == m.termId && v.revision is int && v.draftRevision is int && v.publishedAt is number && v.publishedByUid == me()
+        && r is map && r.keys().hasOnly(expected.keys().concat(['chairName','minutesTakerName','attendance','agenda']))
+        && r.keys().hasAll(expected.keys()) && r.diff(expected).changedKeys().size() == 0
+        && text(r.get('chairName',''),0,120) && text(r.get('minutesTakerName',''),0,120)
+        && draft.status == 'published' && draft.publishedVersion == v.revision && draft.revision == v.draftRevision
+        && r.attendance is map && r.attendance.size() <= 200
+        && r.attendance.keys().toSet().difference(m.participantUids.toSet()).size() == 0
+        && r.attendance.values().toSet().hasOnly(['present','late','absent','excused'])
+        && r.agenda == getAfter(/databases/$(db)/documents/meetings/$(id)/versions/$(string(v.revision))/sections/agenda-0).data.entries.concat(getAfter(/databases/$(db)/documents/meetings/$(id)/versions/$(string(v.revision))/sections/agenda-1).data.entries);
+    }
+    function rev() { return request.resource.data.revision == resource.data.revision + 1; }
+    function referenceOk(d) { return d is map && d.keys().hasOnly(['title','url']) && text(d.title,1,120) && google(d.url); }
+    function referencesOk(v) { return v is list && v.size() <= 5
+      && (v.size() < 1 || referenceOk(v[0])) && (v.size() < 2 || referenceOk(v[1])) && (v.size() < 3 || referenceOk(v[2]))
+      && (v.size() < 4 || referenceOk(v[3])) && (v.size() < 5 || referenceOk(v[4])); }
+    function positionOk(p,available) { return p is map && p.keys().hasOnly(['title','memberUid'])
+      && text(p.title,available ? 1 : 0,80) && (available ? text(p.memberUid,1,120) : optString(p,'memberUid')); }
+    function positionUid(v,i) { return v.size() > i ? v[i].memberUid : null; }
+    function positionsOk(d) {
+      let v = d.get('positions',[]);
+      let available = d.get('available',true);
+      let code = d.get('code','custom');
+      return v is list && v.size() <= 6
+        && (code == 'custom' || v.size() == (code == 'executive4' ? 4 : 6))
+        && (v.size() < 1 || positionOk(v[0],available)) && (v.size() < 2 || positionOk(v[1],available))
+        && (v.size() < 3 || positionOk(v[2],available)) && (v.size() < 4 || positionOk(v[3],available))
+        && (v.size() < 5 || positionOk(v[4],available)) && (v.size() < 6 || positionOk(v[5],available))
+        && (code == 'custom' || d.memberUids.toSet() == [positionUid(v,0),positionUid(v,1),positionUid(v,2),positionUid(v,3),positionUid(v,4),positionUid(v,5)].toSet().difference([null].toSet()));
+    }
+    function meetingOk(d) {
+      return d.keys().hasOnly(['termId','eventId','createdByUid','createdAt','title','date','startTime','endTime','venue',
+          'participantUids','projectIds','chairUid','hostUid','cohostUids','minutesUid','minutesBackupUid','revision','status','actualStart','actualEnd','updatedAt','minutesStatus','publishedVersion','minutesReviewRevision'])
+        && text(d.title,1,80) && day(d.date) && hhmm(d.startTime) && hhmm(d.endTime) && d.endTime >= d.startTime
+        && text(d.venue,0,120) && text(d.eventId,1,120) && d.createdAt is number && d.get('updatedAt',0) is number
+        && emails(d.participantUids,200) && emails(d.projectIds,50) && emails(d.cohostUids,10)
+        && text(d.chairUid,1,120) && text(d.hostUid,1,120) && text(d.minutesUid,1,120)
+        && (d.minutesBackupUid == null || text(d.minutesBackupUid,1,120))
+        && d.revision is int && d.status in ['prepared','live','closed']
+        && d.get('minutesStatus','draft') in ['draft','review','published'] && d.get('publishedVersion',0) is int && d.get('minutesReviewRevision',0) is int
+        && (d.actualStart == null || d.actualStart is number) && (d.actualEnd == null || d.actualEnd is number);
+    }
+    match /meetings/{id} {
+      allow get: if active() && ((!exists(/databases/$(db)/documents/meetings/$(id)) && isAdmin()) || meetingVisible(resource.data));
+      allow list: if active() && meetingVisible(resource.data);
+      allow create: if active() && notTeacher() && termOk() && meetingOk(request.resource.data)
+        && isAdmin()
+        && request.resource.data.createdByUid == me() && request.resource.data.revision == 1
+        && request.resource.data.status == 'prepared' && request.resource.data.actualStart == null && request.resource.data.actualEnd == null;
+      allow update: if active() && notTeacher() && termOk() && meetingOk(request.resource.data) && rev()
+        && fixed(['termId','eventId','createdByUid','createdAt','title','date','startTime','endTime','venue'])
+        && (fixed(['minutesStatus','publishedVersion','minutesReviewRevision'])
+          || (request.resource.data.minutesStatus == getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.status
+            && request.resource.data.publishedVersion == getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.publishedVersion
+            && request.resource.data.minutesReviewRevision == getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.revision))
+        && (fixed(['hostUid']) || (((meetingControl(resource.data) && request.resource.data.hostUid in resource.data.cohostUids)
+          || ((isAdmin() || me() in resource.data.cohostUids) && request.resource.data.hostUid == me()))
+          && getAfter(/databases/$(db)/documents/meetings/$(id)/session/control).data.hostUid == request.resource.data.hostUid
+          && getAfter(/databases/$(db)/documents/meetings/$(id)/session/control).data.revision == get(/databases/$(db)/documents/meetings/$(id)/session/control).data.revision + 1))
+        && (fixed(['minutesUid']) || (getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.editorUid == request.resource.data.minutesUid
+          && getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.revision == get(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.revision + 1))
+        && ((resource.data.status != 'closed' && changed().hasOnly(['hostUid','revision','updatedAt']) && request.resource.data.hostUid != resource.data.hostUid)
+          || (changed().hasOnly(['minutesStatus','publishedVersion','minutesReviewRevision','revision','updatedAt'])
+            && (isAdmin() || resource.data.minutesUid == me())
+            && request.resource.data.minutesStatus == getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.status
+            && request.resource.data.publishedVersion == getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.publishedVersion
+            && request.resource.data.minutesReviewRevision == getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.revision)
+          || (resource.data.status == 'prepared' && isAdmin() && request.resource.data.status == 'prepared')
+          || (meetingControl(resource.data) && changed().hasOnly(['minutesUid','hostUid','revision','status','actualStart','actualEnd','updatedAt'])
+            && ((resource.data.status == 'prepared' && request.resource.data.status == 'live' && request.resource.data.actualStart is number && request.resource.data.actualEnd == null)
+              || (resource.data.status == 'live' && request.resource.data.status == 'live' && fixed(['actualStart','actualEnd']))
+              || (resource.data.status == 'live' && request.resource.data.status == 'closed' && fixed(['actualStart']) && request.resource.data.actualEnd is number))));
+      match /session/{sessionId} {
+        allow read: if active() && meetingVisible(meeting(id));
+        allow create, update: if sessionId == 'control' && active() && termOk() && meetingAfter(id).termId == curTerm() && ((!exists(/databases/$(db)/documents/meetings/$(id)/session/control) && isAdmin())
+            || meetingControl(meeting(id)) || (meetingAfter(id).hostUid == me() && meeting(id).hostUid != me()
+              && changed().hasOnly(['hostUid','revision','updatedAt'])))
+          && (meetingAfter(id).status != 'closed' || (meeting(id).status == 'live' && meetingAfter(id).status == 'closed'))
+          && request.resource.data.keys().hasOnly(['termId','revision','hostUid','phase','activeTopicId','presenterUid','queue','timerStartedAt','timerDuration','updatedAt','sessionId'])
+          && request.resource.data.termId == meetingAfter(id).termId && request.resource.data.hostUid == meetingAfter(id).hostUid
+          && request.resource.data.phase in ['attendance','agenda','updates','tasks','recap']
+          && optString(request.resource.data,'activeTopicId') && optString(request.resource.data,'presenterUid')
+          && emails(request.resource.data.queue,100) && request.resource.data.timerDuration is number
+          && request.resource.data.timerDuration >= 0 && request.resource.data.timerDuration <= 86400
+          && (request.resource.data.timerStartedAt == null || request.resource.data.timerStartedAt is number)
+          && request.resource.data.updatedAt is number && text(request.resource.data.sessionId,1,120)
+          && ((!exists(/databases/$(db)/documents/meetings/$(id)/session/control) && request.resource.data.revision == 1) || rev());
+      }
+      match /agenda/{topicId} {
+        allow read: if active() && meetingVisible(meeting(id));
+        allow create, update: if active() && termOk() && currentMeeting(id) && meeting(id).status != 'closed'
+          && (meetingControl(meeting(id)) || meetingEditor(meeting(id)))
+          && request.resource.data.keys().hasOnly(['termId','title','presenterUid','duration','order','status','projectIds','taskIds','discussion','outcome','confirmedOutcome','confirmedDecisions','references'])
+          && referencesOk(request.resource.data.get('references',[])) && text(request.resource.data.title,1,120) && optString(request.resource.data,'presenterUid')
+          && request.resource.data.duration is number && request.resource.data.duration >= 0 && request.resource.data.duration <= 1440
+          && request.resource.data.order is number && request.resource.data.status in ['queued','active','done','deferred']
+          && emails(request.resource.data.projectIds,50) && emails(request.resource.data.taskIds,100)
+          && request.resource.data.get('discussion','') == '' && request.resource.data.get('outcome','') == ''
+          && text(request.resource.data.get('confirmedOutcome',''),0,5000) && text(request.resource.data.get('confirmedDecisions',''),0,5000)
+          && ((!exists(/databases/$(db)/documents/meetings/$(id)/agenda/$(topicId))
+              && request.resource.data.get('confirmedOutcome','') == '' && request.resource.data.get('confirmedDecisions','') == '')
+            || fixed(['confirmedOutcome','confirmedDecisions','references']) || meetingControl(meeting(id)));
+      }
+      match /topicMinutes/{topicId} {
+        allow read: if active() && currentMeeting(id) && (isAdmin() || meeting(id).minutesUid == me());
+        allow create, update: if active() && notTeacher() && termOk() && currentMeeting(id) && meeting(id).minutesUid == me()
+          && get(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.status == 'draft'
+          && request.resource.data.keys().hasOnly(['termId','revision','discussion','outcome','updatedAt'])
+          && text(request.resource.data.discussion,0,10000) && text(request.resource.data.outcome,0,5000)
+          && request.resource.data.updatedAt is number && request.resource.data.revision is int
+          && ((!exists(/databases/$(db)/documents/meetings/$(id)/topicMinutes/$(topicId)) && request.resource.data.revision == 1) || rev());
+      }
+      match /minutes/{draftId} {
+        allow read: if active() && currentMeeting(id) && (isAdmin() || meeting(id).minutesUid == me());
+        allow create, update: if draftId == 'draft' && active() && termOk() && meetingAfter(id).termId == curTerm()
+          && ((notTeacher() && meetingAfter(id).minutesUid == me() && (!exists(/databases/$(db)/documents/meetings/$(id)/minutes/draft) || resource.data.status == 'draft' || changed().hasOnly(['editorUid','revision','updatedAt'])))
+            || (isAdmin() && (!exists(/databases/$(db)/documents/meetings/$(id)/minutes/draft)
+              || (request.resource.data.status == 'published' && changed().hasOnly(['status','publishedVersion','revision','reviewedBy','updatedAt'])) || (resource.data.status in ['review','published'] && request.resource.data.status == 'draft' && changed().hasOnly(['status','revision','updatedAt']))))
+            || (meetingControl(meeting(id)) && changed().hasOnly(['editorUid','revision','updatedAt']) && meetingAfter(id).minutesUid != meeting(id).minutesUid))
+          && request.resource.data.keys().hasOnly(['termId','revision','editorUid','status','summary','decisions','actions','closing','nextMeeting','preparedBy','reviewedBy','publishedVersion','updatedAt'])
+          && request.resource.data.editorUid == meetingAfter(id).minutesUid && request.resource.data.revision is int
+          && request.resource.data.status in ['draft','review','published'] && text(request.resource.data.summary,0,15000)
+          && text(request.resource.data.decisions,0,15000)
+          && request.resource.data.actions is list && request.resource.data.actions.size() <= 10
+          && (exists(/databases/$(db)/documents/meetings/$(id)/minutes/draft) ? (fixed(['actions']) || appendedActionOk()) : request.resource.data.actions.size() == 0)
+          && text(request.resource.data.closing,0,5000) && text(request.resource.data.nextMeeting,0,500)
+          && text(request.resource.data.preparedBy,0,120) && text(request.resource.data.reviewedBy,0,120)
+          && request.resource.data.publishedVersion is int && request.resource.data.updatedAt is number
+          && ((!exists(/databases/$(db)/documents/meetings/$(id)/minutes/draft) && request.resource.data.revision == 1 && request.resource.data.status == 'draft' && request.resource.data.publishedVersion == 0)
+            || (rev() && ((request.resource.data.status in ['draft','review'] && request.resource.data.publishedVersion == resource.data.publishedVersion)
+              || (request.resource.data.status == 'published' && resource.data.status == 'review' && isAdmin()
+                && request.resource.data.publishedVersion == resource.data.publishedVersion + 1
+                && getAfter(/databases/$(db)/documents/meetings/$(id)/versions/$(string(request.resource.data.publishedVersion))).data.draftRevision == request.resource.data.revision))));
+      }
+      match /notices/{noticeId} {
+        allow read: if active() && meetingVisible(meeting(id));
+        allow create: if active() && termOk() && meetingAfter(id).termId == curTerm()
+          && request.resource.data.keys().hasOnly(['termId','type','revision','targetUid','createdAt','actorUid','href'])
+          && request.resource.data.type in ['started','closed','handoff','published','action']
+          && noticeId == request.resource.data.type + '-' + string(request.resource.data.revision)
+          && request.resource.data.revision is int && request.resource.data.revision >= 1
+          && request.resource.data.actorUid == me() && request.resource.data.createdAt is number
+          && request.resource.data.href == '#/meeting-hub/' + id
+          && (request.resource.data.targetUid == null || request.resource.data.targetUid in meetingAfter(id).participantUids)
+          && ((request.resource.data.type == 'published' && isAdmin()
+                && getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.status == 'published'
+                && request.resource.data.revision == getAfter(/databases/$(db)/documents/meetings/$(id)/minutes/draft).data.publishedVersion)
+            || (request.resource.data.type == 'action' && meetingAfter(id).minutesUid == me() && meetingAfter(id).status == 'live')
+            || (request.resource.data.type in ['started','closed','handoff'] && (meetingControl(meeting(id)) || (request.resource.data.type == 'handoff' && meetingAfter(id).hostUid == me()))
+              && request.resource.data.revision == meetingAfter(id).revision && meetingAfter(id).revision == meeting(id).revision + 1
+              && ((request.resource.data.type == 'started' && meeting(id).status == 'prepared' && meetingAfter(id).status == 'live')
+                || (request.resource.data.type == 'closed' && meeting(id).status == 'live' && meetingAfter(id).status == 'closed')
+                || (request.resource.data.type == 'handoff' && (meeting(id).hostUid != meetingAfter(id).hostUid || meeting(id).minutesUid != meetingAfter(id).minutesUid)))));
+      }
+      match /versions/{versionId} {
+        allow read: if active() && meetingVisible(meeting(id));
+        allow create: if active() && isAdmin() && termOk() && currentMeeting(id)
+          && versionId == string(request.resource.data.revision) && publicationOk(id,request.resource.data);
+      }
+      match /versions/{versionId}/sections/{sectionId} {
+        allow read: if active() && meetingVisible(meeting(id));
+        allow create: if sectionId in ['agenda-0','agenda-1'] && active() && isAdmin() && currentMeeting(id)
+          && request.resource.data.keys().hasOnly(['entries']) && request.resource.data.entries is list && request.resource.data.entries.size() <= 6
+          && agendaSectionOk(request.resource.data.entries)
+          && getAfter(/databases/$(db)/documents/meetings/$(id)/versions/$(versionId)).data.record.agenda == getAfter(/databases/$(db)/documents/meetings/$(id)/versions/$(versionId)/sections/agenda-0).data.entries.concat(getAfter(/databases/$(db)/documents/meetings/$(id)/versions/$(versionId)/sections/agenda-1).data.entries);
+      }
+      match /contributions/{contributionId} {
+        allow read: if active() && meetingVisible(meeting(id));
+        allow create: if active() && termOk() && currentMeeting(id) && meetingVisible(meeting(id)) && meeting(id).status in ['prepared','live']
+          && request.resource.data.keys().hasOnly(['termId','authorUid','topicId','type','text','createdAt','status'])
+          && request.resource.data.authorUid == me() && optString(request.resource.data,'topicId')
+          && request.resource.data.type in ['question','suggestion','correction','decision','action','update']
+          && text(request.resource.data.text,1,3000) && request.resource.data.createdAt is number && request.resource.data.status == 'submitted';
+        allow update: if active() && termOk() && currentMeeting(id) && (meetingEditor(meeting(id)) || meetingControl(meeting(id)))
+          && changed().hasOnly(['status']) && request.resource.data.status in ['submitted','accepted','deferred'];
+      }
+      match /attendance/{uid} {
+        allow read: if active() && meetingVisible(meeting(id));
+        allow create, update: if active() && termOk() && currentMeeting(id) && (meetingEditor(meeting(id)) || meetingControl(meeting(id)))
+          && request.resource.data.keys().hasOnly(['termId','uid','status']) && request.resource.data.uid == uid
+          && uid in meeting(id).participantUids && request.resource.data.status in ['present','late','absent','excused'];
+      }
+      match /sensitive/{uid} {
+        allow read: if active() && currentMeeting(id) && meetingEditor(meeting(id));
+        allow create, update: if active() && termOk() && currentMeeting(id) && meetingEditor(meeting(id))
+          && request.resource.data.keys().hasOnly(['termId','uid','reason','followup','designation']) && request.resource.data.uid == uid
+          && uid in meeting(id).participantUids && text(request.resource.data.reason,0,2000)
+          && text(request.resource.data.followup,0,2000) && text(request.resource.data.designation,0,120);
+      }
+    }
+
+    match /meetingReads/{readId} {
+      allow read: if active() && resource.data.uid == me();
+      allow create, update: if active() && termOk()
+        && request.resource.data.keys().hasOnly(['termId','uid','meetingId','revision','updatedAt'])
+        && request.resource.data.uid == me() && text(request.resource.data.meetingId,1,120)
+        && readId == request.resource.data.meetingId + '_' + me()
+        && request.resource.data.revision is int && request.resource.data.revision >= 0 && request.resource.data.updatedAt is number
+        && meeting(request.resource.data.meetingId).termId == curTerm()
+        && (isAdmin() || me() in meeting(request.resource.data.meetingId).participantUids);
+    }
+
+    match /attentionReads/{uid}/items/{sourceId} {
+      allow read: if active() && uid == me();
+      allow create, update: if active() && termOk() && uid == me()
+        && request.resource.data.keys().hasOnly(['termId','uid','sourceId','revision','updatedAt'])
+        && request.resource.data.uid == me() && text(request.resource.data.sourceId,1,240) && request.resource.data.sourceId == sourceId
+        && request.resource.data.revision is int && request.resource.data.revision >= 1 && request.resource.data.updatedAt is number;
+    }
+
     // ---- Added with the Fiat Lux redesign. Nothing below can be deleted; documents are archived instead.
 
     function annOk(d) {
@@ -156,24 +417,277 @@ service cloud.firestore {
         && fixed(['termId', 'createdByUid', 'createdAt']);
     }
 
+    function selectionOk(d) {
+      return d is map && d.keys().hasOnly(['groupIds','sections','includeUids','excludeUids'])
+        && emails(d.groupIds,50) && emails(d.sections,50) && emails(d.includeUids,200) && emails(d.excludeUids,200);
+    }
+    function optionsOk(v) { return v is list && v.size() <= 20 && (v.size() <= 0 || (text(v[0],0,120) && (v.size() <= 1 || (text(v[1],0,120) && (v.size() <= 2 || (text(v[2],0,120) && (v.size() <= 3 || (text(v[3],0,120) && (v.size() <= 4 || (text(v[4],0,120) && (v.size() <= 5 || (text(v[5],0,120) && (v.size() <= 6 || (text(v[6],0,120) && (v.size() <= 7 || (text(v[7],0,120) && (v.size() <= 8 || (text(v[8],0,120) && (v.size() <= 9 || (text(v[9],0,120) && (v.size() <= 10 || (text(v[10],0,120) && (v.size() <= 11 || (text(v[11],0,120) && (v.size() <= 12 || (text(v[12],0,120) && (v.size() <= 13 || (text(v[13],0,120) && (v.size() <= 14 || (text(v[14],0,120) && (v.size() <= 15 || (text(v[15],0,120) && (v.size() <= 16 || (text(v[16],0,120) && (v.size() <= 17 || (text(v[17],0,120) && (v.size() <= 18 || (text(v[18],0,120) && (v.size() <= 19 || (text(v[19],0,120) && true)))))))))))))))))))))))))))))))))))))))); }
+    function customFieldOk(d) { return d is map && d.keys().hasOnly(['id','label','type','required','options']) && text(d.id,1,80) && text(d.label,1,80) && d.type in ['text','textarea','select','checkbox'] && d.required is bool && optionsOk(d.options); }
+    function customFieldsOk(v) {
+      return v is list && v.size() <= 4
+        && (v.size() <= 0 || (customFieldOk(v[0])
+          && (v.size() <= 1 || (customFieldOk(v[1])
+            && (v.size() <= 2 || (customFieldOk(v[2])
+              && (v.size() <= 3 || customFieldOk(v[3]))))))));
+    }
+    function customValueOk(v) { return v is bool || (v is string && v.size() <= 2000); }
+    function customValuesOk(d) {
+      let v = d.values();
+      return d is map && v.size() <= 4
+        && (v.size() <= 0 || (customValueOk(v[0])
+          && (v.size() <= 1 || (customValueOk(v[1])
+            && (v.size() <= 2 || (customValueOk(v[2])
+              && (v.size() <= 3 || customValueOk(v[3]))))))));
+    }
+    function eventDefaultsOk(d) {
+      return d is map && d.keys().hasOnly(['title','type','start','end','location','notes','itemId','approval','participantSelection','duration','instructions','agenda','minutes','chairUid','minutesUid','minutesBackupUid','cohostUids','customFields'])
+        && text(d.get('title',''),0,80) && d.get('type','other') in ['meeting','project','committee','other']
+        && hhmm(d.get('start','00:00')) && hhmm(d.get('end','23:59'))
+        && text(d.get('location',''),0,120) && text(d.get('notes',''),0,1000) && optString(d,'itemId')
+        && d.get('approval','immediate') in ['immediate','required']
+        && (!('participantSelection' in d) || selectionOk(d.participantSelection))
+        && d.get('duration',60) is int && d.get('duration',60) >= 1 && d.get('duration',60) <= 1440
+        && text(d.get('instructions',''),0,1000) && text(d.get('agenda',''),0,4000) && text(d.get('minutes',''),0,4000)
+        && optString(d,'chairUid') && optString(d,'minutesUid') && optString(d,'minutesBackupUid')
+        && emails(d.get('cohostUids',[]),10) && d.get('customFields',[]) is list && d.get('customFields',[]).size() <= 4;
+    }
+    match /settings/eventDefaults {
+      allow read: if active();
+      allow create, update: if active() && isAdmin() && termOk()
+        && request.resource.data.keys().hasOnly(['termId','version','defaults','defaultTemplateId','updatedAt','updatedByUid'])
+        && request.resource.data == getAfter(/databases/$(db)/documents/settings/eventDefaults/versions/$(request.resource.data.termId + '_' + string(request.resource.data.version))).data
+        && eventDefaultsOk(request.resource.data.defaults) && optString(request.resource.data,'defaultTemplateId') && request.resource.data.updatedByUid == me()
+        && request.resource.data.updatedAt is number && request.resource.data.version is int
+        && ((!exists(/databases/$(db)/documents/settings/eventDefaults) && request.resource.data.version == 1)
+          || (request.resource.data.version == resource.data.version + 1));
+    }
+    match /settings/eventDefaults/versions/{versionId} {
+      allow read: if active();
+      allow create: if active() && isAdmin() && termOk()
+        && versionId == request.resource.data.termId + '_' + string(request.resource.data.version)
+        && customFieldsOk(request.resource.data.defaults.get('customFields',[]))
+        && request.resource.data == getAfter(/databases/$(db)/documents/settings/eventDefaults).data;
+    }
+    match /eventTemplates/{id} {
+      allow read: if active();
+      allow create, update: if active() && isAdmin()
+        && request.resource.data.keys().hasOnly(['name','description','type','available','version','archived','defaults','createdAt','updatedAt','createdByUid'])
+        && text(request.resource.data.name,1,80) && eventDefaultsOk(request.resource.data.defaults)
+        && text(request.resource.data.get('description',''),0,1000) && request.resource.data.get('type','other') in ['meeting','project','committee','other']
+        && request.resource.data.get('available',true) is bool
+        && getAfter(/databases/$(db)/documents/eventTemplates/$(id)/versions/$(string(request.resource.data.version))).data == request.resource.data
+        && request.resource.data.archived is bool && request.resource.data.createdAt is number && request.resource.data.updatedAt is number
+        && request.resource.data.version is int
+        && ((!exists(/databases/$(db)/documents/eventTemplates/$(id)) && request.resource.data.version == 1 && request.resource.data.createdByUid == me())
+          || (request.resource.data.version == resource.data.version + 1 && fixed(['createdAt','createdByUid'])));
+    }
+    match /eventTemplates/{id}/versions/{versionId} {
+      allow read: if active();
+      allow create: if active() && isAdmin() && versionId == string(request.resource.data.version)
+        && customFieldsOk(request.resource.data.defaults.get('customFields',[]))
+        && request.resource.data == getAfter(/databases/$(db)/documents/eventTemplates/$(id)).data;
+    }
+    match /eventParticipantGroups/{id} {
+      allow read: if active();
+      allow create, update: if active() && isAdmin() && termOk()
+        && request.resource.data.keys().hasOnly(['termId','name','memberUids','version','archived','createdAt','updatedAt','createdByUid','code','available','positions'])
+        && positionsOk(request.resource.data) && text(request.resource.data.name,1,80) && emails(request.resource.data.memberUids,200)
+        && request.resource.data.get('code','custom') in ['custom','jc6','sec6','executive4'] && request.resource.data.get('available',true) is bool
+        && (!(request.resource.data.get('code','custom') in ['jc6','sec6']) || request.resource.data.get('available',true) == false || request.resource.data.memberUids.size() == 6)
+        && request.resource.data.archived is bool && request.resource.data.createdAt is number && request.resource.data.updatedAt is number
+        && request.resource.data.version is int
+        && ((!exists(/databases/$(db)/documents/eventParticipantGroups/$(id)) && request.resource.data.version == 1 && request.resource.data.createdByUid == me())
+          || (request.resource.data.version == resource.data.version + 1 && fixed(['termId','createdAt','createdByUid'])));
+    }
+    function meetingDefaultsOk(d) {
+      return d is map && d.keys().hasOnly(['agenda','minutes','instructions','chairUid','minutesUid','minutesBackupUid','cohostUids','duration'])
+        && (!('agenda' in d) || text(d.agenda,0,4000)) && (!('minutes' in d) || text(d.minutes,0,4000))
+        && (!('instructions' in d) || text(d.instructions,0,1000))
+        && optString(d,'chairUid') && optString(d,'minutesUid') && optString(d,'minutesBackupUid')
+        && (!('cohostUids' in d) || emails(d.cohostUids,10))
+        && (!('duration' in d) || (d.duration is int && d.duration >= 1 && d.duration <= 1440));
+    }
+    function snapshotOk(d) {
+      return d is map && d.keys().hasOnly(['settingsVersion','templateId','templateVersion','approval','defaults','templateName'])
+        && d.settingsVersion is int && d.settingsVersion >= 0 && optString(d,'templateId')
+        && d.templateVersion is int && d.templateVersion >= 0 && d.approval in ['immediate','required']
+        && (!('defaults' in d) || (d.defaults is map && d.defaults.size() <= 24)) && text(d.get('templateName',''),0,80);
+    }
+    function effectiveApproval(d) {
+      let base = d.type == 'meeting' ? 'required' : 'immediate';
+      let settings = exists(/databases/$(db)/documents/settings/eventDefaults) && get(/databases/$(db)/documents/settings/eventDefaults).data.termId == curTerm()
+        ? get(/databases/$(db)/documents/settings/eventDefaults).data.defaults.get('approval',base) : base;
+      return d.configSnapshot.templateId == null ? settings
+        : get(/databases/$(db)/documents/eventTemplates/$(d.configSnapshot.templateId)).data.defaults.get('approval',settings);
+    }
+    // Display defaults are bounded copies. Governing policy and role defaults remain source-bound.
+    function configDefaultsCurrent(d, settings, template) {
+      let base = d.type == 'meeting'
+        ? {'title':'','type':d.type,'start':'15:00','end':'16:00','location':'Assembly Room, third floor','notes':'','itemId':null,'approval':'required','participantSelection':{'groupIds':[],'sections':[],'includeUids':[],'excludeUids':[]},'duration':60}
+        : {'title':'','type':d.type,'start':'15:30','end':'16:30','location':'','notes':'','itemId':null,'approval':'immediate','participantSelection':{'groupIds':[],'sections':[],'includeUids':[],'excludeUids':[]}};
+      let snap = d.configSnapshot.defaults;
+      return snap.type == d.type && snap.keys().toSet() == base.keys().toSet().union(settings.keys().toSet()).union(template.keys().toSet())
+        && snap.diff(base).changedKeys().hasOnly(settings.keys().concat(template.keys()).concat(['type','participantSelection']))
+        && snap.diff(settings).changedKeys().hasOnly(template.keys().concat(['type','participantSelection']))
+        && snap.diff(template).changedKeys().hasOnly(['type','participantSelection'])
+        && selectionOk(snap.participantSelection);
+    }
+    function configCurrent(d) {
+      let stored = exists(/databases/$(db)/documents/settings/eventDefaults) ? get(/databases/$(db)/documents/settings/eventDefaults).data : {'termId':'','version':0,'defaults':{}};
+      let settings = stored.termId == curTerm() ? stored : {'version':0,'defaults':{}};
+      let template = d.configSnapshot.templateId == null ? {'version':0,'archived':false,'defaults':{}}
+        : get(/databases/$(db)/documents/eventTemplates/$(d.configSnapshot.templateId)).data;
+      let approval = template.defaults.get('approval',settings.defaults.get('approval',d.type == 'meeting' ? 'required' : 'immediate'));
+      return d.configSnapshot.settingsVersion == settings.version && d.configSnapshot.templateVersion == template.version && template.archived == false
+        && template.get('available',true) == true && template.get('type',d.type) == d.type
+        && template.defaults.get('type',d.type) == d.type && d.configSnapshot.approval == approval
+        && d.configSnapshot.get('defaults',{}).get('customFields',[]) == template.defaults.get('customFields',settings.defaults.get('customFields',[]))
+        && (!('defaults' in d.configSnapshot) || configDefaultsCurrent(d,settings.defaults,template.defaults));
+    }
+    // Direct event saves validate governing policy and authority; copied prose defaults are display metadata.
+    function eventConfigCurrent(d) {
+      let stored = exists(/databases/$(db)/documents/settings/eventDefaults) ? get(/databases/$(db)/documents/settings/eventDefaults).data : {'termId':'','version':0,'defaults':{}};
+      let settings = stored.termId == curTerm() ? stored : {'version':0,'defaults':{}};
+      let template = d.configSnapshot.templateId == null ? {'version':0,'archived':false,'defaults':{}} : get(/databases/$(db)/documents/eventTemplates/$(d.configSnapshot.templateId)).data;
+      let defaults = d.configSnapshot.get('defaults',{});
+      return (d.configSnapshot.templateId == null && settings.version == 0)
+        ? (d.configSnapshot.settingsVersion == 0 && d.configSnapshot.templateVersion == 0
+          && d.configSnapshot.approval == (d.type == 'meeting' ? 'required' : 'immediate')
+          && defaults.get('type',d.type) == d.type && defaults.get('customFields',[]) == []
+          && !defaults.keys().hasAny(['chairUid','minutesUid','minutesBackupUid','cohostUids']))
+        : (d.configSnapshot.settingsVersion == settings.version && d.configSnapshot.templateVersion == template.version
+        && template.archived == false && template.get('available',true) == true
+        && template.get('type',d.type) == d.type && template.defaults.get('type',d.type) == d.type
+        && d.configSnapshot.approval == template.defaults.get('approval',settings.defaults.get('approval',d.type == 'meeting' ? 'required' : 'immediate'))
+        && defaults.get('type',d.type) == d.type
+        && defaults.get('customFields',[]) == template.defaults.get('customFields',settings.defaults.get('customFields',[]))
+        && defaults.get('chairUid',null) == template.defaults.get('chairUid',settings.defaults.get('chairUid',null))
+        && defaults.get('minutesUid',null) == template.defaults.get('minutesUid',settings.defaults.get('minutesUid',null))
+        && defaults.get('minutesBackupUid',null) == template.defaults.get('minutesBackupUid',settings.defaults.get('minutesBackupUid',null))
+        && defaults.get('cohostUids',[]) == template.defaults.get('cohostUids',settings.defaults.get('cohostUids',[])));
+    }
+    function proposalOk(d) {
+      return d is map && d.keys().hasOnly(['title','type','date','start','end','allDay','location','notes','public','itemId','participantSelection','participantUids','configSnapshot','customValues','meetingDefaults'])
+        && text(d.title,1,80) && d.type in ['meeting','project','committee','other'] && day(d.date)
+        && hhmm(d.start) && hhmm(d.end) && d.end >= d.start && text(d.location,0,120) && text(d.notes,0,1000)
+        && d.get('allDay',false) is bool && d.public is bool && optString(d,'itemId') && selectionOk(d.participantSelection)
+        && emails(d.participantUids,200) && snapshotOk(d.configSnapshot) && (!('customValues' in d) || customValuesOk(d.customValues))
+        && (!('meetingDefaults' in d) || meetingDefaultsOk(d.meetingDefaults));
+    }
+    // Create fixes lifecycle fields to narrower constants below, so validate their shape once.
+    function eventRequestCreateOk(d) {
+      return d.keys().hasOnly(['termId','createdByUid','state','revision','proposal','eventId','reviewedByUid','reviewNote','createdAt','updatedAt','replacesEventId','baseEventRevision'])
+        && d.createdAt is number && d.updatedAt is number && optString(d,'replacesEventId')
+        && (d.baseEventRevision == null || (d.baseEventRevision is int && d.baseEventRevision >= 1));
+    }
+    function eventRequestOk(d) {
+      return d.keys().hasOnly(['termId','createdByUid','state','revision','proposal','eventId','reviewedByUid','reviewNote','createdAt','updatedAt','replacesEventId','baseEventRevision'])
+        && d.state in ['draft','awaiting','scheduled','changes-requested','declined','withdrawn','cancelled']
+        && d.revision is int && optString(d,'eventId') && optString(d,'reviewedByUid')
+        && text(d.reviewNote,0,2000) && d.createdAt is number && d.updatedAt is number && optString(d,'replacesEventId')
+        && (d.baseEventRevision == null || (d.baseEventRevision is int && d.baseEventRevision >= 1));
+    }
+    function approvedEvent(id,d) {
+      let r = getAfter(/databases/$(db)/documents/eventRequests/$(d.requestId)).data;
+      return isAdmin() && r.state == 'scheduled' && r.eventId == id && r.termId == d.termId
+        && r.createdByUid == d.createdByUid && r.proposal.title == d.title && r.proposal.type == d.type
+        && r.proposal.get('allDay',false) == d.get('allDay',false) && r.proposal.date == d.date && r.proposal.start == d.start && r.proposal.end == d.end
+        && r.proposal.location == d.location && r.proposal.notes == d.notes && r.proposal.public == d.public
+        && r.proposal.get('itemId',null) == d.get('itemId',null) && r.proposal.participantUids == d.participantUids
+        && r.proposal.participantSelection == d.participantSelection && r.proposal.configSnapshot == d.configSnapshot
+        && r.proposal.get('customValues',{}) == d.get('customValues',{}) && r.proposal.get('meetingDefaults',{}) == d.get('meetingDefaults',{});
+    }
+    function requestProposalMatches(id) {
+      return request.resource.data.proposal == getAfter(/databases/$(db)/documents/eventRequests/$(id)/proposals/$(string(request.resource.data.revision))).data;
+    }
+    function requestProposalSnapshotOk(id, revisionId) {
+      let parent = getAfter(/databases/$(db)/documents/eventRequests/$(id)).data;
+      return parent.termId == curTerm() && revisionId == string(parent.revision)
+        && (parent.createdByUid == me() || isAdmin()) && parent.proposal == request.resource.data
+        && proposalOk(request.resource.data);
+    }
+    match /eventRequests/{id} {
+      match /proposals/{revisionId} {
+        allow read: if active() && (isAdmin() || get(/databases/$(db)/documents/eventRequests/$(id)).data.createdByUid == me());
+        allow create: if active() && notTeacher() && requestProposalSnapshotOk(id, revisionId);
+      }
+      allow read: if active() && (isAdmin() || resource.data.createdByUid == me());
+      allow create: if active() && notTeacher() && termOk() && eventRequestCreateOk(request.resource.data) && requestProposalMatches(id)
+        && request.resource.data.createdByUid == me() && request.resource.data.revision == 1
+        && request.resource.data.state in ['draft','awaiting'] && request.resource.data.eventId == null
+        && request.resource.data.reviewedByUid == null && request.resource.data.reviewNote == ''
+        && (request.resource.data.proposal.public == false || isAdmin())
+        && (request.resource.data.replacesEventId == null ? configCurrent(request.resource.data.proposal)
+          : request.resource.data.proposal.configSnapshot == get(/databases/$(db)/documents/events/$(request.resource.data.replacesEventId)).data.configSnapshot)
+        && (request.resource.data.replacesEventId == null
+          ? request.resource.data.baseEventRevision == null
+          : (get(/databases/$(db)/documents/events/$(request.resource.data.replacesEventId)).data.createdByUid == me()
+            && request.resource.data.baseEventRevision == get(/databases/$(db)/documents/events/$(request.resource.data.replacesEventId)).data.get('revision',1)));
+      allow update: if active() && notTeacher() && termOk() && eventRequestOk(request.resource.data) && rev() && requestProposalMatches(id)
+        && fixed(['termId','createdByUid','createdAt','replacesEventId','baseEventRevision'])
+        && ((resource.data.createdByUid == me() && resource.data.state in ['draft','changes-requested']
+            && request.resource.data.state in ['draft','awaiting'] && fixed(['eventId','reviewedByUid','reviewNote'])
+            && (request.resource.data.proposal.public == false || isAdmin())
+            && request.resource.data.proposal.configSnapshot == resource.data.proposal.configSnapshot)
+          || (resource.data.createdByUid == me() && resource.data.state in ['draft','awaiting','changes-requested']
+            && request.resource.data.state == 'withdrawn' && changed().hasOnly(['state','revision','updatedAt']))
+          || (isAdmin() && resource.data.state in ['awaiting','draft','changes-requested'] && (request.resource.data.state == 'scheduled' || fixed(['proposal']))
+            && request.resource.data.reviewedByUid == me()
+            && ((request.resource.data.state in ['changes-requested','declined'] && text(request.resource.data.reviewNote,1,2000) && fixed(['eventId']))
+              || (request.resource.data.state == 'scheduled'
+                && request.resource.data.eventId == (resource.data.replacesEventId == null ? id : resource.data.replacesEventId)
+                && getAfter(/databases/$(db)/documents/events/$(request.resource.data.eventId)).data.requestId == id
+                && getAfter(/databases/$(db)/documents/events/$(request.resource.data.eventId)).data.archived == false
+                && (resource.data.replacesEventId == null || resource.data.baseEventRevision == get(/databases/$(db)/documents/events/$(resource.data.replacesEventId)).data.get('revision',1) && get(/databases/$(db)/documents/events/$(resource.data.replacesEventId)).data.archived == false))))
+          || (resource.data.state == 'scheduled' && (isAdmin() || resource.data.createdByUid == me())
+            && request.resource.data.state == 'cancelled' && changed().hasOnly(['state','revision','updatedAt'])
+            && getAfter(/databases/$(db)/documents/events/$(resource.data.eventId)).data.archived == true
+            && get(/databases/$(db)/documents/events/$(resource.data.eventId)).data.requestId == id));
+    }
+
     function eventOk(d) {
-      return d.keys().hasOnly(['termId', 'title', 'type', 'date', 'start', 'end', 'location', 'notes', 'public', 'itemId',
-          'createdByUid', 'archived', 'createdAt', 'updatedAt'])
+      return d.keys().hasOnly(['termId', 'title', 'type', 'date', 'start', 'end', 'allDay', 'location', 'notes', 'public', 'itemId',
+          'createdByUid', 'archived', 'createdAt', 'updatedAt','revision','participantSelection','participantUids','configSnapshot','requestId','customValues','meetingDefaults'])
         && text(d.title, 1, 80) && d.type in ['meeting', 'project', 'committee', 'other'] && day(d.date)
         && hhmm(d.start) && hhmm(d.end) && d.end >= d.start
         && d.location is string && d.location.size() <= 120 && d.notes is string && d.notes.size() <= 1000
-        && d.public is bool && d.archived is bool && optString(d, 'itemId') && d.createdAt is number;
+        && d.get('allDay',false) is bool && d.public is bool && d.archived is bool && optString(d, 'itemId') && d.createdAt is number
+        && (!('revision' in d) || (d.revision is int && d.revision >= 1))
+        && (!('participantSelection' in d) || selectionOk(d.participantSelection))
+        && (!('participantUids' in d) || emails(d.participantUids,200))
+        && (!('configSnapshot' in d) || snapshotOk(d.configSnapshot)) && optString(d,'requestId') && (!('customValues' in d) || customValuesOk(d.customValues))
+        && (!('meetingDefaults' in d) || meetingDefaultsOk(d.meetingDefaults));
+    }
+    function auditedEvent(id,d) {
+      let a = getAfter(/databases/$(db)/documents/activity/$('event_' + id + '_' + string(d.revision))).data;
+      return isAdmin() && a.actorUid == me() && a.termId == curTerm() && a.itemId == id && a.type == 'event';
     }
     match /events/{id} {
       allow read: if active();
       allow create: if active() && notTeacher() && termOk() && eventOk(request.resource.data)
-        && request.resource.data.createdByUid == me() && request.resource.data.archived == false
+        && request.resource.data.archived == false
+        && ((request.resource.data.createdByUid == me()
+            && (isAdmin() || (request.resource.data.get('requestId',null) == null
+              && ('configSnapshot' in request.resource.data && eventConfigCurrent(request.resource.data) && request.resource.data.configSnapshot.approval == 'immediate'))))
+          || (request.resource.data.get('requestId',null) != null && approvedEvent(id,request.resource.data)))
+        && (!('revision' in request.resource.data) || request.resource.data.revision == 1)
         && (request.resource.data.public == false || isAdmin());
       allow update: if active() && notTeacher() && termOk() && eventOk(request.resource.data)
-        && (resource.data.createdByUid == me() || isBoss())
+        && (resource.data.createdByUid == me() || isAdmin())
+        && (('revision' in resource.data || 'revision' in request.resource.data) ? request.resource.data.revision == resource.data.get('revision',0) + 1 : true)
+        && (resource.data.get('requestId',null) == null
+          ? (fixed(['requestId']) && (fixed(['configSnapshot']) || eventConfigCurrent(request.resource.data))
+            && (!changed().hasAny(['title','type','date','start','end','allDay','location','notes','participantUids','participantSelection','configSnapshot','itemId','public','customValues','meetingDefaults'])
+              || isAdmin() || (!('configSnapshot' in resource.data) && !('configSnapshot' in request.resource.data) && fixed(['type']))
+              || (fixed(['configSnapshot','type']) && resource.data.get('configSnapshot',{}).get('approval','required') == 'immediate')
+              || (eventConfigCurrent(request.resource.data) && request.resource.data.configSnapshot.approval == 'immediate')))
+          : (approvedEvent(id,request.resource.data) || auditedEvent(id,request.resource.data)
+            || (changed().hasOnly(['archived','revision','updatedAt']) && request.resource.data.archived == true
+              && getAfter(/databases/$(db)/documents/eventRequests/$(resource.data.requestId)).data.state == 'cancelled'
+              && getAfter(/databases/$(db)/documents/eventRequests/$(resource.data.requestId)).data.revision == get(/databases/$(db)/documents/eventRequests/$(resource.data.requestId)).data.revision + 1)))
         && fixed(['termId', 'createdByUid', 'createdAt'])
         && (fixed(['public']) || isAdmin())
-        && (!(resource.data.get('public', false) == true && changed().hasAny(['title', 'type', 'date', 'start', 'end', 'location'])) || isAdmin());
+        && (!(resource.data.get('public', false) == true && changed().hasAny(['title', 'type', 'date', 'start', 'end', 'allDay', 'location'])) || isAdmin());
     }
 
     match /rsvps/{id} {

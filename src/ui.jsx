@@ -61,10 +61,16 @@ export const Panel = ({ title, id, link, children, extra = '' }) => (
 
 export function TaskRow({ t, path }) {
   const { byId } = tree(), mine = isMine(t), s = taskState(t), done = t.status === 'done';
+  const [busy, setBusy] = useState(false);
+  const toggle = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { await toggleDone(t); } finally { setBusy(false); }
+  };
   return (
-    <div class={`fl-row fl-row--task${mine ? ' is-mine' : ''}${done ? ' is-done' : ''}`}>
+    <div class={`fl-row fl-row--task${mine ? ' is-mine' : ''}${done ? ' is-done' : ''}`} aria-busy={busy}>
       {canWork(t)
-        ? <input type="checkbox" class="fl-check" checked={done} onChange={() => toggleDone(t)} aria-label={`Done: ${t.title}`} />
+        ? <label class="fl-task-toggle"><input type="checkbox" class="fl-check" checked={done} disabled={busy} onChange={toggle} aria-label={`Mark ${t.title} ${done ? 'not done' : 'done'}`} /></label>
         : <span aria-hidden="true" />}
       <div>
         <a class="fl-h3" href={`#/p/${t.id}`}>{t.title}</a>
@@ -202,9 +208,9 @@ export function Comments({ it }) {
             <textarea id="comment-box" ref={box} class="fl-input" maxLength={500} rows={3} value={text} onInput={type} aria-describedby="comment-help"
               onKeyDown={(e) => { if (choices.length && (e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); pick(choices[0]); } if (e.key === 'Escape') setQ(null); }} />
             {choices.length > 0 && <div class="fl-pop" role="listbox" aria-label="Mention someone">{choices.map((x) => (
-              <button type="button" role="option" key={x.id} onMouseDown={(e) => { e.preventDefault(); pick(x); }}><Chip email={x.id} />@{x.label}</button>))}</div>}
+              <button type="button" role="option" key={x.id} onMouseDown={(e) => e.preventDefault()} onClick={() => pick(x)}><Chip email={x.id} />@{x.label}</button>))}</div>}
             <span id="comment-help" class="fl-help">Type @ and a first name to mention someone; Enter picks the first match.</span></div>
-          <div class="fl-actions"><button class="fl-btn fl-btn--ghost fl-btn--sm" disabled={busy || !text.trim()}>Post comment</button></div>
+          <div class="fl-actions"><button class="fl-btn fl-btn--ghost fl-btn--sm" disabled={busy || !text.trim()} aria-busy={busy}>{busy ? 'Posting comment…' : 'Post comment'}</button></div>
         </form>
       )}
     </section>

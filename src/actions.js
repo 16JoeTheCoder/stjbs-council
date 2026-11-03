@@ -5,6 +5,7 @@ import { S, fail, toast } from './store.js';
 import { initials, isAdmin, tree } from './model.js';
 import { publish, refreshCache } from './publish.js';
 import { week } from './time.js';
+import { archiveEventRecord, saveEventProposal } from './event-actions.js';
 
 const T = () => S.term.termId;
 const now = () => Date.now();
@@ -166,16 +167,9 @@ export const archiveIdea = (idea) =>
   updateDoc(doc(db, 'ideas', idea.id), { archived: true, updatedAt: now() }).then(() => toast('Idea archived.'), fail);
 
 // ---- Events and RSVPs. Only admins may set public; the rules refuse it from anyone else.
-export async function saveEvent(ev, data) {
-  const body = { ...data, itemId: data.itemId || null, updatedAt: now() };
-  try {
-    if (ev) await updateDoc(doc(db, 'events', ev.id), body);
-    else await setDoc(newRef('events'), { ...body, termId: T(), createdByUid: S.me.id, archived: false, createdAt: now() });
-    toast(ev ? 'Event saved.' : `Added "${data.title}".`);
-    return true;
-  } catch (e) { fail(e); return false; }
-}
-export const archiveEvent = (ev) => updateDoc(doc(db, 'events', ev.id), { archived: true, updatedAt: now() }).then(() => { toast(`Archived "${ev.title}".`); return true; }, (e) => { fail(e); return false; });
+// Kept for internal compatibility; every event save uses the current approval policy.
+export const saveEvent = (ev,data) => saveEventProposal({event:ev,data,participantsChanged:false});
+export const archiveEvent = async ev => {const ok=await archiveEventRecord(ev,true);if(ok)toast(`Archived "${ev.title}".`,{label:'Restore',fn:()=>archiveEventRecord({...ev,revision:(ev.revision||0)+1},false)});return ok;};
 export const rsvp = (ev, status) => setDoc(doc(db, 'rsvps', `${ev.id}_${S.me.id}`),
   { termId: T(), eventId: ev.id, uid: S.me.id, status, archived: false, createdAt: now(), updatedAt: now() }).catch(fail);
 

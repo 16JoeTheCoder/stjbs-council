@@ -59,7 +59,7 @@ export function Home() {
   const ci = S.checkins.find((c) => c.uid === S.me.id && c.weekId === w.id), late = today > w.due;
   const showCheckin = checksIn(S.me) && !ci;
   const anns = activeAnnouncements(S.announcements, today);
-  const agenda = S.events.filter((e) => e.date === today).sort((a, b) => a.start.localeCompare(b.start));
+  const agenda = S.events.filter((e) => e.date === today && (!e.requestState || e.requestState === 'scheduled') && (!e.state || e.state === 'scheduled')).sort((a, b) => a.start.localeCompare(b.start));
   const projects = myProjects();
   const checkinPanel = showCheckin && (
     <section class="fl-panel fl-panel--red" aria-labelledby="ci-h">
