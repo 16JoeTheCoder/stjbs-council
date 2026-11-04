@@ -11,6 +11,7 @@ import {
   query,
   runTransaction,
   where,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "./firebase.js";
 import { S, fail, toast } from "./store.js";
@@ -148,7 +149,7 @@ export function useEventPolicy() {
 async function attempt(fn, message) {
   try {
     await runTransaction(db, fn);
-    toast(message);
+    toast(typeof message === "function" ? message() : message);
     return true;
   } catch (e) {
     fail(e);
@@ -218,6 +219,7 @@ async function currentProposal(
       members: S.members,
       groups: groupRows,
       frozenParticipants,
+      org: { departments: S.departments, committees: S.committees },
     });
     proposal.configSnapshot = snapshot;
     const error = validateProposal(proposal);
@@ -264,6 +266,7 @@ async function currentProposal(
     members,
     groups,
     frozenParticipants,
+    org: { departments: S.departments, committees: S.committees },
   });
   const error = validateProposal(proposal);
   if (error) throw new Error(error);
@@ -287,6 +290,7 @@ export function saveEventProposal({
     ? doc(db, "eventRequests", request.id)
     : reference("eventRequests");
   const eventRef = event ? doc(db, "events", event.id) : reference("events");
+  let outcome = "saved";
   return attempt(
     async (tx) => {
       checkWriter();
@@ -340,6 +344,7 @@ export function saveEventProposal({
           approvedRef,
           {
             ...proposal,
+            ...(prior && !proposal.endDate ? { endDate: deleteField() } : {}),
             termId: reviewed.termId,
             createdByUid: prior?.createdByUid || reviewed.createdByUid,
             archived: false,
@@ -376,6 +381,7 @@ export function saveEventProposal({
           (proposal.configSnapshot.approval === "required" ||
             (event && proposal.type === "meeting" && event.type !== "meeting") ||
             !!event?.requestId);
+      outcome = draft ? "draft" : needsApproval || request ? "request" : "saved";
       if (draft || needsApproval || request) {
         tx.set(requestRef, {
           termId: S.term.termId,
@@ -405,6 +411,7 @@ export function saveEventProposal({
           eventRef,
           {
             ...proposal,
+            ...(event && !proposal.endDate ? { endDate: deleteField() } : {}),
             termId: S.term.termId,
             createdByUid: event?.createdByUid || S.me.id,
             archived: false,
@@ -432,9 +439,7 @@ export function saveEventProposal({
         );
       }
     },
-    draft
-      ? "Draft saved."
-      : "Event saved. Events requiring approval appear in Requests.",
+    () => (outcome === "draft" ? "Draft saved. It stays private until you submit it." : outcome === "request" ? "Sent to an admin for approval." : "Event saved."),
   );
 }
 export function transitionEventRequest(request, next, reason = "") {

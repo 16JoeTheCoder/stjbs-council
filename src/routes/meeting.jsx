@@ -15,7 +15,7 @@ export function Checkin() {
     if (busy) return;
     if (!v.done.trim() && !v.doing.trim() && !v.blocked.trim()) return setErr('Write at least one answer, then submit.');
     setBusy(true);
-    if (await saveCheckin({ done: v.done.trim(), doing: v.doing.trim(), blocked: v.blocked.trim() })) location.hash = '#/week';
+    if (await saveCheckin({ done: v.done.trim(), doing: v.doing.trim(), blocked: v.blocked.trim() })) location.hash = '#/home';
     else setBusy(false);
   };
   const box = (k, label, help) => (

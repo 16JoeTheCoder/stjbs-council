@@ -1,3 +1,4 @@
+import { committeeKeyMembers, deptMembers, rankMembers } from "./org-model.js";
 // Pure event policy. Configuration is copied into each proposal; invitations are resolved once.
 export const EVENT_TYPES = [
   ["meeting", "Meeting"],
@@ -14,6 +15,10 @@ export const REQUEST_STATES = [
   "withdrawn",
   "cancelled",
 ];
+// The selection is stored as rules, not frozen lists, so someone who joins a department later is invited.
+// Legacy keys are always present; the newer keys are written only when used, so old documents keep their shape.
+const LEGACY = ["groupIds", "sections", "includeUids", "excludeUids"];
+export const RULE_KEYS = ["departmentIds", "ranks", "teamIds"];
 export const emptySelection = () => ({
   groupIds: [],
   sections: [],
@@ -22,18 +27,18 @@ export const emptySelection = () => ({
 });
 const unique = (a = []) => [...new Set(a)].sort();
 export function normalizeSelection(s = {}) {
-  return Object.fromEntries(
-    Object.keys(emptySelection()).map((k) => [k, unique(s[k] || [])]),
-  );
+  const out = Object.fromEntries(LEGACY.map((k) => [k, unique(s?.[k] || [])]));
+  for (const k of RULE_KEYS) if (s?.[k]?.length) out[k] = unique(s[k]);
+  return out;
 }
-export function resolveParticipants(selection, members, groups = []) {
+// org: { departments, committees } for the newer keys. Legacy rule kept: sections narrow the group union.
+export function resolveParticipants(selection, members, groups = [], org = {}) {
   const s = normalizeSelection(selection),
     active = members.filter((m) => m.active);
   const selected = new Set();
   for (const g of groups)
     if (!g.archived && g.available !== false && s.groupIds.includes(g.id))
       for (const uid of g.memberUids || []) selected.add(uid);
-  // A section narrows the group union. Without groups, sections can select from the active roster.
   const base = active.filter(
     (m) =>
       (!s.groupIds.length || selected.has(m.id)) &&
@@ -41,6 +46,13 @@ export function resolveParticipants(selection, members, groups = []) {
       (s.groupIds.length || s.sections.length),
   );
   const resolved = new Set([...base.map((m) => m.id), ...s.includeUids]);
+  const depts = org.departments || [];
+  for (const id of s.departmentIds || []) {
+    const d = depts.find((x) => x.id === id);
+    if (d && d.active !== false) for (const uid of deptMembers(d)) resolved.add(uid);
+  }
+  for (const r of s.ranks || []) for (const uid of rankMembers(r, members, depts)) resolved.add(uid);
+  for (const key of s.teamIds || []) for (const uid of committeeKeyMembers(key, org.committees || [])) resolved.add(uid);
   return active
     .filter((m) => resolved.has(m.id) && !s.excludeUids.includes(m.id))
     .map((m) => m.id)
@@ -113,12 +125,14 @@ export function makeProposal({
   members,
   groups,
   frozenParticipants,
+  org,
 }) {
   const d = eventDefaults(settings, template, edits);
   return {
     title: d.title.trim().slice(0, 80),
     type: d.type,
     date: d.date,
+    ...(d.allDay && d.endDate && d.endDate > d.date ? { endDate: d.endDate } : {}),
     start: d.start,
     end: d.end,
     allDay: !!d.allDay,
@@ -129,7 +143,7 @@ export function makeProposal({
     participantSelection: d.participantSelection,
     participantUids:
       frozenParticipants ||
-      resolveParticipants(d.participantSelection, members, groups),
+      resolveParticipants(d.participantSelection, members, groups, org),
     customValues: copy(d.customValues || {}),
     meetingDefaults: Object.fromEntries(
       [

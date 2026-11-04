@@ -10,7 +10,7 @@ import { announcementsQuery, eventsQuery } from './queries.js';
 
 export const S = {
   phase: 'loading', user: null, me: null, term: null, digest: null, members: [], items: [], checkins: [], notes: [],
-  events: [], announcements: [], docTemplates: [], feed: null, cacheInfo: null, cacheFull: false, publishError: '',
+  events: [], announcements: [], departments: [], committees: [], docTemplates: [], feed: null, cacheInfo: null, cacheFull: false, publishError: '',
   ready: {}, fail: {}, cached: {}, weekId: null, day: null, toast: '', error: '', undo: null,
 };
 const subs = new Set();
@@ -101,6 +101,9 @@ function startTerm(termId) {
   const w = week(), my = ++gen;
   set({ weekId: w.id, ready: { ...S.ready, items: false, checkins: false } });
   startItems(termId, my);
+  // Organisation: one small listener each (six departments, a handful of committees).
+  listen(termStops, query(collection(db, 'departments'), where('termId', '==', termId)), 'departments', rows, true);
+  listen(termStops, query(collection(db, 'committees'), where('termId', '==', termId)), 'committees', rows, true);
   listen(termStops, query(collection(db, 'checkins'), where('termId', '==', termId), where('weekId', 'in', [w.id, w.lastId])), 'checkins');
   startDay(termId);
 }

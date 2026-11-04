@@ -74,7 +74,7 @@ export function personStatus(email, w = week()) {
 
 // Exec in the roles table: may start root projects, edit the digest and project templates (the advisor too).
 export const isExec = (m = S.me) => isBoss(m) && m?.role !== 'teacher';
-const ROLE = { advisor: 'Advisor', president: 'President', vp: 'Vice president', treasurer: 'Treasurer', secretary: 'Secretary', officer: 'Officer', teacher: 'Teacher' };
+const ROLE = { advisor: 'Advisor', president: 'President', vp: 'Vice president', treasurer: 'Treasurer', secretary: 'Secretary', officer: 'Officer', member: 'Member', teacher: 'Teacher' };
 export const roleName = (r) => ROLE[r] || r;
 export const firstName = (email) => (S.members.find((m) => m.id === email)?.name || email || '').split(' ')[0];
 export const checksIn = (m) => !['teacher', 'advisor'].includes(m?.role);

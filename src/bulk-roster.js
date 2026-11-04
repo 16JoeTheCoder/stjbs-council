@@ -4,7 +4,7 @@
 const SCHOOL = /^[^@\s]+@stjbs\.sch\.id$/;
 const ROLE_WORDS = {
   advisor: 'advisor', president: 'president', 'vice president': 'vp', 'vice-president': 'vp', vp: 'vp',
-  treasurer: 'treasurer', secretary: 'secretary', officer: 'officer', teacher: 'teacher',
+  treasurer: 'treasurer', secretary: 'secretary', officer: 'officer', member: 'member', 'general member': 'member', teacher: 'teacher',
 };
 
 // "Jc 2", "jc2" and "JC 2" are the same grade; "sec 4" becomes "Sec 4". Anything else is kept as typed.
