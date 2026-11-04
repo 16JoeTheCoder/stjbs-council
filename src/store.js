@@ -27,9 +27,18 @@ export function toast(msg, undo = null) {
   clearTimeout(toastTimer);
   if (!undo) toastTimer = setTimeout(() => set({ toast: '', undo: null }), 4000); // an undo stays until used or dismissed
 }
-export const fail = (e) => toast(e.code === 'permission-denied'
-  ? 'That did not save: your role is not allowed to make this change.'
-  : e.code === 'resource-exhausted' ? quotaText() : `That did not save (${e.code || e.message}). Check your connection and try again.`);
+// Plain words for every error. Raw codes never reach the screen.
+export function plain(e) {
+  const code = String(e?.code || '').replace(/^(firestore|auth)\//, '');
+  if (code === 'permission-denied') return 'Your role is not allowed to do this.';
+  if (code === 'resource-exhausted') return quotaText();
+  if (code === 'failed-precondition') return 'This list is still being set up on the server. Try again in a few minutes.';
+  if (['unavailable', 'deadline-exceeded', 'cancelled', 'network-request-failed'].includes(code)) return 'The connection dropped. Check your internet and try again.';
+  if (code === 'not-found') return 'This no longer exists. It may have been archived.';
+  if (!code && e?.message && !/[a-z]+\/[a-z-]+|FirebaseError|Missing or insufficient/i.test(e.message)) return e.message; // our own sentences
+  return 'Something went wrong. Try again.';
+}
+export const fail = (e) => toast(e?.code === 'permission-denied' ? 'That did not save: your role is not allowed to make this change.' : `That did not save. ${plain(e)}`);
 
 export const memberName = (email) => S.members.find((m) => m.id === email)?.name || email || 'Unknown';
 export const unreadCount = () => S.notes.filter((n) => !n.read).length;
@@ -44,7 +53,7 @@ function quotaText() {
 
 let stops = [], termStops = [], dayStops = [], gen = 0;
 const stopAll = (list) => { list.forEach((f) => f()); list.length = 0; };
-const lost = (e) => set({ error: e.code === 'resource-exhausted' ? quotaText() : `Live updates stopped (${e.code}). Reload the page.` });
+const lost = (e) => set({ error: e.code === 'resource-exhausted' ? quotaText() : `Live updates stopped. ${plain(e)} Reload the page to reconnect.` });
 const rows = (s) => s.docs.map((d) => ({ id: d.id, ...d.data() }));
 // One shape for items from the snapshot document and from listeners: touchedAt as milliseconds.
 export const itemRow = (d) => {

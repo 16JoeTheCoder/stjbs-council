@@ -82,3 +82,27 @@ export async function bulkMembers(rows, label) {
     return true;
   } catch (e) { fail(e); return false; }
 }
+
+// A planned set of writes with the values to restore: { members: [{uid, patch, before}], departments: [{id, data, before}],
+// committees: [{id, data, before}] }. Writes go in chunks; Undo restores every before value for 10 seconds.
+export async function applyPlan(plan, label) {
+  const at = now(), t = S.term.termId;
+  const forward = [
+    ...plan.departments.map((x) => [doc(db, 'departments', x.id), { ...x.data, updatedAt: at }]),
+    ...plan.committees.map((x) => [doc(db, 'committees', x.id), { ...x.data, updatedAt: at }]),
+    ...plan.members.map((x) => [memberRef(x.uid), { ...x.patch, termId: t, updatedAt: at }]),
+  ];
+  const back = [
+    ...plan.departments.map((x) => [doc(db, 'departments', x.id), { ...x.before, updatedAt: now() }]),
+    ...plan.committees.map((x) => [doc(db, 'committees', x.id), { ...x.before, updatedAt: now() }]),
+    ...plan.members.map((x) => [memberRef(x.uid), { ...x.before, termId: t, updatedAt: now() }]),
+  ];
+  try {
+    await commit(forward);
+    const undo = async () => { try { await commit(back); toast('Changes undone.'); } catch (e) { fail(e); } };
+    const n = new Set([...plan.members.map((x) => x.uid)]).size || plan.committees.length;
+    toast(`${label}: ${n} ${n === 1 ? 'person' : 'people'} updated.`, { label: 'Undo', fn: undo });
+    setTimeout(() => { if (S.undo?.fn === undo) toast(''); }, 10e3);
+    return true;
+  } catch (e) { fail(e); return false; }
+}

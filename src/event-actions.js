@@ -14,7 +14,7 @@ import {
   deleteField,
 } from "firebase/firestore";
 import { db } from "./firebase.js";
-import { S, fail, toast } from "./store.js";
+import { S, fail, plain, toast } from "./store.js";
 import { isAdmin } from "./model.js";
 import {
   assertRevision,
@@ -97,7 +97,7 @@ export function useEventPolicy() {
       alive &&
       setData((v) => ({
         ...v,
-        error: `Event settings did not load (${e.code}). Reload to try again.`,
+        error: `Event settings did not load. ${plain(e)}`,
       }));
     const stops = [
       onSnapshot(

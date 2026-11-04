@@ -153,6 +153,19 @@ function General({ admin }) {
   );
 }
 
+// ---------- Org charts: a root, then branches side by side; each branch lists its people top-down.
+const Node = ({ uid, label, lead }) => uid && (
+  <span class="fl-orgnode"><Chip email={uid} lead={lead} /><span><b>{memberName(uid)}</b>{label && <small>{label}</small>}</span></span>
+);
+const Head = ({ title, sub }) => <span class="fl-orgnode fl-orgnode--dept"><span><b>{title}</b>{sub && <small>{sub}</small>}</span></span>;
+const Branch = ({ head, top = [], rest = [] }) => (
+  <div class="fl-tree__branch">
+    {head}
+    {(top.length > 0 || rest.length > 0) && <ul class="fl-tree__people">{top.map((x, i) => <li key={`t${i}`}>{x}</li>)}
+      {rest.length > 0 && <li><ul class={top.length ? 'fl-tree__sub' : 'fl-tree__people'}>{rest.map((x, i) => <li key={`r${i}`}>{x}</li>)}</ul></li>}</ul>}
+  </div>
+);
+
 // ---------- Org chart, from department data
 
 function OrgChart({ admin }) {
@@ -170,9 +183,20 @@ function OrgChart({ admin }) {
   return (
     <>
       <section class="fl-panel fl-scroll" aria-label="Org chart">
-        <ul class="fl-org fl-org--chart">
-          {node(adv?.id || pres?.id, adv ? 'Advisor' : 'President', adv ? [node(pres?.id, 'President', [...rest.map((m) => node(m.id, roleName(m.role))), ...depts.map(dept)])] : [...rest.map((m) => node(m.id, roleName(m.role))), ...depts.map(dept)], true)}
-        </ul>
+        <div class="fl-tree">
+          {adv && <div class="fl-tree__root"><Node uid={adv.id} label="Advisor" lead /></div>}
+          {pres && <div class="fl-tree__root"><Node uid={pres.id} label="President" lead /></div>}
+          {rest.length > 0 && <div class="fl-tree__root fl-tree__row">{rest.map((m) => <Node key={m.id} uid={m.id} label={roleName(m.role)} />)}</div>}
+          <div class="fl-tree__kids">
+            {depts.map((d) => {
+              const members = (d.memberUids || []).map((u) => <Node key={u} uid={u} label="General member" />);
+              const sec = d.secLeadUid && <Node uid={d.secLeadUid} label="Sec officer" lead />;
+              return <Branch key={d.id} head={<Head title={d.name} sub={`${deptMembers(d).length} people`} />}
+                top={[d.jcLeadUid ? <Node uid={d.jcLeadUid} label="JC officer, head" lead /> : <span class="fl-small fl-muted">No JC officer yet</span>]}
+                rest={sec ? [<div class="fl-tree__nest">{sec}{members.length > 0 && <ul class="fl-tree__sub">{members.map((x, i) => <li key={i}>{x}</li>)}</ul>}</div>] : members} />;
+            })}
+          </div>
+        </div>
       </section>
       {unplaced.length > 0 && (
         <Panel title="Unassigned" id="unassigned-h" link={<span class="fl-small fl-muted">{unplaced.length} not in a department</span>}>
@@ -262,7 +286,6 @@ function Committee({ c, admin }) {
       <div class="fl-cmhead">
         <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => go({ c: null })}>Back to general committee</button>
         <div class="fl-grow">
-          <h2 class="fl-title fl-title--sub">{c.name}</h2>
           <p class="fl-small fl-muted"><span class="fl-mono">{range(c)}</span> · {teams.length} {teams.length === 1 ? 'team' : 'teams'} · <span class={`fl-badge fl-badge--${STATUS[c.status]?.[0]}`}>{STATUS[c.status]?.[1]}</span></p>
         </div>
         {admin && <div class="fl-actions">
@@ -278,16 +301,16 @@ function Committee({ c, admin }) {
       </div>
       {closed && <p class="fl-calnote fl-calnote--plain">This committee is closed. It is archived and read-only.</p>}
       <section class="fl-panel fl-scroll" aria-label={`${c.name} org chart`}>
-        <ul class="fl-org fl-org--chart">
-          <li><span class="fl-orgnode fl-orgnode--dept"><b>{c.name}</b><small>{c.chairUids?.length ? `Chair: ${c.chairUids.map(first).join(', ')}` : 'No overall chair'}</small></span>
-            <ul>{teams.map((t) => (
-              <li key={t.id}><span class="fl-orgnode fl-orgnode--dept"><b>{t.name}</b><small>{(t.leadUids || []).length ? `${t.leadUids.length} ${t.leadUids.length === 1 ? 'leader' : 'leaders'}` : 'No leader'} · {(t.memberUids || []).length + (t.leadUids || []).length} people</small></span>
-                <ul>{(t.leadUids || []).length
-                  ? t.leadUids.map((u) => <li key={u}><span class="fl-orgnode"><Chip email={u} lead /><span><b>{memberName(u)}</b><small>Leader</small></span></span>
-                    {u === t.leadUids[0] && (t.memberUids || []).length > 0 && <ul>{t.memberUids.map((m) => <li key={m}><span class="fl-orgnode"><Chip email={m} /><span><b>{memberName(m)}</b></span></span></li>)}</ul>}</li>)
-                  : (t.memberUids || []).map((m) => <li key={m}><span class="fl-orgnode"><Chip email={m} /><span><b>{memberName(m)}</b></span></span></li>)}</ul></li>
-            ))}</ul></li>
-        </ul>
+        <div class="fl-tree">
+          <div class="fl-tree__root">{c.chairUids?.length ? c.chairUids.map((u) => <Node key={u} uid={u} label="Chair" lead />) : <Head title={c.name} sub="No overall chair" />}</div>
+          <div class="fl-tree__kids">
+            {teams.map((t) => (
+              <Branch key={t.id} head={<Head title={t.name} sub={(t.leadUids || []).length ? null : 'No leader'} />}
+                top={(t.leadUids || []).map((u) => <Node uid={u} label="Leader" lead />)}
+                rest={(t.memberUids || []).map((u) => <Node uid={u} />)} />
+            ))}
+          </div>
+        </div>
       </section>
       {teams.length ? <div class="fl-grid fl-grid--depts">{teams.map((t, i) => (
         <section key={t.id} class="fl-panel fl-deptcard" aria-labelledby={`t-${t.id}`}>

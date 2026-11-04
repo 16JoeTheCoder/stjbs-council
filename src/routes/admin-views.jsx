@@ -61,7 +61,7 @@ export function Overview({ nav }) {
         {(unpublished || S.publishError) && (
           <Attention icon="globe" title={S.publishError ? 'The public site did not update' : 'The public site has changes not published yet'}
             link={<a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/admin/public">Open</a>}>
-            <p class="fl-small fl-muted">{S.publishError ? `Last attempt failed (${S.publishError}). Publish now to retry.` : 'It updates on its own within 10 minutes while an admin has the app open.'}</p>
+            <p class="fl-small fl-muted">{S.publishError ? "The last attempt did not go through. Publish now to try again." : 'It updates on its own within 10 minutes while an admin has the app open.'}</p>
           </Attention>
         )}
         {S.cacheFull && (

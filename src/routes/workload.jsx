@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { db } from '../firebase.js';
-import { S } from '../store.js';
+import { S, plain } from '../store.js';
 import { activeMembers, canSeeStats, checksIn, taskState } from '../model.js';
 import { daysBetween, isoDay, monday, week } from '../time.js';
 import { Title } from '../ui.jsx';
@@ -53,7 +53,7 @@ export function Workload() {
         await setDoc(ref, { termId: T, weekId: week().id, totalOpen: S.items.filter((t) => t.kind === 'task' && t.status !== 'done').length, members: Object.fromEntries(r.map((x) => [x.id.replace(/\./g, '_'), { open: x.open, overdue: x.overdue, blocked: x.blocked, done: x.done }])), createdAt: Date.now() });
       }
       setSnaps((await getDocs(query(collection(db, 'stats'), where('termId', '==', T)))).docs.map((d) => d.data()).sort((a, b) => a.weekId.localeCompare(b.weekId)));
-    })().catch((e) => setErr(`Could not load workload (${e.code || e.message}). Reload to try again.`));
+    })().catch((e) => setErr(`Check-ins did not load. ${plain(e)}`));
   }, [ok, T]);
   if (!ok) return <><Title light="Not for you." bold="Workload" /><p>Only the advisor, president and vice president see workload.</p></>;
   const r = rows(cis);

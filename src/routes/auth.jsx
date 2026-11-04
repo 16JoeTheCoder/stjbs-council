@@ -3,7 +3,7 @@ import {
   createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut,
 } from 'firebase/auth';
 import { auth } from '../firebase.js';
-import { S, boot } from '../store.js';
+import { S, boot, plain } from '../store.js';
 import { Title } from '../ui.jsx';
 import { Install } from './settings.jsx';
 import sky from '../../design/fiatlux/img/campus-sky.webp';
@@ -20,7 +20,7 @@ const MESSAGES = {
   'auth/too-many-requests': 'Too many attempts. Wait a few minutes, then try again.',
   'auth/network-request-failed': 'No connection. Check your internet, then try again.',
 };
-const say = (e) => MESSAGES[e.code] || `Something went wrong (${e.code || e.message}). Try again.`;
+const say = (e) => MESSAGES[e.code] || plain(e);
 
 // Split layout: the school on the left (a stage surface, dark in both themes), the form on the right.
 const Stage = () => (
