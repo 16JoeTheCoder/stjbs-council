@@ -12,7 +12,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "./firebase.js";
-import { S, fail, set, subscribe } from "./store.js";
+import { S, fail, plain, set, subscribe } from "./store.js";
 import { isAdmin } from "./model.js";
 import { isoDay } from "./time.js";
 import { subscribeEventRequests } from "./event-actions.js";
@@ -31,6 +31,7 @@ export function useAttention(allowed = true) {
       attentionReady: false,
       attentionError: "",
     });
+    // Retry re-runs this effect through S.attentionRetry.
     if (!enabled || !uid || !termId) return;
     let alive = true,
       requests = [],
@@ -66,7 +67,7 @@ export function useAttention(allowed = true) {
     const lost = (e) =>
       alive &&
       set({
-        attentionError: `Some updates did not load (${e.code || "connection error"}). Reload to reconnect.`,
+        attentionError: plain(e),
       });
     const stops = [
       onSnapshot(
@@ -148,7 +149,7 @@ export function useAttention(allowed = true) {
       alive = false;
       stops.forEach((f) => f());
     };
-  }, [uid, termId, admin, enabled]);
+  }, [uid, termId, admin, enabled, S.attentionRetry]);
   return S.attention || [];
 }
 export async function markAttentionRead(entry) {

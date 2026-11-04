@@ -4,7 +4,7 @@
 const SCHOOL = /^[^@\s]+@stjbs\.sch\.id$/;
 const ROLE_WORDS = {
   advisor: 'advisor', president: 'president', 'vice president': 'vp', 'vice-president': 'vp', vp: 'vp',
-  treasurer: 'treasurer', secretary: 'secretary', officer: 'officer', teacher: 'teacher',
+  treasurer: 'treasurer', secretary: 'secretary', officer: 'officer', member: 'member', 'general member': 'member', teacher: 'teacher',
 };
 
 // "Jc 2", "jc2" and "JC 2" are the same grade; "sec 4" becomes "Sec 4". Anything else is kept as typed.
@@ -57,3 +57,34 @@ export function sectionsOf(members) {
 // The sentence an admin must type before a bulk change. It names the action and the count, so it cannot be reused by habit.
 export const confirmPhrase = (verb, n) => `I understand this will ${verb} ${n} member${n === 1 ? '' : 's'} and I want to proceed.`;
 export const confirmed = (typed, phrase) => String(typed).trim().replace(/\s+/g, ' ').toLowerCase() === phrase.toLowerCase();
+
+// CSV with a header row: email,name,role,section,department,position. Department matches a department name;
+// position is "JC officer", "Sec officer" or "General member". Rows come back in the same shape as parseBulk, plus
+// department and position.
+export const CSV_TEMPLATE = 'email,name,role,section,department,position\nadelyn.liu@stjbs.sch.id,Adelyn Liu,member,Sec 4,Events,General member\n';
+const POS = { 'jc officer': 'jc_officer', 'sec officer': 'sec_officer', 'general member': 'member', member: 'member', '': null };
+function cells(line) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (q && c === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = !q; else if (c === ',' && !q) { out.push(cur); cur = ''; } else cur += c;
+  }
+  out.push(cur);
+  return out.map((x) => x.trim());
+}
+export const isCsv = (text) => /^\s*email\s*,\s*name/i.test(String(text || ''));
+export function parseCsv(text, allowed, existing = [], departments = []) {
+  const lines = String(text || '').replace(/\r/g, '').split('\n').filter((l) => l.trim());
+  const head = cells(lines.shift() || '').map((h) => h.toLowerCase());
+  const at = (row, k) => row[head.indexOf(k)] ?? '';
+  const blocks = lines.map((l) => { const r = cells(l); return [at(r, 'email'), at(r, 'name'), at(r, 'role'), at(r, 'section')].join('\n'); }).join('\n\n');
+  const rows = parseBulk(blocks, allowed, existing);
+  return rows.map((r, i) => {
+    const raw = cells(lines[i]), dName = at(raw, 'department'), pName = at(raw, 'position').toLowerCase();
+    const d = dName ? departments.find((x) => x.name.toLowerCase() === dName.toLowerCase()) : null;
+    const errors = [...r.errors];
+    if (dName && !d) errors.push(`Unknown department "${dName}".`);
+    if (!(pName in POS)) errors.push(`Unknown position "${pName}".`);
+    return { ...r, line: i + 2, errors, departmentId: d?.id || null, department: d?.name || '', position: d ? POS[pName] || 'member' : null };
+  });
+}

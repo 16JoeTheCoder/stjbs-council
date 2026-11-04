@@ -9,7 +9,7 @@ import { addTemplate, archiveAnnouncement, archiveTemplate, decide, saveAnnounce
 import { localFeedHash, publish } from '../publish.js';
 import { addDays, fmtDay, isoDay, week } from '../time.js';
 import { ago, dateRange } from '../feed.js';
-import { Icon, PublicProject } from '../shared.jsx';
+import { Icon, PublicProject, Sheet } from '../shared.jsx';
 import { Chip, Empty, Panel, Title, useAutofocus } from '../ui.jsx';
 import { wa } from './projects.jsx';
 import { SUB_STATUS, SUB_TYPE } from './resources.jsx';
@@ -61,7 +61,7 @@ export function Overview({ nav }) {
         {(unpublished || S.publishError) && (
           <Attention icon="globe" title={S.publishError ? 'The public site did not update' : 'The public site has changes not published yet'}
             link={<a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/admin/public">Open</a>}>
-            <p class="fl-small fl-muted">{S.publishError ? `Last attempt failed (${S.publishError}). Publish now to retry.` : 'It updates on its own within 10 minutes while an admin has the app open.'}</p>
+            <p class="fl-small fl-muted">{S.publishError ? "The last attempt did not go through. Publish now to try again." : 'It updates on its own within 10 minutes while an admin has the app open.'}</p>
           </Attention>
         )}
         {S.cacheFull && (
@@ -154,16 +154,34 @@ export function PublicSite() {
   const roots = tree().kids.root || [], [busy, setBusy] = useState(false);
   let preview = null;
   try { preview = JSON.parse(S.feed?.json || 'null'); } catch { /* a damaged feed shows no preview */ }
-  const go = async () => { setBusy(true); toast((await publish(true)) ? 'Published. The public site shows it now.' : `Publish failed${S.publishError ? ` (${S.publishError})` : ''}. Try again.`); setBusy(false); };
+  const [confirming, setConfirming] = useState(false);
+  const go = async () => { setBusy(true); toast((await publish(true)) ? 'Published. The public site shows it now.' : 'Publishing did not go through. Check your connection and try again.'); setBusy(false); setConfirming(false); };
+  // What changes compared with the last publish, by title.
+  const today = isoDay(), was = (k) => new Set((preview?.[k] || []).map((x) => x.title));
+  const now = { projects: roots.filter((r) => r.public).map((r) => r.title), events: S.events.filter((e) => e.public && !e.archived && e.date >= today).map((e) => e.title),
+    announcements: S.announcements.filter((a) => a.audience === 'everyone' && !a.archived && a.endDate >= today).map((a) => a.title) };
+  const diff = Object.fromEntries(Object.entries(now).map(([k, list]) => [k, { add: list.filter((t) => !was(k).has(t)), drop: [...was(k)].filter((t) => !list.includes(t)), n: list.length }]));
+  const changes = Object.values(diff).reduce((n, d) => n + d.add.length + d.drop.length, 0);
   return (
     <>
       <Title light="Public site." bold="What visitors see." title="Public site">
         <a class="fl-btn fl-btn--ghost fl-btn--sm" href="/" target="_blank" rel="noopener"><Icon n="ext" />Open the public site</a>
-        <button class="fl-btn fl-btn--red fl-btn--sm" disabled={busy} onClick={go}><Icon n="globe" />Publish now</button>
+        <button class="fl-btn fl-btn--red fl-btn--sm" disabled={busy} onClick={() => setConfirming(true)}><Icon n="globe" />Publish now</button>
       </Title>
       <p class="fl-muted fl-measure">
         {S.feed ? `Last published ${ago(S.feed.updatedAt)}.` : 'Not published yet.'} Changes publish on their own within 10 minutes while an admin has the app open. Only project titles, stage, progress and the line below go out; never names, tasks or comments.
       </p>
+      {confirming && (
+        <Sheet label="Publish now" onClose={() => setConfirming(false)}>
+          <h2 class="fl-h2">Publish to the public site now?</h2>
+          <p>{changes ? `${changes} ${changes === 1 ? 'change' : 'changes'} since the last publish.` : 'Nothing has changed since the last publish. Publishing again refreshes the same content.'}</p>
+          <dl class="fl-dl">{[['projects', 'Projects'], ['events', 'Events'], ['announcements', 'Announcements']].map(([k, l]) => (
+            <div key={k}><dt class="fl-h3">{l} <span class="fl-mono fl-muted">{diff[k].n}</span></dt>
+              <dd class="fl-small">{diff[k].add.length ? <>Adds {diff[k].add.join(', ')}. </> : ''}{diff[k].drop.length ? <>Removes {diff[k].drop.join(', ')}.</> : ''}{!diff[k].add.length && !diff[k].drop.length ? 'No change.' : ''}</dd></div>))}</dl>
+          <p class="fl-help">Visitors never see names, tasks or comments.</p>
+          <div class="fl-actions"><button class="fl-btn fl-btn--red" disabled={busy} onClick={go}>{busy ? 'Publishing…' : 'Publish now'}</button><button class="fl-btn fl-btn--ghost" onClick={() => setConfirming(false)}>Cancel</button></div>
+        </Sheet>
+      )}
       <Panel title="Projects" id="pub-proj-h">
         {roots.length ? <div class="fl-list">{roots.map((r) => (
           <div key={r.id} class="fl-proj">

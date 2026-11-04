@@ -8,7 +8,7 @@ import { firstName, isAdmin } from '../model.js';
 import { archiveIdea, pinIdea, toggleVote } from '../actions.js';
 import { Empty, Panel, Title } from '../ui.jsx';
 
-function useIdeas() {
+export function useIdeas() {
   const [list, setList] = useState(null);
   useEffect(() => onSnapshot(query(collection(db, 'ideas'), where('termId', '==', S.term.termId), where('archived', '==', false), orderBy('createdAt', 'desc'), limit(20)),
     (s) => setList(s.docs.map((d) => ({ id: d.id, ...d.data() }))), () => setList(false)), []);
@@ -37,8 +37,9 @@ function Note({ idea, board }) {
   );
 }
 
-export function TopIdeas() {
-  const list = useIdeas();
+export function TopIdeas({ list: given }) {
+  const own = useIdeas(), list = given === undefined ? own : given;
+  if (!list?.length) return null; // Home shows a card only when it has rows
   return (
     <Panel title="Top ideas" id="ideas-h" extra="fl-desk-only" link={<a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/ideas">Open idea board</a>}>
       <p class="fl-small fl-muted">Anyone can pin an idea. Vote for the ones you want.</p>
@@ -51,7 +52,8 @@ export function Ideas() {
   const list = useIdeas(), [text, setText] = useState(''), [sort, setSort] = useState('top'), [busy, setBusy] = useState(false);
   const pin = async (e) => {
     e.preventDefault();
-    if (!text.trim() || busy) return;
+    if (busy) return;
+    if (!text.trim()) { document.getElementById('idea')?.focus(); return; }
     setBusy(true);
     if (await pinIdea(text.trim())) setText('');
     setBusy(false);
@@ -64,8 +66,8 @@ export function Ideas() {
         <form class="fl-panel fl-form" onSubmit={pin}>
           <div class="fl-field"><label for="idea">Your idea</label>
             <input id="idea" class="fl-input" maxLength={140} value={text} onInput={(e) => setText(e.target.value)} placeholder="Movie night in the hall after exams" aria-describedby="idea-help" />
-            <span id="idea-help" class="fl-help">{140 - text.length} characters left. Everyone on the council sees your first name with it.</span></div>
-          <div class="fl-actions"><button class="fl-btn fl-btn--red" disabled={busy || !text.trim()}>Pin idea</button></div>
+            <span id="idea-help" class="fl-help">{text.trim() ? `${140 - text.length} characters left.` : 'Type your idea, then pin it.'} Everyone on the council sees your first name with it.</span></div>
+          <div class="fl-actions"><button class="fl-btn fl-btn--red" disabled={busy} aria-disabled={!text.trim() || undefined}>{busy ? 'Pinning…' : 'Pin idea'}</button></div>
         </form>
       )}
       <div class="fl-seg" role="group" aria-label="Sort ideas">

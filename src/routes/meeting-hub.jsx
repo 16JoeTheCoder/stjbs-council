@@ -11,7 +11,7 @@ import {
 import { db } from "../firebase.js";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { rsvp, updateItem } from "../actions.js";
-import { S, memberName } from "../store.js";
+import { S, memberName, plain } from "../store.js";
 import { isAdmin, canWork, googleUrl } from "../model.js";
 import { isoDay, week } from "../time.js";
 import { Title, TaskRow } from "../ui.jsx";
@@ -68,7 +68,7 @@ function Action({ children, onClick, ...props }) {
           try {
             await onClick();
           } catch (e) {
-            setError(e.message);
+            setError(plain(e));
           } finally {
             setBusy(false);
           }
@@ -192,7 +192,7 @@ function Contribution({ meeting, topicId, type = "question" }) {
           await buffer.flush();
           setError("");
         } catch (e) {
-          setError(e.message);
+          setError(plain(e));
         }
       }}
     >
@@ -567,7 +567,7 @@ function GoogleExport({ record: sourceRecord }) {
     if (clientId)
       loadGoogleIdentity()
         .then(() => setReady(true))
-        .catch((e) => setError(e.message));
+        .catch((e) => setError(plain(e)));
   }, [clientId]);
   return (
     <section class="fl-section">
@@ -593,7 +593,7 @@ function GoogleExport({ record: sourceRecord }) {
                   setConfirmed(false);
                   setError("");
                 })
-                .catch((e) => setError(e.message))
+                .catch((e) => setError(plain(e)))
             }
           >
             Connect Google account
@@ -692,7 +692,7 @@ function SensitiveRecord({ meeting, uid }) {
             snapshot.data() || { reason: "", followup: "", designation: "" },
           );
         },
-        (e) => setError(e.message),
+        (e) => setError(plain(e)),
       ),
     [meeting.id, uid],
   );
@@ -879,7 +879,7 @@ function VersionHistory({ meeting, versions }) {
             setError("");
           } catch (e) {
             setError(
-              `Earlier versions could not load (${e.code || e.message}).`,
+              `Earlier versions could not load. ${plain(e)}`,
             );
           } finally {
             setBusy(false);

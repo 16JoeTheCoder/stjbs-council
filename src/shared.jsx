@@ -37,6 +37,13 @@ const PATHS = {
   ext: 'M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6',
   pin: 'M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z',
   archive: 'M3 4h18v4H3zM5 8v12h14V8M10 12h4',
+  keyboard: 'M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8',
+  panel: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3v18',
+  undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
+  checkin: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9',
+  dots: 'M12 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM19 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM5 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
+  sort: 'M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4',
+  department: 'M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 10h.01M15 10h.01',
 };
 export const Icon = ({ n, label }) => (
   <svg class="fl-icon" viewBox="0 0 24 24" aria-hidden={label ? undefined : 'true'} role={label ? 'img' : undefined} aria-label={label}
@@ -125,7 +132,7 @@ export function PublicProject({ p }) {
       <div class="fl-card__meta"><h3 class="fl-h3">{p.title}</h3><span class={`fl-tag${p.stage === 'Done' ? ' fl-tag--public' : ''}`}>{p.stage}</span></div>
       {p.blurb && <p class="fl-small fl-muted">{p.blurb}</p>}
       <div class="fl-bar" role="progressbar" aria-label={`${p.title} progress`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={p.pct}><i style={{ width: `${p.pct}%` }} /></div>
-      <span class="fl-mono fl-small fl-muted">{p.pct}% · {p.done} of {p.total} tasks done</span>
+      <span class="fl-mono fl-small fl-muted">{p.pct}% · {p.done} of {p.total} {p.total === 1 ? "task" : "tasks"} done</span>
     </article>
   );
 }

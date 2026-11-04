@@ -32,11 +32,9 @@ function ProgressCard({ it }) {
     <article class="fl-card">
       <div class="fl-card__meta"><a class="fl-h3" href={`#/p/${it.id}`}>{it.title}</a><Badge s={groupState(list)} /></div>
       <Steps root={it} />
-      <div class="fl-card__meta">
-        <span class="fl-mono fl-small">{pct(p)}% · {p.done} of {p.total} tasks</span>
-        <PublicSwitch it={it} />
-      </div>
+      <span class="fl-mono fl-small">{pct(p)}% · {p.done} of {p.total} {p.total === 1 ? 'task' : 'tasks'}</span>
       <p class="fl-small fl-muted">{next ? <>Next: <a class="fl-link" href={`#/p/${next.id}`}>{next.title}</a> <span class="fl-mono">{fmtDay(next.dueDate)}</span></> : 'No open tasks with a date.'}</p>
+      {isAdmin() && <div class="fl-card__foot"><PublicSwitch it={it} /></div>}
     </article>
   );
 }
@@ -55,7 +53,8 @@ function Pipeline({ roots }) {
                 <article key={r.id} class="fl-card">
                   <a class="fl-h3" href={`#/p/${r.id}`}>{r.title}</a>
                   <div class="fl-bar" aria-hidden="true"><i style={{ width: `${pct(p)}%` }} /></div>
-                  <div class="fl-card__meta"><span class="fl-mono fl-small">{pct(p)}% · {p.done} of {p.total}</span><PublicSwitch it={r} /></div>
+                  <span class="fl-mono fl-small">{pct(p)}% · {p.done} of {p.total} done</span>
+                  {isAdmin() && <div class="fl-card__foot"><PublicSwitch it={r} /></div>}
                   {canManage(r) && (
                     <label class="fl-field"><span class="fl-sr">Move {r.title} to</span>
                       <select class="fl-input" value={status} onChange={(e) => { const to = e.target.value; updateItem(r, { status: to }, `moved to ${STAGE_WORD[to]}:`).then((ok) => ok && toast(`Moved "${r.title}" to ${STAGE_WORD[to]}.`)); }}>
@@ -233,6 +232,11 @@ export function ItemForm({ item, parent, kind, done, prefill = {} }) {
       <h2 class="fl-h2">{editing ? `Edit ${k}` : `New ${k}`}{parent && !editing ? <span class="fl-light"> in {parent.title}</span> : ''}</h2>
       {manage && field('title', 'Title', 'text', { maxLength: 80, required: true })}
       {manage && <div class="fl-fields">{field('startDate', 'Start date', 'date')}{field('dueDate', 'Due date', 'date')}</div>}
+      {manage && (() => {
+        const rootId = (editing ? [...(editing.ancestors || []), editing.id] : [...(parent?.ancestors || []), parent?.id].filter(Boolean))[0], root = rootId && tree().byId[rootId];
+        return root && root.id !== editing?.id && root.dueDate && v.dueDate && v.dueDate > root.dueDate
+          ? <p class="fl-warnline" role="status"><span class="fl-badge fl-badge--warn">Check the date</span> This is due after {root.title} itself ({fmtDay(root.dueDate)}). You can still save it.</p> : null;
+      })()}
       {manage && k !== 'task' && (
         <div class="fl-field"><label for="f-lead">Lead</label>
           <select id="f-lead" class="fl-input" value={v.leadUid || ''} onChange={on('leadUid')}><option value="">No lead</option>

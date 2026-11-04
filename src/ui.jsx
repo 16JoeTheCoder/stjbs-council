@@ -91,7 +91,7 @@ export function ItemCard({ it }) {
       <div class="fl-card__meta"><a class="fl-h3" href={`#/p/${it.id}`}>{it.title}</a><Badge s={groupState(list)} /></div>
       <Bar done={p.done} total={p.total} label={`${it.title} progress`} />
       <div class="fl-card__meta">
-        <span class="fl-mono fl-small fl-muted">{p.done} of {p.total} tasks{it.dueDate ? ` · due ${fmtDay(it.dueDate)}` : ''}</span>
+        <span class="fl-mono fl-small fl-muted">{p.done} of {p.total} {p.total === 1 ? "task" : "tasks"}{it.dueDate ? ` · due ${fmtDay(it.dueDate)}` : ''}</span>
         <span class="fl-rowmeta">{mineN > 0 && <span class="fl-tag fl-tag--meeting">{mineN} yours</span>}{list.some((t) => t.isDeal) && <span class="fl-tag">Deal</span>}</span>
       </div>
       <Chips list={list.flatMap((t) => t.assigneeUids)} lead={it.leadUid} />

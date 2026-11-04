@@ -38,7 +38,8 @@ export function Digest() {
         <a class="fl-btn fl-btn--ghost" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">Open in WhatsApp</a>
       </div>
       <section class="fl-section" aria-labelledby="pv-h"><h2 id="pv-h" class="fl-h2">Preview</h2>
-        <pre class="fl-digest">{text}</pre></section>
+        <pre class="fl-digest">{text.split(/(\*[^*\n]+\*)/g).map((part, i) => (/^\*[^*\n]+\*$/.test(part) ? <b key={i}>{part.slice(1, -1)}</b> : part))}</pre>
+        <p class="fl-caption">Bold shows here as it will in the chat. Copy keeps the stars, which WhatsApp and Google Chat turn into bold.</p></section>
       {edit && (
         <section class="fl-panel fl-form" aria-labelledby="tpl-h"><h2 id="tpl-h" class="fl-h2">Template</h2>
           <p class="fl-caption">Placeholders: {'{week} {done} {overdue} {blocked} {deals}'}. Use *stars* for bold; WhatsApp and Google Chat both show it.</p>

@@ -8,7 +8,7 @@ import {
   startAfter,
 } from "firebase/firestore";
 import { db } from "../firebase.js";
-import { S } from "../store.js";
+import { S, plain } from "../store.js";
 import { isAdmin } from "../model.js";
 import {
   EVENT_TYPES,
@@ -23,74 +23,10 @@ import {
 } from "../event-actions.js";
 import { isoDay, fmtDay } from "../time.js";
 import { Empty, Panel, Title } from "../ui.jsx";
+import { Sheet } from "../shared.jsx";
+import { Menu, ParticipantFields } from "../pickers.jsx";
 
-export function ParticipantFields({
-  value = emptySelection(),
-  onChange,
-  groups = [],
-  disabled = false,
-}) {
-  const sections = [
-    ...new Set(
-      S.members.filter((m) => m.active && m.section).map((m) => m.section),
-    ),
-  ].sort();
-  const multi = (key, label, options) => (
-    <div class="fl-field">
-      <label for={`participants-${key}`}>{label}</label>
-      <select
-        id={`participants-${key}`}
-        class="fl-input"
-        multiple
-        size={Math.min(5, Math.max(2, options.length))}
-        disabled={disabled}
-        value={value[key] || []}
-        onChange={(e) =>
-          onChange({
-            ...value,
-            [key]: [...e.target.selectedOptions].map((o) => o.value),
-          })
-        }
-      >
-        {options.map(([id, name]) => (
-          <option key={id} value={id}>
-            {name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-  const members = S.members
-    .filter((m) => m.active)
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((m) => [m.id, m.name]);
-  return (
-    <fieldset disabled={disabled}>
-      <legend class="fl-h3">Participants</legend>
-      <p class="fl-help">
-        Combine groups, narrow to sections, add individuals, then remove
-        exceptions. Hold Ctrl or Command to select several. Invitations are
-        frozen when you save.
-      </p>
-      <div class="fl-fields">
-        {multi(
-          "groupIds",
-          "Participant groups",
-          groups
-            .filter((g) => g.available !== false)
-            .map((g) => [g.id, g.name]),
-        )}
-        {multi(
-          "sections",
-          "Sections",
-          sections.map((s) => [s, s]),
-        )}
-        {multi("includeUids", "Additional people", members)}
-        {multi("excludeUids", "Exclude people", members)}
-      </div>
-    </fieldset>
-  );
-}
+export { ParticipantFields };
 function ConfigurationForm({
   kind,
   value,
@@ -102,7 +38,7 @@ function ConfigurationForm({
 }) {
   const [name, setName] = useState(
       value?.name ||
-        { jc6: "JC6", sec6: "SEC6", executive4: "Executive4" }[groupCode] ||
+        { jc6: "JC officers", sec6: "Sec officers", executive4: "Executive board" }[groupCode] ||
         "",
     ),
     [defaults, setDefaults] = useState(
@@ -194,7 +130,7 @@ function ConfigurationForm({
               : { defaultTemplateId: defaultTemplateId || null }),
             defaults,
           };
-    if (await saveEventConfiguration(kind, value, data)) done();
+    if (await saveEventConfiguration(kind, value, data)) done(true);
     setBusy(false);
   };
   return (
@@ -264,22 +200,20 @@ function ConfigurationForm({
         <div class="fl-field">
           {expected > 0 && (
             <fieldset>
-              <legend>Confirmed organizational positions</legend>
+              <legend>Who is in this group</legend>
               <p class="fl-help">
-                Enter the school’s actual titles and choose existing roster
-                identities. Unmapped placeholders do not create roles or account
-                permissions. This group stays unavailable until all positions
-                are confirmed.
+                Link each place to a person on the roster. Linking changes nobody's
+                permissions. The group can be invited once every place is linked.
               </p>
               {positions.map((position, index) => (
                 <div class="fl-fields" key={index}>
                   <label class="fl-field">
-                    Position {index + 1} title
+                    Place {index + 1} title
                     <input
                       class="fl-input"
                       aria-label={`Position ${index + 1} title`}
                       maxLength="80"
-                      placeholder={`Unmapped position ${index + 1}`}
+                      placeholder={`Title, for example Head of events`}
                       value={position.title}
                       onInput={(e) =>
                         positionChange(index, { title: e.currentTarget.value })
@@ -287,7 +221,7 @@ function ConfigurationForm({
                     />
                   </label>
                   <label class="fl-field">
-                    Position {index + 1} member
+                    Place {index + 1} person
                     <select
                       class="fl-input"
                       aria-label={`Position ${index + 1} member`}
@@ -298,7 +232,7 @@ function ConfigurationForm({
                         })
                       }
                     >
-                      <option value="">Unmapped</option>
+                      <option value="">Not linked yet</option>
                       {S.members
                         .filter((m) => m.active)
                         .map((m) => (
@@ -529,241 +463,120 @@ function ConfigurationForm({
         <button class="fl-btn fl-btn--red" disabled={busy}>
           {busy ? "Saving…" : "Save configuration"}
         </button>
-        <button class="fl-btn fl-btn--ghost" type="button" onClick={done}>
+        <button class="fl-btn fl-btn--ghost" type="button" onClick={() => done(false)}>
           Cancel
         </button>
       </div>
     </form>
   );
 }
-export function EventSettings() {
+const TABS = [
+  ["templates", "Templates", "Templates fill in new events. Editing an event never changes its template."],
+  ["groups", "Participant groups", "Groups are saved lists of people you can invite in one go. They do not change anyone's permissions."],
+  ["defaults", "Term defaults", "Term defaults fill every new event this term. Templates override them, and each event can override both."],
+];
+const LEGACY_GROUPS = [["jc6", "JC officers", 6], ["sec6", "Sec officers", 6], ["executive4", "Executive board", 4]];
+function SettingRow({ title, meta, primary, menu }) {
+  return (
+    <li class="fl-srow">
+      <div><b class="fl-h3">{title}</b>{meta && <p class="fl-small fl-muted">{meta}</p>}</div>
+      <div class="fl-actions">{primary}{menu}</div>
+    </li>
+  );
+}
+export function EventSettings({ q }) {
   const policy = useEventPolicy(),
     [form, setForm] = useState(null),
-    [history, setHistory] = useState(null);
+    [history, setHistory] = useState(null),
+    [apply, setApply] = useState(false);
+  const tab = TABS.some(([k]) => k === q?.get("tab")) ? q.get("tab") : "templates";
   if (!isAdmin())
-    return <Empty>Only an admin can manage event settings.</Empty>;
+    return <><Title light="Not for you." bold="Event settings" /><Empty>Only the advisor, the president and the vice president change event settings.</Empty></>;
+  const archive = (kind, item) =>
+    confirm(`Archive “${item.name}”? Events already planned keep their invitations.`) &&
+    saveEventConfiguration(kind, item, kind === "group"
+      ? { name: item.name, memberUids: item.memberUids, code: item.code || "custom", positions: item.positions || [], available: item.available !== false, archived: true }
+      : { name: item.name, description: item.description || item.name, type: item.type || item.defaults.type || "other", available: item.available !== false, defaults: item.defaults, archived: true });
+  const future = S.events.filter((e) => !e.archived && e.date >= isoDay());
+  const sentence = TABS.find(([k]) => k === tab)[2];
   return (
     <>
       <Title light="Event" bold="settings." title="Event settings">
-        <a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/calendar">
-          Back to calendar
-        </a>
+        <a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/calendar">Back to calendar</a>
       </Title>
-      <p class="fl-muted">
-        Term defaults apply first, templates override them, and event edits
-        override templates. Saved events keep their policy and invitations.
-        Meetings require approval unless an admin changes the policy.
-      </p>
-      {policy.error && (
-        <p class="fl-error" role="alert">
-          {policy.error}
-        </p>
-      )}
-      {!policy.ready ? (
-        <p role="status">Loading event settings…</p>
-      ) : (
-        <>
-          {form && (
-            <ConfigurationForm
-              key={`${form.kind}-${form.groupCode || ""}-${form.value?.id || form.value?.version || "new"}-${form.meeting ? "meeting" : "normal"}`}
-              {...form}
-              groups={policy.groups}
-              templates={policy.templates}
-              done={() => setForm(null)}
-            />
-          )}
-          <Panel title="Term defaults">
-            <p class="fl-small fl-muted">
-              {S.term.termName || S.term.termId} · Version{" "}
-              {policy.settings?.version || 0}
-            </p>
-            <button
-              class="fl-btn fl-btn--ghost"
-              onClick={() =>
-                setForm({ kind: "settings", value: policy.settings })
-              }
-            >
-              Edit term defaults
-            </button>
-          </Panel>
-          <Panel title="Council group mapping">
-            <p class="fl-help">
-              Organization membership does not grant account permissions. JC6
-              and SEC6 stay unavailable until six real people are confirmed.
-              School titles are unknown; no titles are inferred. Executive4 is
-              the president, vice president, secretary and treasurer, with the
-              advisor separate.
-            </p>
-            <ul class="fl-list">
-              {[
-                ["jc6", "JC6", 6],
-                ["sec6", "SEC6", 6],
-                ["executive4", "Executive4", 4],
-              ].map(([code, name, count]) => {
-                const group = policy.groups.find((g) => g.code === code);
-                return (
-                  <li key={code} class="fl-row">
-                    <div>
-                      <b>{name}</b>
-                      <p class="fl-small fl-muted">
-                        {group?.memberUids.length || 0} of {count} mapped ·{" "}
-                        {group?.available ? "Available" : "Needs admin mapping"}
-                      </p>
-                    </div>
-                    <button
-                      class="fl-btn fl-btn--ghost fl-btn--sm"
-                      onClick={() =>
-                        setForm({
-                          kind: "group",
-                          value: group || null,
-                          groupCode: code,
-                        })
-                      }
-                    >
-                      {group ? "Edit" : "Map"} {name}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </Panel>
-          <BulkDefaults policy={policy} />
-          {history && (
-            <TemplateHistory
-              template={history}
-              close={() => setHistory(null)}
-            />
-          )}
-          {[
-            ["template", "Event templates", policy.templates],
-            ["group", "Participant groups", policy.groups],
-          ].map(([kind, title, list]) => (
-            <Panel key={kind} title={title}>
-              {kind === "group" && (
-                <p class="fl-help">
-                  Map JC6 and SEC6 to confirmed council members here. These are
-                  participant groups, separate from advisor, president,
-                  secretary and other account permissions. Select each group's
-                  people explicitly; missing school titles stay unmapped until
-                  an admin confirms them.
-                </p>
-              )}
+      <div class="fl-seg" role="tablist" aria-label="Event settings">
+        {TABS.map(([k, label]) => <a key={k} role="tab" aria-selected={tab === k} aria-current={tab === k ? "page" : undefined} href={`#/event-settings?tab=${k}`}>{label}</a>)}
+      </div>
+      {policy.error && <p class="fl-error" role="alert">{policy.error}</p>}
+      <p class="fl-measure">{sentence}</p>
+      {!policy.ready ? <p role="status" class="fl-muted">Loading event settings…</p> : (
+        <section class="fl-panel" aria-label={TABS.find(([k]) => k === tab)[1]}>
+          {tab === "templates" && (
+            <>
               <div class="fl-actions">
-                {kind === "template" && (
-                  <button
-                    class="fl-btn fl-btn--ghost"
-                    onClick={() =>
-                      setForm({ kind, value: null, meeting: true })
-                    }
-                  >
-                    Add meeting template
-                  </button>
-                )}
-                <button
-                  class="fl-btn fl-btn--ghost"
-                  onClick={() => setForm({ kind, value: null })}
-                >
-                  Add {kind === "group" ? "group" : "template"}
-                </button>
+                <button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setForm({ kind: "template", value: null, meeting: true })}>Add meeting template</button>
+                <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => setForm({ kind: "template", value: null })}>Add other template</button>
               </div>
-              {list.length ? (
-                <ul class="fl-list">
-                  {list.map((item) => (
-                    <li key={item.id} class="fl-row">
-                      <div>
-                        <b>{item.name}</b>
-                        <p class="fl-small fl-muted">
-                          Version {item.version}
-                          {kind === "group"
-                            ? ` · ${item.memberUids.length} people`
-                            : ""}
-                        </p>
-                      </div>
-                      <div class="fl-actions">
-                        {kind === "template" && (
-                          <>
-                            <button
-                              class="fl-btn fl-btn--ghost fl-btn--sm"
-                              onClick={() => setHistory(item)}
-                            >
-                              Version history
-                            </button>
-                            <button
-                              class="fl-btn fl-btn--ghost fl-btn--sm"
-                              disabled={
-                                item.available === false ||
-                                policy.settings?.defaultTemplateId === item.id
-                              }
-                              onClick={() =>
-                                saveEventConfiguration(
-                                  "settings",
-                                  policy.settings,
-                                  {
-                                    defaults: policy.settings?.defaults || {},
-                                    defaultTemplateId: item.id,
-                                  },
-                                )
-                              }
-                            >
-                              {policy.settings?.defaultTemplateId === item.id
-                                ? "Default template"
-                                : "Set as default"}
-                            </button>
-                          </>
-                        )}
-                        <button
-                          class="fl-btn fl-btn--ghost fl-btn--sm"
-                          onClick={() => setForm({ kind, value: item })}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          class="fl-btn fl-btn--ghost fl-btn--sm"
-                          onClick={() =>
-                            confirm(
-                              `Archive “${item.name}”? Existing events keep their invitations.`,
-                            ) &&
-                            saveEventConfiguration(
-                              kind,
-                              item,
-                              kind === "group"
-                                ? {
-                                    name: item.name,
-                                    memberUids: item.memberUids,
-                                    code: item.code || "custom",
-                                    positions: item.positions || [],
-                                    available: item.available !== false,
-                                    archived: true,
-                                  }
-                                : {
-                                    name: item.name,
-                                    description: item.description || item.name,
-                                    type:
-                                      item.type ||
-                                      item.defaults.type ||
-                                      "other",
-                                    available: item.available !== false,
-                                    defaults: item.defaults,
-                                    archived: true,
-                                  },
-                            )
-                          }
-                        >
-                          Archive
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <Empty>
-                  Add a {kind === "group" ? "participant group" : "template"} to
-                  reuse it when planning events.
-                </Empty>
-              )}
-            </Panel>
-          ))}
-        </>
+              {policy.templates.length ? (
+                <ul class="fl-list">{policy.templates.map((t) => (
+                  <SettingRow key={t.id} title={t.name}
+                    meta={`${policy.settings?.defaultTemplateId === t.id ? "Default for new events · " : ""}${t.available === false ? "Hidden from new events · " : ""}Version ${t.version}`}
+                    primary={<button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => setForm({ kind: "template", value: t })}>Edit</button>}
+                    menu={<Menu label={`More for ${t.name}`} items={[
+                      policy.settings?.defaultTemplateId !== t.id && t.available !== false && ["Use for new events", () => saveEventConfiguration("settings", policy.settings, { defaults: policy.settings?.defaults || {}, defaultTemplateId: t.id })],
+                      ["Version history", () => setHistory(t)],
+                      ["Archive", () => archive("template", t)],
+                    ]} />} />
+                ))}</ul>
+              ) : <Empty>No templates yet. Add one so new events start filled in.</Empty>}
+            </>
+          )}
+          {tab === "groups" && (
+            <>
+              <div class="fl-actions"><button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setForm({ kind: "group", value: null })}>Add group</button></div>
+              <ul class="fl-list">
+                {LEGACY_GROUPS.map(([code, name, count]) => {
+                  const g = policy.groups.find((x) => x.code === code), n = g?.memberUids.length || 0, missing = count - n;
+                  return (
+                    <SettingRow key={code} title={g?.name && !/^(JC6|SEC6|Executive4)$/.test(g.name) ? g.name : name}
+                      meta={missing > 0 ? `${missing} ${missing === 1 ? "person" : "people"} not linked yet` : `${n} people · ready to invite`}
+                      primary={<button class="fl-btn fl-btn--sm fl-btn--ghost" onClick={() => setForm({ kind: "group", value: g || null, groupCode: code })}>{missing > 0 ? "Link people" : "Edit"}</button>} />
+                  );
+                })}
+                {policy.groups.filter((g) => !LEGACY_GROUPS.some(([c]) => c === g.code)).map((g) => (
+                  <SettingRow key={g.id} title={g.name} meta={`${g.memberUids.length} ${g.memberUids.length === 1 ? "person" : "people"}`}
+                    primary={<button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => setForm({ kind: "group", value: g })}>Edit</button>}
+                    menu={<Menu label={`More for ${g.name}`} items={[["Archive", () => archive("group", g)]]} />} />
+                ))}
+              </ul>
+              <p class="fl-help">Departments, ranks and special-committee teams are invited straight from the event editor and stay up to date on their own.</p>
+            </>
+          )}
+          {tab === "defaults" && (
+            <ul class="fl-list">
+              <SettingRow title={`Defaults for ${S.term.termName || S.term.termId}`}
+                meta={`Version ${policy.settings?.version || 0}${policy.settings?.defaults?.location ? ` · place ${policy.settings.defaults.location}` : ""}`}
+                primary={<button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setForm({ kind: "settings", value: policy.settings })}>Edit term defaults</button>}
+                menu={future.length > 0 && <Menu label="More for term defaults" items={[["Apply to planned events", () => setApply(true)]]} />} />
+            </ul>
+          )}
+        </section>
+      )}
+      {form && (
+        <Sheet label={form.value ? `Edit ${form.value.name || "term defaults"}` : "New"} onClose={() => setForm(null)}>
+          <ConfigurationForm key={`${form.kind}-${form.groupCode || ""}-${form.value?.id || "new"}-${form.meeting ? "m" : "n"}`} {...form}
+            groups={policy.groups} templates={policy.templates}
+            done={(saved) => { const wasSettings = form.kind === "settings"; setForm(null); if (wasSettings && saved && future.length) setApply(true); }} />
+        </Sheet>
+      )}
+      {history && <Sheet label={`Version history of ${history.name}`} onClose={() => setHistory(null)}><TemplateHistory template={history} close={() => setHistory(null)} /></Sheet>}
+      {apply && (
+        <Sheet label="Apply new defaults to planned events" onClose={() => setApply(false)}>
+          <h2 class="fl-h2">Apply the new defaults to planned events?</h2>
+          <p>Events already on the calendar keep their old settings unless you choose them here. Preview who and what changes before anything is saved.</p>
+          <BulkDefaults policy={policy} />
+          <div class="fl-actions"><button class="fl-btn fl-btn--ghost" onClick={() => setApply(false)}>Not now</button></div>
+        </Sheet>
       )}
     </>
   );
@@ -1081,7 +894,7 @@ function TemplateHistory({ template, close }) {
       setMore(snapshot.size === 10);
     } catch (e) {
       setError(
-        `Template history did not load (${e.code || "connection error"}). Try again.`,
+        `Template history did not load. ${plain(e)}`,
       );
     }
     setBusy(false);

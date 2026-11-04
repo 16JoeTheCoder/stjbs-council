@@ -5,6 +5,7 @@ import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { Timestamp, doc, setDoc } from 'firebase/firestore';
 import { addDays, isoDay, weekId } from '../src/time.js';
 import { STAGE_WORD, feedPayload, hash } from '../src/feed.js';
+import { makeProposal } from '../src/event-model.js';
 
 const P = 'demo-council', T = '2026-27', D = 'stjbs.sch.id', day = 86400e3, now = Date.now(), today = isoDay(now);
 const iso = (n) => addDays(today, n);
@@ -14,7 +15,24 @@ const people = [
   ['michael', 'Michael Tan', 'officer', 'Events', 'kevin'], ['alya', 'Alya Rahman', 'officer', 'Events', 'kevin'],
   ['bryan', 'Bryan Hartono', 'officer', 'Sports', 'kevin'], ['clara', 'Clara Gunawan', 'officer', 'Arts', 'kevin'],
   ['raka', 'Raka Siregar', 'officer', 'Welfare', 'dimas'], ['budi', 'Budi Halim', 'teacher', 'Teachers', null],
+  // General members (role "member"), section is the year level.
+  ['josef', 'Josef Yang', 'member', 'JC 2', null], ['adelyn', 'Adelyn Liu', 'member', 'Sec 4', null], ['aaron', 'Aaron Kusuma', 'member', 'JC 1', null],
+  ['carlos', 'Carlos Wibowo', 'member', 'Sec 3', null], ['kim', 'Kimberly Tanoto', 'member', 'Sec 4', null], ['kayra', 'Kayra Hasan', 'member', 'JC 1', null],
+  ['earlene', 'Earlene Sutanto', 'member', 'Sec 2', null], ['cherrish', 'Cherrish Halim', 'member', 'Sec 3', null], ['farah', 'Farah Nasution', 'member', 'Sec 1', null],
+  ['gilang', 'Gilang Saputra', 'member', 'JC 2', null], ['hana', 'Hana Wijaya', 'member', 'Sec 2', null], ['ivan', 'Ivan Setiadi', 'member', 'JC 1', null],
+  ['jessica', 'Jessica Lim', 'member', 'Sec 1', null], ['lukas', 'Lukas Hartanto', 'member', 'Sec 3', null], ['maya', 'Maya Santika', 'member', 'JC 2', null],
+  ['nico', 'Nico Pranata', 'member', 'Sec 2', null], ['olivia', 'Olivia Gunadi', 'member', 'Sec 1', null],
 ];
+// Six standing departments: id, name, JC officer (head), Sec officer (second), general members. Olivia is unassigned.
+const depts = [
+  ['events', 'Events', 'michael', 'alya', ['josef', 'adelyn', 'farah']],
+  ['sports', 'Sports', 'bryan', 'aaron', ['carlos', 'ivan']],
+  ['arts', 'Arts and culture', 'clara', 'kim', ['cherrish', 'maya']],
+  ['welfare', 'Welfare', 'raka', 'earlene', ['hana', 'jessica']],
+  ['media', 'Media', 'kayra', null, ['nico', 'lukas']],
+  ['academic', 'Academic', 'gilang', null, []],
+];
+const placeOfSeed = (k) => { for (const [id, , jc, sec, list] of depts) { if (k === jc) return [id, 'jc_officer', 'nadia']; if (k === sec) return [id, 'sec_officer', jc]; if (list.includes(k)) return [id, 'member', jc]; } return null; };
 const email = (k) => `${k}@${D}`;
 
 for (const [k, name] of people) {
@@ -31,8 +49,22 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   const raw = (path, data) => setDoc(doc(db, path), data);                      // cross-term documents: exact keys only
   const put = (path, data) => raw(path, { termId: T, createdAt: now, ...data }); // term-scoped documents
   await put('settings/current', { termId: T, termName: T, startDate: '2026-08-03', startWeekId: '2026-W32' });
-  for (const [k, name, role, section, boss] of people)
-    await put(`members/${email(k)}`, { name, initials: name.split(' ').map((p) => p[0]).join(''), role, section, reportsTo: boss && email(boss), active: true });
+  for (const [k, name, role, section, boss] of people) {
+    const place = placeOfSeed(k), sec = ['Exec', 'Teachers', 'Advisor', 'Events', 'Sports', 'Arts', 'Welfare'].includes(section) ? ['JC 2', 'JC 1', 'Sec 4', 'Sec 3'][k.length % 4] : section;
+    await put(`members/${email(k)}`, { name, initials: name.split(' ').map((p) => p[0]).join(''), role, section: role === 'teacher' || role === 'advisor' ? '' : sec,
+      reportsTo: place ? email(place[2]) : boss && email(boss), active: true, ...(place ? { departmentId: place[0], position: place[1] } : {}) });
+  }
+  for (const [i, [id, name, jc, sec, list]] of depts.entries())
+    await put(`departments/${id}`, { name, order: i, jcLeadUid: email(jc), secLeadUid: sec && email(sec), memberUids: list.map(email), active: true, updatedAt: now });
+  // A special committee: its own teams, independent of departments. One team has no leader.
+  await put('committees/carnival', { name: 'Carnival committee', startDate: iso(-20), endDate: iso(40), status: 'active', chairUids: [email('nadia')], createdByUid: email('nadia'), updatedAt: now, teams: [
+    { id: 'finance', name: 'Finance team', leadUids: [email('josef')], memberUids: [email('michael'), email('adelyn')] },
+    { id: 'tenants', name: 'Tenant stall team', leadUids: [email('aaron')], memberUids: [email('carlos'), email('kim')] },
+    { id: 'reach', name: 'Reach and registration', leadUids: [email('kayra'), email('earlene')], memberUids: [email('cherrish')] },
+    { id: 'stage', name: 'Stage crew', leadUids: [], memberUids: [email('bryan'), email('clara'), email('maya'), email('josef')] },
+  ] });
+  await put('committees/fest25', { name: 'Arts fest 2025', startDate: '2025-09-01', endDate: '2025-09-20', status: 'closed', chairUids: [], createdByUid: email('nadia'), updatedAt: now, teams: [
+    { id: 'program', name: 'Programme', leadUids: [email('clara')], memberUids: [email('kim')] }] });
 
   // Projects: one in each pipeline stage; the carnival is public with a blurb.
   const items = [];
@@ -43,7 +75,7 @@ await env.withSecurityRulesDisabled(async (ctx) => {
     public: true, publicBlurb: 'Our biggest event of the year: games, food and music on the school field for families.' });
   const teams = [['drinks', 'Drinks', 'michael'], ['food', 'Food', 'alya'], ['games', 'Games', 'bryan'], ['stage', 'Stage', 'clara'], ['sponsors', 'Sponsors', 'sarah']];
   for (const [id, title, lead] of teams)
-    add(id, { kind: 'team', title, parentId: 'carnival', ancestors: ['carnival'], leadUid: email(lead), leadUids: [email(lead)], dueDate: iso(35) });
+    add(id, { kind: 'team', title, parentId: 'carnival', ancestors: ['carnival'], leadUid: email(lead), leadUids: [email(lead)], dueDate: ['drinks', 'food', 'games'].includes(id) ? iso(2) : iso(35) }); // three deadlines on one day
   const tasks = [
     ['drinks', 'Secure Pocari Sweat booth contract', ['michael', 'alya', 'raka'], 2, { isDeal: true, dealStage: 'Negotiating', pledgedIdr: 15000000, blocked: true, blockedReason: 'Waiting on Pocari reply', blockedOnUid: email('sarah') }],
     ['drinks', 'Order 400 cups', ['raka'], -2, {}], ['drinks', 'Price list for drinks stall', ['michael'], 6, { status: 'done', completedAt: now - day }],
@@ -88,9 +120,24 @@ await env.withSecurityRulesDisabled(async (ctx) => {
     ['e5', 'Open house tour', 'other', 8, '09:00', '12:00', 'Main hall', true, null],
     ['e6', 'Carnival night', 'project', 9, '18:00', '21:00', 'School field', true, 'carnival'],
     ['e7', 'Last week’s debrief', 'meeting', -3, '15:30', '16:15', 'Meeting Room 2', false, null],
-  ].map(([id, title, type, d, start, end, location, isPublic, itemId]) => ({
-    id, title, type, date: iso(d), start, end, location, notes: '', public: isPublic, ...(itemId ? { itemId } : {}), createdByUid: email('kevin'), archived: false }));
+    ['e8', 'Football training', 'other', 0, '15:00', '17:00', 'School field', false, null],
+    ['e9', 'Stand-up', 'committee', 0, '13:00', '13:15', 'Office', false, null],
+    ['e10', 'Booth build day', 'project', 1, '09:00', '13:00', 'School field', false, 'carnival'],
+    ['e11', 'Ticket design review', 'committee', 1, '10:00', '11:00', 'Art room', false, null],
+    ['e12', 'Sponsor follow-up calls', 'project', 1, '10:30', '11:30', 'Office', false, 'carnival'],
+    ['e13', 'Volunteer briefing', 'meeting', 1, '10:45', '11:15', 'Hall', false, null],
+    ['e14', 'Parents evening briefing', 'other', 2, '18:30', '20:30', 'Main hall', false, null],
+    ['e15', 'Sports day', 'other', 3, '00:00', '23:59', 'School field', true, null, { allDay: true }],
+    ['e16', 'Mid-term exams', 'other', 7, '00:00', '23:59', 'Classrooms', false, null, { allDay: true, endDate: iso(11) }],
+  ].map(([id, title, type, d, start, end, location, isPublic, itemId, extra = {}]) => ({
+    id, title, type, date: iso(d), start, end, location, notes: id === 'e1' ? 'Bring your check-in answers. We decide the carnival stall map.' : '', public: isPublic, ...(itemId ? { itemId } : {}),
+    createdByUid: email('kevin'), archived: false, updatedAt: now, allDay: false, ...extra,
+    participantUids: { e1: ['nadia', 'kevin', 'sarah', 'dimas', 'michael', 'alya', 'raka', 'bryan', 'clara'], e8: ['bryan', 'aaron', 'carlos', 'ivan'], e13: ['michael', 'alya', 'josef'] }[id]?.map(email) || [] }));
   for (const { id, ...e } of events) await put(`events/${id}`, e);
+  // A pending event request from a member, waiting for an admin.
+  const proposal = makeProposal({ settings: null, template: null, members: [], groups: [], edits: { title: 'Carnival poster workshop', type: 'meeting', date: iso(5), start: '14:00', end: '15:30', location: 'Art room', notes: 'Two hours to finish the poster set.', public: false, itemId: 'carnival', participantSelection: { groupIds: [], sections: [], includeUids: [], excludeUids: [], teamIds: ['carnival:reach'] } }, frozenParticipants: [email('kayra'), email('earlene'), email('cherrish')] });
+  await put('eventRequests/rq1', { createdByUid: email('michael'), state: 'awaiting', revision: 1, proposal, eventId: null, replacesEventId: null, baseEventRevision: null, reviewedByUid: null, reviewNote: '', updatedAt: now });
+  await raw('eventRequests/rq1/proposals/1', proposal);
   for (const [k, status] of [['michael', 'going'], ['alya', 'going'], ['raka', 'not'], ['kevin', 'going']])
     await put(`rsvps/e1_${email(k)}`, { eventId: 'e1', uid: email(k), status, archived: false });
 

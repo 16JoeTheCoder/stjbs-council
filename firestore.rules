@@ -17,7 +17,7 @@ service cloud.firestore {
     function notTeacher() { return role() != 'teacher'; }
     function curTerm() { return get(/databases/$(db)/documents/settings/current).data.termId; }
     function termOk() { return request.resource.data.termId == curTerm(); }
-    function roles() { return ['advisor', 'president', 'vp', 'treasurer', 'secretary', 'officer', 'teacher']; }
+    function roles() { return ['advisor', 'president', 'vp', 'treasurer', 'secretary', 'officer', 'member', 'teacher']; }
     function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
     function fixed(keys) { return !changed().hasAny(keys); }
     function text(s, lo, hi) { return s is string && s.size() >= lo && s.size() <= hi; }
@@ -35,7 +35,22 @@ service cloud.firestore {
 
     function memberOk(d) {
       return d.role in roles() && d.active is bool && text(d.get('name', 'x'), 1, 60) && text(d.get('section', ''), 0, 60)
-        && (d.get('reportsTo', null) == null || d.get('reportsTo', null) is string);
+        && (d.get('reportsTo', null) == null || d.get('reportsTo', null) is string)
+        && optString(d, 'departmentId') && d.get('position', null) in [null, 'jc_officer', 'sec_officer', 'member'];
+    }
+    // A department's JC officer or Sec officer, read from the stored department.
+    function leadOf(id) {
+      let d = get(/databases/$(db)/documents/departments/$(id)).data;
+      return d.termId == curTerm() && (d.get('jcLeadUid', null) == me() || d.get('secLeadUid', null) == me());
+    }
+    // Leads add a person with no department to theirs, or remove one of their general members. Nothing else.
+    function deptLeadMemberEdit(email) {
+      let a = request.resource.data;
+      let b = resource.data;
+      return email != me() && changed().hasOnly(['departmentId', 'position', 'reportsTo', 'updatedAt', 'termId'])
+        && b.get('position', null) in [null, 'member'] && a.get('position', null) in [null, 'member']
+        && ((b.get('departmentId', null) == null && a.get('departmentId', null) is string && leadOf(a.departmentId) && a.position == 'member')
+          || (b.get('departmentId', null) is string && leadOf(b.departmentId) && a.get('departmentId', null) == null));
     }
     match /members/{email} {
       allow read: if active();
@@ -43,13 +58,40 @@ service cloud.firestore {
         && email == email.lower() && email.matches('^[^@]+@stjbs[.]sch[.]id$')
         && request.resource.data.active == true && memberOk(request.resource.data)
         && (isAdvisor() || request.resource.data.role != 'advisor')
-        && (role() != 'president' || request.resource.data.role in ['officer', 'treasurer', 'secretary', 'teacher']);
+        && (role() != 'president' || request.resource.data.role in ['officer', 'member', 'treasurer', 'secretary', 'teacher']);
       allow update: if active() && termOk() && memberOk(request.resource.data)
-        && !(email == me() && changed().hasAny(['role', 'active']))
-        && (isAdvisor()
+        && !(email == me() && changed().hasAny(['role', 'active', 'position']))
+        && (isAdvisor() || deptLeadMemberEdit(email)
           || (role() == 'vp' && resource.data.role != 'advisor' && request.resource.data.role != 'advisor')
           || (role() == 'president' && resource.data.role != 'advisor'
-            && changed().hasOnly(['name', 'section', 'reportsTo', 'initials', 'termId', 'updatedAt'])));
+            && changed().hasOnly(['name', 'section', 'reportsTo', 'initials', 'termId', 'updatedAt', 'departmentId', 'position'])));
+    }
+
+    // Standing departments. Admins create and edit them; a department's two officers change only its general members.
+    function deptOk(d) {
+      return d.keys().hasOnly(['termId', 'name', 'order', 'jcLeadUid', 'secLeadUid', 'memberUids', 'active', 'createdAt', 'updatedAt'])
+        && text(d.name, 1, 60) && d.order is int && optString(d, 'jcLeadUid') && optString(d, 'secLeadUid')
+        && emails(d.memberUids, 200) && d.active is bool
+        && !(d.get('jcLeadUid', null) in d.memberUids) && !(d.get('secLeadUid', null) in d.memberUids);
+    }
+    match /departments/{id} {
+      allow read: if active();
+      allow create: if active() && isAdmin() && termOk() && deptOk(request.resource.data);
+      allow update: if active() && termOk() && deptOk(request.resource.data) && fixed(['termId', 'createdAt'])
+        && (isAdmin() || (changed().hasOnly(['memberUids', 'updatedAt']) && leadOf(id)));
+    }
+    // Special committees: one document each, teams inside. Admins only. Closed is read-only except reopening.
+    function committeeOk(d) {
+      return d.keys().hasOnly(['termId', 'name', 'startDate', 'endDate', 'status', 'chairUids', 'teams', 'createdAt', 'updatedAt', 'createdByUid'])
+        && text(d.name, 1, 80) && day(d.startDate) && day(d.endDate) && d.endDate >= d.startDate
+        && d.status in ['planning', 'active', 'closed'] && emails(d.get('chairUids', []), 10)
+        && d.teams is list && d.teams.size() <= 30;
+    }
+    match /committees/{id} {
+      allow read: if active();
+      allow create: if active() && isAdmin() && termOk() && committeeOk(request.resource.data) && request.resource.data.status != 'closed';
+      allow update: if active() && isAdmin() && termOk() && committeeOk(request.resource.data) && fixed(['termId', 'createdAt'])
+        && (resource.data.status != 'closed' || changed().hasOnly(['status', 'updatedAt']));
     }
 
     // Items: projects, subteams and tasks. leadUids must always equal the parent's leadUids plus this item's lead,
@@ -418,7 +460,7 @@ service cloud.firestore {
     }
 
     function selectionOk(d) {
-      return d is map && d.keys().hasOnly(['groupIds','sections','includeUids','excludeUids'])
+      return d is map && d.keys().hasOnly(['groupIds','sections','includeUids','excludeUids','departmentIds','ranks','teamIds'])
         && emails(d.groupIds,50) && emails(d.sections,50) && emails(d.includeUids,200) && emails(d.excludeUids,200);
     }
     function optionsOk(v) { return v is list && v.size() <= 20 && (v.size() <= 0 || (text(v[0],0,120) && (v.size() <= 1 || (text(v[1],0,120) && (v.size() <= 2 || (text(v[2],0,120) && (v.size() <= 3 || (text(v[3],0,120) && (v.size() <= 4 || (text(v[4],0,120) && (v.size() <= 5 || (text(v[5],0,120) && (v.size() <= 6 || (text(v[6],0,120) && (v.size() <= 7 || (text(v[7],0,120) && (v.size() <= 8 || (text(v[8],0,120) && (v.size() <= 9 || (text(v[9],0,120) && (v.size() <= 10 || (text(v[10],0,120) && (v.size() <= 11 || (text(v[11],0,120) && (v.size() <= 12 || (text(v[12],0,120) && (v.size() <= 13 || (text(v[13],0,120) && (v.size() <= 14 || (text(v[14],0,120) && (v.size() <= 15 || (text(v[15],0,120) && (v.size() <= 16 || (text(v[16],0,120) && (v.size() <= 17 || (text(v[17],0,120) && (v.size() <= 18 || (text(v[18],0,120) && (v.size() <= 19 || (text(v[19],0,120) && true)))))))))))))))))))))))))))))))))))))))); }
@@ -566,8 +608,10 @@ service cloud.firestore {
         && defaults.get('minutesBackupUid',null) == template.defaults.get('minutesBackupUid',settings.defaults.get('minutesBackupUid',null))
         && defaults.get('cohostUids',[]) == template.defaults.get('cohostUids',settings.defaults.get('cohostUids',[])));
     }
+    // Multi-day events are all-day and carry an optional last day.
+    function endDateOk(d) { return !('endDate' in d) || (day(d.endDate) && d.endDate >= d.date && d.get('allDay', false) == true); }
     function proposalOk(d) {
-      return d is map && d.keys().hasOnly(['title','type','date','start','end','allDay','location','notes','public','itemId','participantSelection','participantUids','configSnapshot','customValues','meetingDefaults'])
+      return d is map && d.keys().hasOnly(['title','type','date','endDate','start','end','allDay','location','notes','public','itemId','participantSelection','participantUids','configSnapshot','customValues','meetingDefaults'])
         && text(d.title,1,80) && d.type in ['meeting','project','committee','other'] && day(d.date)
         && hhmm(d.start) && hhmm(d.end) && d.end >= d.start && text(d.location,0,120) && text(d.notes,0,1000)
         && d.get('allDay',false) is bool && d.public is bool && optString(d,'itemId') && selectionOk(d.participantSelection)
@@ -591,7 +635,7 @@ service cloud.firestore {
       let r = getAfter(/databases/$(db)/documents/eventRequests/$(d.requestId)).data;
       return isAdmin() && r.state == 'scheduled' && r.eventId == id && r.termId == d.termId
         && r.createdByUid == d.createdByUid && r.proposal.title == d.title && r.proposal.type == d.type
-        && r.proposal.get('allDay',false) == d.get('allDay',false) && r.proposal.date == d.date && r.proposal.start == d.start && r.proposal.end == d.end
+        && r.proposal.get('allDay',false) == d.get('allDay',false) && r.proposal.date == d.date && r.proposal.get('endDate',null) == d.get('endDate',null) && r.proposal.start == d.start && r.proposal.end == d.end
         && r.proposal.location == d.location && r.proposal.notes == d.notes && r.proposal.public == d.public
         && r.proposal.get('itemId',null) == d.get('itemId',null) && r.proposal.participantUids == d.participantUids
         && r.proposal.participantSelection == d.participantSelection && r.proposal.configSnapshot == d.configSnapshot
@@ -646,9 +690,9 @@ service cloud.firestore {
     }
 
     function eventOk(d) {
-      return d.keys().hasOnly(['termId', 'title', 'type', 'date', 'start', 'end', 'allDay', 'location', 'notes', 'public', 'itemId',
+      return d.keys().hasOnly(['termId', 'title', 'type', 'date', 'endDate', 'start', 'end', 'allDay', 'location', 'notes', 'public', 'itemId',
           'createdByUid', 'archived', 'createdAt', 'updatedAt','revision','participantSelection','participantUids','configSnapshot','requestId','customValues','meetingDefaults'])
-        && text(d.title, 1, 80) && d.type in ['meeting', 'project', 'committee', 'other'] && day(d.date)
+        && text(d.title, 1, 80) && d.type in ['meeting', 'project', 'committee', 'other'] && day(d.date) && endDateOk(d)
         && hhmm(d.start) && hhmm(d.end) && d.end >= d.start
         && d.location is string && d.location.size() <= 120 && d.notes is string && d.notes.size() <= 1000
         && d.get('allDay',false) is bool && d.public is bool && d.archived is bool && optString(d, 'itemId') && d.createdAt is number
@@ -677,7 +721,7 @@ service cloud.firestore {
         && (('revision' in resource.data || 'revision' in request.resource.data) ? request.resource.data.revision == resource.data.get('revision',0) + 1 : true)
         && (resource.data.get('requestId',null) == null
           ? (fixed(['requestId']) && (fixed(['configSnapshot']) || eventConfigCurrent(request.resource.data))
-            && (!changed().hasAny(['title','type','date','start','end','allDay','location','notes','participantUids','participantSelection','configSnapshot','itemId','public','customValues','meetingDefaults'])
+            && (!changed().hasAny(['title','type','date','endDate','start','end','allDay','location','notes','participantUids','participantSelection','configSnapshot','itemId','public','customValues','meetingDefaults'])
               || isAdmin() || (!('configSnapshot' in resource.data) && !('configSnapshot' in request.resource.data) && fixed(['type']))
               || (fixed(['configSnapshot','type']) && resource.data.get('configSnapshot',{}).get('approval','required') == 'immediate')
               || (eventConfigCurrent(request.resource.data) && request.resource.data.configSnapshot.approval == 'immediate')))
@@ -687,7 +731,7 @@ service cloud.firestore {
               && getAfter(/databases/$(db)/documents/eventRequests/$(resource.data.requestId)).data.revision == get(/databases/$(db)/documents/eventRequests/$(resource.data.requestId)).data.revision + 1)))
         && fixed(['termId', 'createdByUid', 'createdAt'])
         && (fixed(['public']) || isAdmin())
-        && (!(resource.data.get('public', false) == true && changed().hasAny(['title', 'type', 'date', 'start', 'end', 'allDay', 'location'])) || isAdmin());
+        && (!(resource.data.get('public', false) == true && changed().hasAny(['title', 'type', 'date', 'endDate', 'start', 'end', 'allDay', 'location'])) || isAdmin());
     }
 
     match /rsvps/{id} {

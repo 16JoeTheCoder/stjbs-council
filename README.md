@@ -30,7 +30,9 @@ Every demo password is `council123`. Accounts:
 - `nadia@stjbs.sch.id` (president)
 - `kevin@stjbs.sch.id` (vice president)
 - `sarah@stjbs.sch.id` (treasurer)
-- `raka@stjbs.sch.id` (officer)
+- `raka@stjbs.sch.id` (officer, Welfare JC officer)
+- `michael@stjbs.sch.id` (officer, Events JC officer)
+- `josef@stjbs.sch.id` (member, Events; leads the Carnival Finance team)
 - `budi@stjbs.sch.id` (teacher)
 
 Nothing touches the real project. Stop it with Ctrl+C.
@@ -81,10 +83,10 @@ That runs `tests/rules.test.mjs` against the Firestore emulator. Expect `# fail 
 | vp | Admin view. Adds members; changes any member's role and active flag except the advisor's and their own; never assigns advisor. Announcements, publishing, approvals. |
 | president | Admin view. Adds officers, treasurers, secretaries and teachers; edits name, section and reports-to; cannot change roles or active flags. Announcements, publishing, approvals. |
 | treasurer, secretary | Start root projects, edit the digest and project templates. |
-| officer | Work on tasks, lead subteams they are made lead of, add events, pin and vote on ideas, share resources. |
+| officer, member | Work on tasks, lead subteams they are made lead of, add events, pin and vote on ideas, share resources. `member` is the default for new general members and has the same rights as officer. |
 | teacher | Read and comment only. |
 
-Nobody changes their own role or active flag. Every `*Uid` field stores the lowercased school email, so tasks can be assigned before someone's first sign-in. Nothing is deleted except your own comments and notifications; everything else is archived.
+Nobody changes their own role, position or active flag. Departments and special committees are edited by admins; a department's JC officer and Sec officer may add people with no department to it and remove its general members. Every `*Uid` field stores the lowercased school email, so tasks can be assigned before someone's first sign-in. Nothing is deleted except your own comments and notifications; everything else is archived.
 
 ## What Josef sets up once
 
