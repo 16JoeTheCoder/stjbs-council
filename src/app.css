@@ -644,3 +644,16 @@ kbd { display: inline-block; min-width: 24px; padding: 1px 6px; border: var(--bo
 .fl-tree__people, .fl-tree__sub { display: flex; flex-direction: column; margin-left: var(--s-5); padding-left: var(--s-3); border-left: var(--border) solid var(--line); }
 .fl-tree__sub { margin-left: var(--s-4); }
 .fl-tree__nest { display: flex; flex-direction: column; }
+.fl-zero { color: var(--ink-subtle); }
+.fl-table td.fl-num { color: var(--ink); }
+.fl-wl { min-width: 140px; }
+.fl-wl > span { display: block; min-width: 24px; }
+.fl-card__foot { display: flex; justify-content: space-between; align-items: center; padding-top: var(--s-3); border-top: var(--border) solid var(--line); }
+@media (min-width: 900px) { .fl-board { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.fl-digest b { font-weight: 700; color: var(--ink); }
+.fl-warnline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); font: 500 13px/20px var(--font-sans); color: var(--ink-muted); }
+.fl-btn[aria-disabled="true"] { opacity: .75; }
+.fl-tl__axis .fl-tl__track span { font-size: 12px !important; color: var(--ink-muted) !important; }
+.fl-hero--short { min-height: 156px; }
+.fl-hero--short .fl-hero__body { padding-top: var(--s-6); padding-bottom: var(--s-6); gap: var(--s-2); }
+.fl-calm { padding: var(--s-4) var(--s-5); border: var(--border) solid var(--line); border-radius: var(--r-md); color: var(--ink-muted); }

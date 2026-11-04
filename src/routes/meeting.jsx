@@ -93,7 +93,7 @@ export function Meeting({ id }) {
             <section key={lane.id} class="fl-lane" role="listitem" aria-label={lane.title}>
               <div class="fl-section"><h3 class="fl-h3"><a href={`#/p/${lane.id}`}>{lane === root ? 'Project tasks' : lane.title}</a></h3>
                 {lane.leadUid && <span class="fl-person"><Chip email={lane.leadUid} lead /><span>{memberName(lane.leadUid)}</span></span>}
-                <Bar done={p.done} total={p.total} label={`${lane.title} progress`} /><span class="fl-mono fl-small">{p.done} of {p.total} tasks</span></div>
+                <Bar done={p.done} total={p.total} label={`${lane.title} progress`} /><span class="fl-mono fl-small">{p.done} of {p.total} {p.total === 1 ? "task" : "tasks"}</span></div>
               <div class="fl-list">{tasks.filter((t) => visible.has(t.id)).map((t) => <TaskRow key={t.id} t={t} />)}</div>
               {canManage(lane) && <LaneAdd lane={lane} open={open === lane.id} setOpen={setOpen} accent={open == null && lane === lanes.find(canManage)} />}
             </section>

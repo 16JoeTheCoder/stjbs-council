@@ -9,3 +9,4 @@ qa/**/*.log
 .env.production
 qa/**/.*.out
 qa/**/*.out
+backups/

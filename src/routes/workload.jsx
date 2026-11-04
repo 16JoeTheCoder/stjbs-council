@@ -5,7 +5,7 @@ import { db } from '../firebase.js';
 import { S, plain } from '../store.js';
 import { activeMembers, canSeeStats, checksIn, taskState } from '../model.js';
 import { daysBetween, isoDay, monday, week } from '../time.js';
-import { Title } from '../ui.jsx';
+import { Bar, Title } from '../ui.jsx';
 
 export function rows(termCheckins) {
   const tasks = S.items.filter((t) => t.kind === 'task'), weekAgo = Date.now() - 7 * 86400e3;
@@ -40,7 +40,7 @@ function Chart({ snaps }) {
 }
 
 export function Workload() {
-  const [cis, setCis] = useState(null), [snaps, setSnaps] = useState([]), [err, setErr] = useState('');
+  const [cis, setCis] = useState(null), [snaps, setSnaps] = useState([]), [err, setErr] = useState(''), [sort, setSort] = useState({ key: 'overdue', dir: -1 });
   const ok = canSeeStats(), T = S.term.termId;
   useEffect(() => {
     if (!ok) return;
@@ -56,17 +56,23 @@ export function Workload() {
     })().catch((e) => setErr(`Check-ins did not load. ${plain(e)}`));
   }, [ok, T]);
   if (!ok) return <><Title light="Not for you." bold="Workload" /><p>Only the advisor, president and vice president see workload.</p></>;
-  const r = rows(cis);
+  const r = rows(cis).sort((a, b) => sort.dir * ((typeof a[sort.key] === 'string' ? a[sort.key].localeCompare(b[sort.key]) : (a[sort.key] ?? 0) - (b[sort.key] ?? 0))) || a.name.localeCompare(b.name));
+  const max = Math.max(1, ...r.map((x) => x.open + x.done));
+  const th = (k, l, num = true) => <th class={num ? 'fl-num' : ''} aria-sort={sort.key === k ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none'}><button class="fl-sortbtn" onClick={() => setSort({ key: k, dir: sort.key === k ? -sort.dir : k === 'name' ? 1 : -1 })}>{l}{sort.key === k && <span aria-hidden="true">{sort.dir > 0 ? ' ↑' : ' ↓'}</span>}</button></th>;
+  const n = (v) => <span class={v ? '' : 'fl-zero'}>{v}</span>;
+  const flag = (v, word) => (v ? <span class={`fl-badge fl-badge--${v > 2 ? 'bad' : 'warn'}`}>{v} {word}</span> : <span class="fl-zero">0</span>);
   return (
     <>
       <Title light="Who carries what." bold="Workload." title="Workload" />
       <p class="fl-caption">Live numbers come from tasks every member can read. Only the weekly snapshots below are restricted to the advisor, president and vice president.</p>
       {err && <p class="fl-alert" role="alert">{err}</p>}
       <div class="fl-scroll"><table class="fl-table">
-        <thead><tr><th>Member</th><th class="fl-num">Open</th><th class="fl-num">Overdue</th><th class="fl-num">Blocked</th><th class="fl-num">Done this term</th><th class="fl-num">Done, last 7 days</th><th class="fl-num">Check-ins</th></tr></thead>
+        <thead><tr>{th('name', 'Member', false)}{th('open', 'Open')}<th><span class="fl-sr">Open and done</span></th>{th('overdue', 'Overdue')}{th('blocked', 'Blocked')}{th('done', 'Done this term')}{th('done7', 'Done, 7 days')}{th('checkins', 'Check-ins')}</tr></thead>
         <tbody>{r.map((x) => (
-          <tr key={x.id}><td><a href={`#/people/${x.id}`}>{x.name}</a></td><td class="fl-num">{x.open}</td><td class="fl-num">{x.overdue}</td><td class="fl-num">{x.blocked}</td>
-            <td class="fl-num">{x.done}</td><td class="fl-num">{x.done7}</td><td class="fl-num">{x.checkins == null ? 'Loading' : `${x.checkins} of ${x.weeks ?? '?'}`}</td></tr>))}</tbody>
+          <tr key={x.id}><td><a class="fl-tablelink" href={`#/people/${x.id}`}>{x.name}</a></td><td class="fl-num">{n(x.open)}</td>
+            <td class="fl-wl"><span style={{ width: `${(100 * (x.open + x.done)) / max}%` }}><Bar done={x.done} total={x.open + x.done} label={`${x.name}: ${x.done} done, ${x.open} open`} /></span></td>
+            <td class="fl-num">{flag(x.overdue, 'overdue')}</td><td class="fl-num">{flag(x.blocked, 'blocked')}</td>
+            <td class="fl-num">{n(x.done)}</td><td class="fl-num">{n(x.done7)}</td><td class="fl-num">{x.checkins == null ? <span class="fl-zero">Loading</span> : `${x.checkins} of ${x.weeks ?? '?'}`}</td></tr>))}</tbody>
       </table></div>
       <section class="fl-section" aria-labelledby="trend-h"><h2 id="trend-h" class="fl-h2">Open tasks over the term</h2><Chart snaps={snaps} /></section>
     </>

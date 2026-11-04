@@ -132,7 +132,7 @@ export function PublicProject({ p }) {
       <div class="fl-card__meta"><h3 class="fl-h3">{p.title}</h3><span class={`fl-tag${p.stage === 'Done' ? ' fl-tag--public' : ''}`}>{p.stage}</span></div>
       {p.blurb && <p class="fl-small fl-muted">{p.blurb}</p>}
       <div class="fl-bar" role="progressbar" aria-label={`${p.title} progress`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={p.pct}><i style={{ width: `${p.pct}%` }} /></div>
-      <span class="fl-mono fl-small fl-muted">{p.pct}% · {p.done} of {p.total} tasks done</span>
+      <span class="fl-mono fl-small fl-muted">{p.pct}% · {p.done} of {p.total} {p.total === 1 ? "task" : "tasks"} done</span>
     </article>
   );
 }

@@ -624,3 +624,112 @@ test('request companions are mandatory, exact, immutable and owner-scoped',async
   await assertFails(deleteDoc(doc(db,'eventRequests/canonical/proposals/1')));
   await assertFails(getDoc(doc(as(people.lead),'eventRequests/canonical/proposals/1')));
 });
+
+// ---- Departments, special committees, member role and positions, new invitation keys, multi-day events
+
+const dept = (o) => ({ termId: T, name: 'Events', order: 0, jcLeadUid: people.lead, secLeadUid: null, memberUids: [], active: true, createdAt: 1, updatedAt: 1, ...o });
+const committee = (o) => ({ termId: T, name: 'Carnival committee', startDate: '2026-11-01', endDate: '2026-12-01', status: 'active', chairUids: [], createdAt: 1, updatedAt: 1, createdByUid: people.president,
+  teams: [{ id: 'finance', name: 'Finance team', leadUids: [], memberUids: [] }], ...o });
+const NEW = 'new@stjbs.sch.id', GEN = 'gen@stjbs.sch.id';
+async function seedOrg() {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'departments/ev'), dept({ memberUids: [GEN] }));
+    await setDoc(doc(db, 'departments/sp'), dept({ name: 'Sports', jcLeadUid: people.vp, memberUids: [] }));
+    await setDoc(doc(db, 'committees/c1'), committee({}));
+    await setDoc(doc(db, 'committees/old'), committee({ status: 'closed' }));
+    await setDoc(doc(db, 'members', NEW), { name: 'New', role: 'member', active: true, termId: T, section: 'Sec 1', reportsTo: null });
+    await setDoc(doc(db, 'members', GEN), { name: 'Gen', role: 'member', active: true, termId: T, section: 'Sec 2', reportsTo: people.lead, departmentId: 'ev', position: 'member' });
+  });
+}
+
+test('member role: anyone signed in reads; admins add a member; president may add the member role', async () => {
+  await seedOrg();
+  await assertSucceeds(getDoc(doc(as(NEW), 'items/t1')));
+  await assertSucceeds(setDoc(doc(as(people.president), 'members/m2@stjbs.sch.id'), { name: 'M', role: 'member', active: true, termId: T, section: 'JC 1', reportsTo: null }));
+  await assertFails(setDoc(doc(as(people.officer), 'members/m3@stjbs.sch.id'), { name: 'M', role: 'member', active: true, termId: T, section: '', reportsTo: null }));
+  await assertFails(setDoc(doc(as(people.president), 'members/m4@stjbs.sch.id'), { name: 'M', role: 'member', active: true, termId: T, section: '', position: 'boss' }));
+});
+test('member role has officer rights: adds an event and pins an idea; never a root project', async () => {
+  await seedOrg();
+  await assertSucceeds(setDoc(doc(as(NEW), 'ideas/n1'), { termId: T, text: 'Idea', authorUid: NEW, voters: [NEW], archived: false, createdAt: 1 }));
+  await assertFails(setDoc(doc(as(NEW), 'items/x'), item({ kind: 'project', createdByUid: NEW, ...touch })));
+});
+test('departments: only admins create and edit; everyone reads; no delete', async () => {
+  await seedOrg();
+  await assertSucceeds(getDoc(doc(as(people.teacher), 'departments/ev')));
+  await assertFails(setDoc(doc(as(people.officer), 'departments/x'), dept({})));
+  await assertFails(setDoc(doc(as(people.treasurer), 'departments/x'), dept({})));
+  await assertSucceeds(setDoc(doc(as(people.president), 'departments/x'), dept({ name: 'Media' })));
+  await assertSucceeds(updateDoc(doc(as(people.vp), 'departments/ev'), { name: 'Events and fests', updatedAt: 2 }));
+  await assertFails(updateDoc(doc(as(people.president), 'departments/ev'), { memberUids: [people.lead], updatedAt: 2 })); // a lead is never also a general member
+  await assertFails(deleteDoc(doc(as(people.advisor), 'departments/ev')));
+});
+test("departments: the department's JC or Sec officer changes only its general members", async () => {
+  await seedOrg();
+  const lead = as(people.lead);
+  await assertSucceeds(updateDoc(doc(lead, 'departments/ev'), { memberUids: [GEN, NEW], updatedAt: 2 }));
+  await assertFails(updateDoc(doc(lead, 'departments/ev'), { name: 'Mine now', updatedAt: 3 }));
+  await assertFails(updateDoc(doc(lead, 'departments/ev'), { secLeadUid: NEW, updatedAt: 3 }));
+  await assertFails(updateDoc(doc(lead, 'departments/sp'), { memberUids: [NEW], updatedAt: 3 })); // not their department
+  await assertFails(updateDoc(doc(as(GEN), 'departments/ev'), { memberUids: [GEN, NEW], updatedAt: 3 }));
+});
+test('member documents: a lead places an unplaced person in their department and removes their own general member', async () => {
+  await seedOrg();
+  const lead = as(people.lead);
+  await assertSucceeds(updateDoc(doc(lead, 'members', NEW), { departmentId: 'ev', position: 'member', reportsTo: people.lead, termId: T, updatedAt: 2 }));
+  await assertSucceeds(updateDoc(doc(lead, 'members', GEN), { departmentId: null, position: null, reportsTo: null, termId: T, updatedAt: 2 }));
+});
+test('member documents: a lead cannot promote, move between departments, touch roles or edit themselves', async () => {
+  await seedOrg();
+  const lead = as(people.lead);
+  await assertFails(updateDoc(doc(lead, 'members', NEW), { departmentId: 'ev', position: 'sec_officer', termId: T, updatedAt: 2 }));
+  await assertFails(updateDoc(doc(lead, 'members', NEW), { departmentId: 'sp', position: 'member', termId: T, updatedAt: 2 }));
+  await assertFails(updateDoc(doc(lead, 'members', GEN), { role: 'officer', termId: T, updatedAt: 2 }));
+  await assertFails(updateDoc(doc(lead, 'members', GEN), { departmentId: 'sp', termId: T, updatedAt: 2 }));
+  await assertFails(updateDoc(doc(lead, 'members', people.lead), { position: 'member', termId: T, updatedAt: 2 }));
+  await assertFails(updateDoc(doc(as(people.officer), 'members', NEW), { departmentId: 'ev', position: 'member', termId: T, updatedAt: 2 }));
+});
+test('member documents: nobody changes their own position; the president may set department and position for others', async () => {
+  await seedOrg();
+  await assertFails(updateDoc(doc(as(people.vp), 'members', people.vp), { position: 'jc_officer', termId: T, updatedAt: 2 }));
+  await assertFails(updateDoc(doc(as(people.advisor), 'members', people.advisor), { position: 'member', termId: T, updatedAt: 2 }));
+  await assertSucceeds(updateDoc(doc(as(people.president), 'members', NEW), { departmentId: 'sp', position: 'member', reportsTo: people.vp, termId: T, updatedAt: 2 }));
+  await assertFails(updateDoc(doc(as(people.president), 'members', NEW), { role: 'officer', termId: T, updatedAt: 3 }));
+  await assertSucceeds(updateDoc(doc(as(people.vp), 'members', NEW), { role: 'officer', termId: T, updatedAt: 3 }));
+});
+test('special committees: admins create and edit; members read; closed is read-only except reopening; no delete', async () => {
+  await seedOrg();
+  await assertSucceeds(getDoc(doc(as(NEW), 'committees/c1')));
+  await assertFails(setDoc(doc(as(people.officer), 'committees/x'), committee({})));
+  await assertFails(setDoc(doc(as(people.treasurer), 'committees/x'), committee({})));
+  await assertSucceeds(setDoc(doc(as(people.president), 'committees/x'), committee({ chairUids: [people.lead] })));
+  await assertFails(setDoc(doc(as(people.president), 'committees/y'), committee({ status: 'closed' })));
+  await assertFails(setDoc(doc(as(people.president), 'committees/z'), committee({ endDate: '2026-10-01' })));
+  await assertSucceeds(updateDoc(doc(as(people.vp), 'committees/c1'), { teams: [{ id: 'finance', name: 'Finance team', leadUids: [NEW], memberUids: [GEN] }], updatedAt: 2 }));
+  await assertFails(updateDoc(doc(as(people.vp), 'committees/old'), { name: 'Renamed', updatedAt: 2 }));
+  await assertSucceeds(updateDoc(doc(as(people.vp), 'committees/old'), { status: 'active', updatedAt: 2 }));
+  await assertFails(deleteDoc(doc(as(people.advisor), 'committees/c1')));
+});
+test('events: invitation rules accept department, rank and committee-team keys; unknown keys fail', async () => {
+  await seedOrg();
+  const sel = { groupIds: [], sections: [], includeUids: [], excludeUids: [], departmentIds: ['ev'], ranks: ['jc', 'exec'], teamIds: ['c1:finance', 'c1:*'] };
+  await assertSucceeds(setDoc(doc(as(people.president), 'events/rk'), event({ createdByUid: people.president, participantSelection: sel, participantUids: [GEN] })));
+  await assertFails(setDoc(doc(as(people.president), 'events/rk2'), event({ createdByUid: people.president, participantSelection: { ...sel, bogus: [] } })));
+});
+test('events: a multi-day event is all day and ends on or after its first day', async () => {
+  await seedOrg();
+  const admin = as(people.president);
+  await assertSucceeds(setDoc(doc(admin, 'events/md'), event({ createdByUid: people.president, type: 'other', allDay: true, endDate: '2026-11-06' })));
+  await assertFails(setDoc(doc(admin, 'events/md2'), event({ createdByUid: people.president, type: 'other', allDay: false, endDate: '2026-11-06' })));
+  await assertFails(setDoc(doc(admin, 'events/md3'), event({ createdByUid: people.president, type: 'other', allDay: true, endDate: '2026-10-01' })));
+  await assertFails(updateDoc(doc(as(people.treasurer), 'events/pub'), { endDate: '2026-11-09', allDay: true, updatedAt: 2 })); // public dates are admin-only
+});
+test('events: a member schedules an ordinary event invited by department, rank and team within the rules budget', async () => {
+  await seedOrg();
+  const sel = { groupIds: [], sections: [], includeUids: [GEN], excludeUids: [NEW], departmentIds: ['ev', 'sp'], ranks: ['jc', 'sec', 'general'], teamIds: ['c1:finance', 'c1:*', 'c1:leads'] };
+  const p = makeProposal({ settings: null, template: null, edits: { title: 'Team sync', type: 'other', date: '2026-11-02', start: '15:30', end: '16:30', location: 'Hall', notes: '', public: false, itemId: null, participantSelection: sel }, members: [], groups: [], frozenParticipants: [GEN, people.lead] });
+  await assertSucceeds(setDoc(doc(as(NEW), 'events/team'), event({ ...p, createdByUid: NEW, revision: 1, requestId: null })));
+  const md = makeProposal({ settings: null, template: null, edits: { title: 'Exams', type: 'other', date: '2026-11-02', endDate: '2026-11-06', allDay: true, start: '00:00', end: '23:59', location: '', notes: '', public: false, itemId: null, participantSelection: sel }, members: [], groups: [], frozenParticipants: [] });
+  await assertSucceeds(setDoc(doc(as(NEW), 'events/exams'), event({ ...md, createdByUid: NEW, revision: 1, requestId: null })));
+});

@@ -462,7 +462,7 @@ service cloud.firestore {
     function selectionOk(d) {
       return d is map && d.keys().hasOnly(['groupIds','sections','includeUids','excludeUids','departmentIds','ranks','teamIds'])
         && emails(d.groupIds,50) && emails(d.sections,50) && emails(d.includeUids,200) && emails(d.excludeUids,200)
-        && emails(d.get('departmentIds',[]),20) && emails(d.get('ranks',[]),5) && emails(d.get('teamIds',[]),60);
+        && d.get('departmentIds',[]).size() <= 20 && d.get('ranks',[]).size() <= 5 && d.get('teamIds',[]).size() <= 60;
     }
     function optionsOk(v) { return v is list && v.size() <= 20 && (v.size() <= 0 || (text(v[0],0,120) && (v.size() <= 1 || (text(v[1],0,120) && (v.size() <= 2 || (text(v[2],0,120) && (v.size() <= 3 || (text(v[3],0,120) && (v.size() <= 4 || (text(v[4],0,120) && (v.size() <= 5 || (text(v[5],0,120) && (v.size() <= 6 || (text(v[6],0,120) && (v.size() <= 7 || (text(v[7],0,120) && (v.size() <= 8 || (text(v[8],0,120) && (v.size() <= 9 || (text(v[9],0,120) && (v.size() <= 10 || (text(v[10],0,120) && (v.size() <= 11 || (text(v[11],0,120) && (v.size() <= 12 || (text(v[12],0,120) && (v.size() <= 13 || (text(v[13],0,120) && (v.size() <= 14 || (text(v[14],0,120) && (v.size() <= 15 || (text(v[15],0,120) && (v.size() <= 16 || (text(v[16],0,120) && (v.size() <= 17 || (text(v[17],0,120) && (v.size() <= 18 || (text(v[18],0,120) && (v.size() <= 19 || (text(v[19],0,120) && true)))))))))))))))))))))))))))))))))))))))); }
     function customFieldOk(d) { return d is map && d.keys().hasOnly(['id','label','type','required','options']) && text(d.id,1,80) && text(d.label,1,80) && d.type in ['text','textarea','select','checkbox'] && d.required is bool && optionsOk(d.options); }
@@ -610,7 +610,7 @@ service cloud.firestore {
         && defaults.get('cohostUids',[]) == template.defaults.get('cohostUids',settings.defaults.get('cohostUids',[])));
     }
     // Multi-day events are all-day and carry an optional last day.
-    function endDateOk(d) { return d.get('endDate', null) == null || (day(d.endDate) && d.endDate >= d.date && d.get('allDay', false) == true); }
+    function endDateOk(d) { return !('endDate' in d) || (day(d.endDate) && d.endDate >= d.date && d.get('allDay', false) == true); }
     function proposalOk(d) {
       return d is map && d.keys().hasOnly(['title','type','date','endDate','start','end','allDay','location','notes','public','itemId','participantSelection','participantUids','configSnapshot','customValues','meetingDefaults'])
         && text(d.title,1,80) && d.type in ['meeting','project','committee','other'] && day(d.date) && endDateOk(d)

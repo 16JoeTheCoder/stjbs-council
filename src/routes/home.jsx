@@ -7,7 +7,9 @@ import { fmtDay, isoDay, jktHour, week } from '../time.js';
 import { activeAnnouncements } from '../feed.js';
 import { Announcements, Mission } from '../shared.jsx';
 import { Bar, Empty, FilterBar, Panel, TaskList, Title, pct, useFilter } from '../ui.jsx';
-import { TopIdeas } from './ideas.jsx';
+import { TopIdeas, useIdeas } from './ideas.jsx';
+import { placeOf } from '../org.js';
+import { Icon } from '../shared.jsx';
 import sunset from '../../design/fiatlux/img/campus-sunset.webp';
 import building from '../../design/fiatlux/img/building.webp';
 
@@ -60,7 +62,8 @@ export function Home() {
   const showCheckin = checksIn(S.me) && !ci;
   const anns = activeAnnouncements(S.announcements, today);
   const agenda = S.events.filter((e) => e.date === today && (!e.requestState || e.requestState === 'scheduled') && (!e.state || e.state === 'scheduled')).sort((a, b) => a.start.localeCompare(b.start));
-  const projects = myProjects();
+  const projects = myProjects(), place = placeOf(S.me.id), ideas = useIdeas();
+  const calm = !list.length && !agenda.length && (!wide || (ideas && !ideas.length));
   const checkinPanel = showCheckin && (
     <section class="fl-panel fl-panel--red" aria-labelledby="ci-h">
       <span class="fl-eyebrow">Weekly check-in · {late ? 'was due' : 'due'} {fmtDay(w.due)}</span>
@@ -70,35 +73,38 @@ export function Home() {
   );
   return (
     <>
-      <section class="fl-hero fl-stage" aria-labelledby="hello-h">
+      <section class="fl-hero fl-hero--short fl-stage" aria-labelledby="hello-h">
         <img class="fl-hero__img" src={sunset} alt="" />
         <div class="fl-hero__body">
           <span class="fl-eyebrow">{longDate()}</span>
           <Title light={greeting()} bold={`${S.me.name.split(' ')[0]}.`} title="Home" />
           <p class="fl-muted">
-            {plural(due.length, 'task')} this week
+            {place.dept && <><a class="fl-link" href="#/department">{place.dept.name}</a> · </>}{plural(due.length, 'task')} this week
             {checksIn(S.me) && (ci ? <> · Checked in for {w.id.slice(5)} · <a class="fl-link" href="#/checkin">Edit check-in</a></>
               : ` · check-in ${late ? 'was due' : 'closes'} ${late ? fmtDay(w.due) : 'Friday'}`)}
           </p>
         </div>
       </section>
       {!wide && checkinPanel}
+      <FirstRun dept={place.dept} />
       <Announcements list={anns} />
+      {calm && <p class="fl-calm">Nothing needs you today. <a class="fl-link" href="#/calendar?v=week">See what is coming up in the calendar</a>, or <a class="fl-link" href="#/tasks">all my tasks</a>.</p>}
       <div class="fl-split">
         <div class="fl-stack">
-          <Panel title="Needs you" id="needs-h" link={<a class="fl-link fl-small" href="#/tasks">All my tasks</a>}>
-            <TaskList list={list.slice(0, 5)} path empty="Nothing of yours is due this week. All my tasks has the rest." />
+          {list.length > 0 && <Panel title="Needs you" id="needs-h" link={<a class="fl-link fl-small" href="#/tasks">All my tasks</a>}>
+            <TaskList list={list.slice(0, 5)} path />
             {list.length > 5 && <a class="fl-link fl-small" href="#/tasks">{list.length - 5} more in All my tasks</a>}
-          </Panel>
-          <Panel title="Today's agenda" id="agenda-h" link={<a class="fl-link fl-small" href="#/calendar">Calendar</a>}>
-            {agenda.length ? agenda.slice(0, 5).map((e) => (
-              <a key={e.id} class="fl-row" href={`#/calendar?d=${e.date}&e=${e.id}`}>
-                <span class="fl-row__time">{e.start}</span>
+          </Panel>}
+          {agenda.length > 0 && <Panel title="Today's agenda" id="agenda-h" link={<a class="fl-link fl-small" href="#/calendar?v=week">Calendar</a>}>
+            {agenda.slice(0, 5).map((e) => (
+              <a key={e.id} class="fl-row" href={`#/calendar?v=week&d=${e.date}&e=${e.id}`}>
+                <span class="fl-row__time fl-mono">{e.allDay ? 'All day' : e.start}</span>
                 <div><div class="fl-h3">{e.title}</div><div class="fl-caption">{e.location || 'No place set'}</div></div>
                 <EventTag type={e.type} />
               </a>
-            )) : <Empty>No events today. The calendar has what is coming up.</Empty>}
-          </Panel>
+            ))}
+          </Panel>}
+          {!calm && !list.length && !agenda.length && <p class="fl-calm">Nothing due from you this week and nothing on today. <a class="fl-link" href="#/calendar?v=week">Calendar</a></p>}
         </div>
         <div class="fl-stack">
           {wide && checkinPanel}
@@ -113,8 +119,32 @@ export function Home() {
           {!(anns.length === 1 && showCheckin) && <Mission img={building} extra="fl-desk-only" />}
         </div>
       </div>
-      {wide && <TopIdeas />}
+      {wide && <TopIdeas list={ideas} />}
     </>
+  );
+}
+
+// First run: three steps for a new member. Dismissed once, it never returns on this device.
+const seen = (k) => { try { return localStorage.getItem(`council-firstrun-${k}`) === '1'; } catch { return false; } };
+export const markSeen = (k) => { try { localStorage.setItem(`council-firstrun-${k}`, '1'); } catch { /* storage blocked */ } };
+function FirstRun({ dept }) {
+  const [gone, setGone] = useState(() => seen('dismissed'));
+  if (gone || !checksIn(S.me)) return null;
+  const steps = [
+    ['dept', dept ? `Check your department, ${dept.name}` : 'Check which department you are in', dept ? '#/department' : '#/committees', seen('dept')],
+    ['checkin', 'Do your first check-in', '#/checkin', S.checkins.some((c) => c.uid === S.me.id)],
+    ['calendar', 'Open the calendar and add it to your week', '#/calendar?v=week', seen('calendar')],
+  ];
+  if (steps.every((x) => x[3])) return null;
+  const close = () => { markSeen('dismissed'); setGone(true); };
+  return (
+    <section class="fl-panel" aria-labelledby="fr-h">
+      <div class="fl-panel__head"><h2 id="fr-h" class="fl-h2">Get started</h2><button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={close}>Dismiss</button></div>
+      <ol class="fl-checklist">{steps.map(([k, label, href, done]) => (
+        <li key={k}><span class={`fl-tick${done ? ' is-on' : ''}`} aria-hidden="true">{done && <Icon n="check" />}</span>
+          <a class={`fl-link${done ? ' is-done' : ''}`} href={href} onClick={() => markSeen(k)}>{label}</a><span class="fl-sr">{done ? ', done' : ''}</span></li>
+      ))}</ol>
+    </section>
   );
 }
 
