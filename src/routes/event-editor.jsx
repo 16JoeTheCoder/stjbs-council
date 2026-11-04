@@ -181,7 +181,7 @@ export function EventEditor({ ev = null, request = null, prefill = null, duplica
             </div>
             {isNew && !v.allDay && (
               <div class="fl-field">
-                <span class="fl-field__row"><label for="ee-repeat">Repeats weekly until</label>{repeat && <button type="button" class="fl-linkbtn fl-small" onClick={() => setRepeat('')}>Does not repeat</button>}</span>
+                <span class="fl-field__row"><label for="ee-repeat">Repeats weekly until</label>{repeat && <button type="button" class="fl-linkbtn fl-small" onClick={() => setRepeat('')}>Stop repeating</button>}</span>
                 <DateField id="ee-repeat" value={repeat} min={addDays(v.date, 7)} onChange={setRepeat} />
                 <span class="fl-help">{repeats > 1 ? `Creates ${repeats} separate events, one each ${fmtDay(v.date).split(' ')[0]}, last on ${fmtDay(addDays(v.date, 7 * (repeats - 1)))}.` : 'Leave empty for a single event. Each repeat is its own event, so you can change one without the others.'}</span>
               </div>

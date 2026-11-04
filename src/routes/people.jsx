@@ -300,7 +300,7 @@ function Committee({ c, admin }) {
   return (
     <>
       <div class="fl-cmhead">
-        <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => go({ c: null })}>Back to general committee</button>
+        <button class="fl-btn fl-btn--ghost fl-btn--sm" onClick={() => go({ c: null, view: null })}>Back to general committee</button>
         <div class="fl-grow">
           <p class="fl-small fl-muted"><span class="fl-mono">{range(c)}</span> · {teams.length} {teams.length === 1 ? 'team' : 'teams'} · <span class={`fl-badge fl-badge--${STATUS[c.status]?.[0]}`}>{STATUS[c.status]?.[1]}</span></p>
         </div>

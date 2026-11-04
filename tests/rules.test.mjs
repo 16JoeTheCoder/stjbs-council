@@ -733,3 +733,20 @@ test('events: a member schedules an ordinary event invited by department, rank a
   const md = makeProposal({ settings: null, template: null, edits: { title: 'Exams', type: 'other', date: '2026-11-02', endDate: '2026-11-06', allDay: true, start: '00:00', end: '23:59', location: '', notes: '', public: false, itemId: null, participantSelection: sel }, members: [], groups: [], frozenParticipants: [] });
   await assertSucceeds(setDoc(doc(as(NEW), 'events/exams'), event({ ...md, createdByUid: NEW, revision: 1, requestId: null })));
 });
+test('approval of a request that invites a committee team schedules within the rules budget', async () => {
+  const sel = { groupIds: [], sections: [], includeUids: [], excludeUids: [], teamIds: ['c1:reach'] };
+  await assertSucceeds(setDoc(doc(as(people.officer), 'eventRequests/rt'), requestData({ proposal: proposalData({ participantSelection: sel }) })));
+  const db = as(people.president), b = writeBatch(db);
+  b.update(doc(db, 'eventRequests/rt'), { state: 'scheduled', eventId: 'rt', reviewedByUid: people.president, revision: 2 });
+  b.set(doc(db, 'events/rt'), event({ ...proposalData({ participantSelection: sel }), revision: 1, requestId: 'rt' }));
+  await assertSucceeds(b.commit());
+});
+test('approval of a meeting request built like the demo seed', async () => {
+  const proposal = makeProposal({ settings: null, template: null, members: [], groups: [], edits: { title: 'Carnival poster workshop', type: 'meeting', date: '2026-11-09', start: '14:00', end: '15:30', location: 'Art room', notes: 'x', public: false, itemId: 'p', participantSelection: { groupIds: [], sections: [], includeUids: [], excludeUids: [], teamIds: ['c1:reach'] } }, frozenParticipants: [people.officer] });
+  await assertSucceeds(setDoc(doc(as(people.officer), 'eventRequests/rs'), requestData({ proposal })));
+  const db = as(people.president), b = writeBatch(db);
+  b.update(doc(db, 'eventRequests/rs'), { state: 'scheduled', eventId: 'rs', reviewedByUid: people.president, revision: 2, updatedAt: 2 });
+  b.set(doc(db, 'events/rs'), event({ ...proposal, createdByUid: people.officer, revision: 1, requestId: 'rs', updatedAt: 2 }));
+  b.set(doc(db, 'activity/a-rs'), { termId: T, actorUid: people.president, type: 'event', itemId: 'rs', text: 'scheduled', createdAt: 2 });
+  await assertSucceeds(b.commit());
+});

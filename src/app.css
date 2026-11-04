@@ -667,3 +667,5 @@ kbd { display: inline-block; min-width: 24px; padding: 1px 6px; border: var(--bo
   .fl-caltool .fl-seg button { padding: 0 var(--s-3); }
   .fl-caltool__end .fl-btn { padding: 0 var(--s-3); }
 }
+.fl-tree { align-items: flex-start; }
+.fl-tree__root { margin-left: var(--s-5); }

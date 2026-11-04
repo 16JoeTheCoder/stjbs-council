@@ -29,7 +29,7 @@ Every design or technical decision made during this release, in plain language: 
 
 15. **The selection stays rules, not lists.** New optional keys on the participant selection: `departmentIds`, `ranks` (`teacher`, `exec`, `jc`, `sec`, `general`) and `teamIds` (`committeeId:teamId`, plus `committeeId:*` for the whole committee, `:chair` and `:leads`). The four old keys are always written; the new ones only when used, so old documents keep their exact shape. Invitations are still frozen into `participantUids` when an event is saved, as before.
 16. **Executive board includes the advisor** in the picker and as a rank, because board meetings include him.
-17. **Rules budget.** Firestore allows 1000 expressions per request, and the event rules were already close. The new selection keys are checked by size only (not uniqueness) to stay inside it; a test proves a member can save an event that uses every new key.
+17. **Rules budget.** Firestore allows 1000 expressions per request, and the event rules were already close. The new selection keys are checked by size only (not uniqueness) to stay inside it; a test proves a member can save an event that uses every new key. The QA run then found that approving a member's meeting request went over the limit; the fix was to drop the size checks on the new keys (the key list itself is still fixed) and to check `endDate` on the event only, since an approved event must equal its request anyway. Tests cover both cases.
 
 ## Organisation data
 

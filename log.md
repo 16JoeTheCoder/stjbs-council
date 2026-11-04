@@ -46,7 +46,7 @@ App-wide (part 1 section 3)
 - `npm run check` ok; `npm run test:rules` 83 pass; `npm run test:models` pass.
 
 ## Next
-- QA run by a separate agent; fix what it finds; final screenshots at 1440x900 and 390x844 in both themes.
+- QA run done: approvals over the rules budget (fixed, tested), Back link kept the old view (fixed), repeat link wording (fixed), wide org charts clipped on the left (fixed). Nine of ten journeys passed cleanly.
 
 ## Open issues
 - None blocking. See decision.md 9 (multi-day window) and 17 (rules budget).
