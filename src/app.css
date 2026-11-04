@@ -657,3 +657,13 @@ kbd { display: inline-block; min-width: 24px; padding: 1px 6px; border: var(--bo
 .fl-hero--short { min-height: 156px; }
 .fl-hero--short .fl-hero__body { padding-top: var(--s-6); padding-bottom: var(--s-6); gap: var(--s-2); }
 .fl-calm { padding: var(--s-4) var(--s-5); border: var(--border) solid var(--line); border-radius: var(--r-md); color: var(--ink-muted); }
+@media (min-width: 900px) { .fl-checklist { flex-direction: row; flex-wrap: wrap; gap: var(--s-2) var(--s-7); } }
+.fl-panel:has(> .fl-checklist) { padding: var(--s-4) var(--s-6); }
+.fl-panel:has(> .fl-checklist) .fl-panel__head { margin-bottom: var(--s-2); }
+.fl-panel:has(> .fl-checklist) .fl-h2 { font-size: var(--fs-h3); }
+@media (max-width: 599px) {
+  .fl-caltool { gap: var(--s-2); }
+  .fl-caltool .fl-pagehead { flex-basis: 100%; }
+  .fl-caltool .fl-seg button { padding: 0 var(--s-3); }
+  .fl-caltool__end .fl-btn { padding: 0 var(--s-3); }
+}

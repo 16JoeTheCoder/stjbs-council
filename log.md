@@ -34,10 +34,19 @@ App-wide (part 1 section 3)
 - `src/routes/department.jsx` (new): My department page; first-run checklist on Home.
 
 ## Done
-(updated as work lands)
+- Data: `org-model.js` (pure), `org.js`, `org-actions.js`; departments and committees listeners; `member` role; rules for departments, committees, member positions, lead edits, new selection keys, `endDate`.
+- Calendar rebuilt: frame, week grid with lanes and widening, all-day grid row, Month, Agenda, rail, shortcuts, quick create, event sheet with RSVP tally and Duplicate.
+- Split-screen event editor with live preview, clash warning, template markers, weekly repeat; participant picker (department, rank, committee, search chips).
+- Event settings tabs; plain errors app-wide; For you Retry and indexes.
+- Members and roles management (filters, sort, sticky header, bulk preview, undo, quick add, CSV with department and position).
+- Committees: general committee, special committees, org charts; My department; first-run checklist.
+- Home, Projects, Public site, Workload, Digest, Ideas and small fixes.
+- Seed data: 28 people, 6 departments, Carnival committee (Finance, Tenant stall, Reach and registration, Stage crew with no leader), overlapping events, 15-minute and 4-hour events, evening event, all-day and multi-day events, three deadlines on one day, a pending request.
+- `scripts/migrate-departments.mjs`, tested twice on the emulator.
+- `npm run check` ok; `npm run test:rules` 83 pass; `npm run test:models` pass.
 
 ## Next
-(updated as work lands)
+- QA run by a separate agent; fix what it finds; final screenshots at 1440x900 and 390x844 in both themes.
 
 ## Open issues
-(updated as work lands)
+- None blocking. See decision.md 9 (multi-day window) and 17 (rules budget).

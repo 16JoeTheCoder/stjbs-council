@@ -9,6 +9,8 @@ import { fmtDay, isoDay, week } from '../time.js';
 import { Sheet } from '../shared.jsx';
 import { Badge, Chip, Empty, Panel, TaskList, Title } from '../ui.jsx';
 import { DateField, Menu } from '../pickers.jsx';
+import { TeamChart } from './views.jsx';
+import { tree } from '../model.js';
 
 const go = (patch) => {
   const p = new URLSearchParams(location.hash.split('?')[1] || '');
@@ -206,6 +208,7 @@ function OrgChart({ admin }) {
           ))}</ul>
         </Panel>
       )}
+      <ProjectTeams />
       {assign && (
         <Sheet label={`Assign ${assign.name}`} onClose={() => setAssign(null)}>
           <h2 class="fl-h2">Assign {assign.name}</h2>
@@ -216,6 +219,19 @@ function OrgChart({ admin }) {
         </Sheet>
       )}
     </>
+  );
+}
+
+// The team chart of one project (subteams and leads), kept from the earlier Committees page.
+function ProjectTeams() {
+  const roots = tree().kids.root || [], [team, setTeam] = useState(roots[0]?.id || '');
+  if (!roots.length) return null;
+  return (
+    <Panel title="Project team chart" id="team-h" link={roots.length > 1 && (
+      <label class="fl-field"><span class="fl-sr">Project</span>
+        <select class="fl-input" value={team} onChange={(e) => setTeam(e.target.value)}>{roots.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</select></label>)}>
+      {tree().byId[team] ? <TeamChart root={tree().byId[team]} /> : <Empty>Choose a project to see its teams.</Empty>}
+    </Panel>
   );
 }
 

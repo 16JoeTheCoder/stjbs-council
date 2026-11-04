@@ -540,7 +540,7 @@ export function EventSettings({ q }) {
                   return (
                     <SettingRow key={code} title={g?.name && !/^(JC6|SEC6|Executive4)$/.test(g.name) ? g.name : name}
                       meta={missing > 0 ? `${missing} ${missing === 1 ? "person" : "people"} not linked yet` : `${n} people · ready to invite`}
-                      primary={<button class={`fl-btn fl-btn--sm ${missing > 0 ? "fl-btn--red" : "fl-btn--ghost"}`} onClick={() => setForm({ kind: "group", value: g || null, groupCode: code })}>{missing > 0 ? "Link people" : "Edit"}</button>} />
+                      primary={<button class="fl-btn fl-btn--sm fl-btn--ghost" onClick={() => setForm({ kind: "group", value: g || null, groupCode: code })}>{missing > 0 ? "Link people" : "Edit"}</button>} />
                   );
                 })}
                 {policy.groups.filter((g) => !LEGACY_GROUPS.some(([c]) => c === g.code)).map((g) => (
