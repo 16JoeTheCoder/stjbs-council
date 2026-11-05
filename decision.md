@@ -49,3 +49,4 @@ Every design or technical decision made during this release, in plain language: 
 28. **Home's route is `#/home`.** `#/week` and the empty hash still open Home, so old links and saved icons keep working.
 29. **Members and roles uses one bulk flow** (preview, apply, 10-second undo) instead of the older Bulk remove screen with its typed confirmation; Deactivate on one row asks in a dialog that names the person.
 30. **The rail photo card hides below 860 px of window height**, so it never overlaps the navigation.
+31. **The migration also runs as the vice president.** The advisor's password is not available to Josef, who builds and releases everything. The rules already let a VP edit every member except the advisor, so the script accepts role advisor or vp and, for a VP, leaves the advisor's own record out and says so. Rejected: hard-coding Josef's email in `firestore.rules` (a permanent bypass), and a service-account key (decision 23).
