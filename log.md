@@ -48,5 +48,7 @@ App-wide (part 1 section 3)
 ## Next
 - QA run done: approvals over the rules budget (fixed, tested), Back link kept the old view (fixed), repeat link wording (fixed), wide org charts clipped on the left (fixed). Nine of ten journeys passed cleanly.
 
+- `scripts/migrate-departments.mjs` now accepts the vice president as well as the advisor (decision 31).
+
 ## Open issues
 - None blocking. See decision.md 9 (multi-day window) and 17 (rules budget).

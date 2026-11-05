@@ -1,8 +1,9 @@
 // One-step migration to departments and positions. Applies directly; no dry run (Josef's decision, see decision.md).
-// It signs in as the advisor with email and password, so firestore.rules check every write like any app session.
+// It signs in as the advisor or the vice president with email and password, so firestore.rules check every write like any app session.
+// A vice president cannot edit the advisor's record (the rules forbid it), so that one record is skipped and reported.
 //
 // Production, VS Code terminal in the repo root (reads the Firebase config from .env.local):
-//   COUNCIL_EMAIL=advisor@stjbs.sch.id COUNCIL_PASSWORD='the advisor password' node scripts/migrate-departments.mjs
+//   COUNCIL_EMAIL=you@stjbs.sch.id COUNCIL_PASSWORD='your password' node scripts/migrate-departments.mjs
 // Emulator test first (with `npm run demo` running in another terminal):
 //   node scripts/migrate-departments.mjs --emulator
 //
@@ -12,7 +13,7 @@
 // 3. For every member: section mapped to the fixed year-level list ("sec3" becomes "Sec 3") or cleared; department,
 //    position and reportsTo rewritten from department data. Outside a department: position "member" for students and none
 //    for the advisor, the board and teachers; the board reports to the president, the president to the advisor.
-// The signed-in advisor's own position is left alone: nobody may change their own position.
+// The signed-in person's own position is left alone: nobody may change their own position.
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, connectAuthEmulator } from 'firebase/auth';
@@ -40,7 +41,8 @@ const term = (await getDoc(doc(db, 'settings/current'))).data();
 if (!term?.termId) throw new Error('settings/current has no termId. Set the term first.');
 const T = term.termId, now = Date.now();
 const members = (await getDocs(collection(db, 'members'))).docs.map((d) => ({ id: d.id, ...d.data() }));
-if ((members.find((m) => m.id === me) || {}).role !== 'advisor') throw new Error(`${me} is not the advisor. Sign in with the advisor account.`);
+const myRole = (members.find((m) => m.id === me) || {}).role;
+if (!['advisor', 'vp'].includes(myRole)) throw new Error(`${me} is not the advisor or the vice president. Sign in with one of those accounts.`);
 
 // 1. Backup
 mkdirSync('backups', { recursive: true });
@@ -63,7 +65,9 @@ const president = members.find((m) => m.active && m.role === 'president')?.id ||
 const advisor = members.find((m) => m.active && m.role === 'advisor')?.id || null;
 // Department data decides placement, so a second run keeps people where the app put them.
 const depts = existing.map((d) => ({ id: d.id, ...d.data() }));
-const plan = members.map((m) => {
+// The rules let a vice president edit everyone except the advisor, so leave the advisor's record out of the batches.
+const skipped = myRole === 'vp' ? members.filter((m) => m.role === 'advisor').map((m) => m.id) : [];
+const plan = members.filter((m) => !skipped.includes(m.id)).map((m) => {
   const student = !BOARD_ORDER.includes(m.role) && m.role !== 'teacher', d = depts.find((x) => deptMembers(x).includes(m.id));
   const patch = {
     section: yearLevel(m.section), departmentId: d?.id || null,
@@ -85,6 +89,7 @@ for (let i = 0; i < plan.length; i += 400) {
   }
 }
 console.log(`updated ${done} of ${plan.length} members`);
+if (skipped.length) console.log(`left alone because a vice president cannot edit the advisor: ${skipped.join(', ')}. Its section and reports-to can stay as they are.`);
 if (failed.length) console.log(`not updated, fix these by hand in the app:\n  ${failed.join('\n  ')}`);
 console.log('done. Next: rename the six departments in Committees, set each JC and Sec officer, then assign members with bulk edit.');
 process.exit(0);
