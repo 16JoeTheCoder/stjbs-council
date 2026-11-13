@@ -84,7 +84,7 @@ export function batches(purchases, members) {
     ...b, pay: Object.entries(b.pay).map(([uid, amount]) => ({ uid, name: fullName(members, uid), amount })).sort((x, y) => x.name.localeCompare(y.name)),
   }));
 }
-export const PSTATUS = { pending: 'Waiting for a treasurer', approved: 'Approved, buy it', rejected: 'Rejected', bought: 'Bought, in batch', paid: 'Paid back', vetoed: 'Vetoed' };
+export const PSTATUS = { pending: 'Needs approval', approved: 'Approved, buy it', rejected: 'Rejected', bought: 'Bought, in batch', paid: 'Paid back', vetoed: 'Vetoed' };
 
 // What waits on this person: approvals (treasurers; the Teacher sees them to veto), receipts to upload, tasks blocked on them.
 export function waitingOn(me, tasks, purchases) {

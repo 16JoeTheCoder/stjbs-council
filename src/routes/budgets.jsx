@@ -58,7 +58,7 @@ function PurchaseSheet({ p, close }) {
   const receipt = mine && p.status === 'approved';
   return (
     <Sheet label={p.item} onClose={close} low>
-      <div class="fl-quick">
+      <div class="fl-qs">
         <h2 class="fl-h2">{p.item}</h2>
         <p class="fl-money fl-mono">{idr(p.totalIdr)}</p>
         <p class="fl-small fl-muted">{p.qty} × {idr(p.unitIdr)} · {fullName(S.members, p.requesterUid)} · {budget?.name || 'Budget removed'} · {PSTATUS[p.status]}</p>
@@ -74,7 +74,7 @@ function PurchaseSheet({ p, close }) {
         )}
         {mode === null && isTreasurer() && mine && p.status === 'pending' && <Quiet>The other treasurer approves your own request.</Quiet>}
         {receipt && (
-          <form class="fl-quick" onSubmit={(e) => { e.preventDefault(); if (photo.length && !busy) run(() => addReceipt(p, { paidIdr: num(paid), changeNote: text, photo: photo[0] })); }}>
+          <form class="fl-qs" onSubmit={(e) => { e.preventDefault(); if (photo.length && !busy) run(() => addReceipt(p, { paidIdr: num(paid), changeNote: text, photo: photo[0] })); }}>
             <PhotoInput photos={photo} set={setPhoto} max={1} label="Add receipt photo" />
             <label class="fl-field"><span class="fl-field__label">Amount paid (IDR)</span><input class="fl-input fl-mono" inputMode="numeric" value={paid} onInput={(e) => setPaid(e.target.value)} /></label>
             {num(paid) !== p.totalIdr && <input class="fl-input" maxLength={140} placeholder="What changed? (optional)" aria-label="What changed" value={text} onInput={(e) => setText(e.target.value)} />}
@@ -82,7 +82,7 @@ function PurchaseSheet({ p, close }) {
           </form>
         )}
         {mode === 'veto' && (
-          <form class="fl-quick" onSubmit={(e) => { e.preventDefault(); if (text.trim() && !busy && confirm(`Veto "${p.item}"? The reason is kept on the record.`)) run(() => veto(p, text)); }}>
+          <form class="fl-qs" onSubmit={(e) => { e.preventDefault(); if (text.trim() && !busy && confirm(`Veto "${p.item}"? The reason is kept on the record.`)) run(() => veto(p, text)); }}>
             <input class="fl-input" autoFocus maxLength={300} placeholder="Reason for the veto" aria-label="Reason for the veto" value={text} onInput={(e) => setText(e.target.value)} />
             <button class="fl-btn fl-btn--red fl-btn--block" disabled={!text.trim() || busy}>Veto request</button>
           </form>
@@ -109,7 +109,7 @@ export function PurchaseForm({ close, budgetId }) {
   if (!pots.length) return <Sheet label="Request a purchase" onClose={close} low><p class="fl-quiet">No budget exists yet. A treasurer adds one in Budgets.</p></Sheet>;
   return (
     <Sheet label="Request a purchase" onClose={close} low>
-      <form class="fl-quick" onSubmit={submit}>
+      <form class="fl-qs" onSubmit={submit}>
         {pots.length > 1 && !budgetId && <select class="fl-input" aria-label="Budget" value={budget} onChange={(e) => setBudget(e.target.value)}>{pots.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select>}
         <input class="fl-input" autoFocus maxLength={80} placeholder="What do you need to buy?" aria-label="Item" value={item} onInput={(e) => setItem(e.target.value)} />
         <PhotoInput photos={photos} set={setPhotos} label="Add photo" />
@@ -134,7 +134,7 @@ function BudgetForm({ old, close }) {
   const save = (active) => (e) => { e.preventDefault(); if (!name.trim()) return; saveBudget(old, { name: name.trim().slice(0, 60), amountIdr: num(amount), active }); close(); };
   return (
     <Sheet label={old ? 'Edit budget' : 'New budget'} onClose={close} low>
-      <form class="fl-quick" onSubmit={save(true)}>
+      <form class="fl-qs" onSubmit={save(true)}>
         <input class="fl-input" autoFocus maxLength={60} placeholder="Event name" aria-label="Event name" value={name} onInput={(e) => setName(e.target.value)} />
         <label class="fl-field"><span class="fl-field__label">Budget (IDR)</span><input class="fl-input fl-mono" inputMode="numeric" value={amount} onInput={(e) => setAmount(e.target.value)} /></label>
         <button class="fl-btn fl-btn--red fl-btn--block" disabled={!name.trim()}>{old ? 'Save budget' : 'Add budget'}</button>
@@ -153,7 +153,7 @@ export const BudgetRows = ({ rows }) => rows.map((b) => (
 
 // Treasurers and the Teacher: what needs a decision, what looks off, who to pay.
 function TreasurerView() {
-  const pending = S.purchases.filter((p) => p.status === 'pending').sort((a, b) => a.createdAt - b.createdAt);
+  const pending = S.purchases.filter((p) => p.status === 'pending' && p.requesterUid !== S.me.id).sort((a, b) => a.createdAt - b.createdAt);
   const flags = S.purchases.filter((p) => p.status === 'bought' && flagged(p)), open = batches(S.purchases, S.members);
   return (
     <>

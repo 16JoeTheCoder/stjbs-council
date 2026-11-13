@@ -57,7 +57,7 @@ export function QuickAdd({ close, budgetId = null }) {
   };
   return (
     <Sheet label="Add a task" onClose={close} low>
-      <form class="fl-quick" onSubmit={submit}>
+      <form class="fl-qs" onSubmit={submit}>
         <input ref={box} class="fl-input" maxLength={120} placeholder="What needs doing?" aria-label="Task" enterkeyhint="done" value={title} onInput={(e) => setTitle(e.target.value)} />
         <PeopleChips value={owner} set={setOwner} list={assignable(S.me, S.members)} label="Who does it" />
         <DueChips value={due} set={setDue} />
@@ -71,16 +71,16 @@ function TaskSheet({ t, close }) {
   const [reason, setReason] = useState(null), [on, setOn] = useState(t.waitingOnUid || (t.assignerUid !== S.me.id ? t.assignerUid : null));
   const move = canMove(t), edit = canEdit(t), budget = S.budgets.find((b) => b.id === t.budgetId);
   const pick = (s) => { if (s === 'blocked') return setReason(t.blockedReason || ''); setStatus(t, s); close(); };
-  const people = S.members.filter((m) => m.active && m.id !== t.ownerUid).sort((a, b) => a.name.localeCompare(b.name));
+  const people = S.members.filter((m) => m.active && m.id !== t.ownerUid).sort((a, b) => (b.id === on) - (a.id === on) || a.name.localeCompare(b.name));
   return (
     <Sheet label={t.title} onClose={close} low>
-      <div class="fl-quick">
+      <div class="fl-qs">
         <h2 class="fl-h2">{t.title}</h2>
         <p class="fl-small fl-muted">{fullName(S.members, t.ownerUid)}{t.assignerUid !== t.ownerUid && ` · from ${firstName(t.assignerUid)}`}{t.dueDate && ` · due ${fmtDay(t.dueDate)}`}{budget && ` · ${budget.name}`}</p>
         {t.status === 'blocked' && reason === null && <p>{waitingLine(t, S.members)}</p>}
         {move && reason === null && <div class="fl-seg fl-seg--fill" role="group" aria-label="Status">{STATUS.map(([k, l]) => <button key={k} aria-pressed={t.status === k} onClick={() => pick(k)}>{l}</button>)}</div>}
         {reason !== null && (
-          <form class="fl-quick" onSubmit={(e) => { e.preventDefault(); if (reason.trim()) { setStatus(t, 'blocked', reason, on); close(); } }}>
+          <form class="fl-qs" onSubmit={(e) => { e.preventDefault(); if (reason.trim()) { setStatus(t, 'blocked', reason, on); close(); } }}>
             <input class="fl-input" autoFocus maxLength={140} placeholder="What are you waiting for? One line." aria-label="Reason" value={reason} onInput={(e) => setReason(e.target.value)} />
             <PeopleChips value={on} set={setOn} list={people} label="Waiting on" />
             <button class="fl-btn fl-btn--red fl-btn--block" disabled={!reason.trim()}>Mark blocked</button>
