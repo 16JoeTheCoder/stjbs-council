@@ -4,7 +4,6 @@ import { db } from './firebase.js';
 import { S, fail, toast } from './store.js';
 import { initials, isAdmin, tree } from './model.js';
 import { publish, refreshCache } from './publish.js';
-import { week } from './time.js';
 import { archiveEventRecord, saveEventProposal } from './event-actions.js';
 
 const T = () => S.term.termId;
@@ -132,14 +131,6 @@ export function addComment(it, text, mentionUids = []) {
   });
 }
 export const deleteComment = (c) => deleteDoc(doc(db, 'comments', c.id)).catch(fail);
-
-export function saveCheckin(answers) {
-  const w = week(), id = `${T()}_${w.id}_${S.me.id}`;
-  return run((b) => {
-    b.set(doc(db, 'checkins', id), { termId: T(), weekId: w.id, uid: S.me.id, ...answers, updatedAt: now(), createdAt: now() });
-    log(b, 'checkin', null, `checked in for ${w.id}`);
-  }, 'Check-in saved.');
-}
 
 export const markRead = (n) => updateDoc(doc(db, `notifications/${S.me.id}/items`, n.id), { read: true }).catch(fail);
 export async function putDoc(path, data, msg) {

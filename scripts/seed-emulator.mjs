@@ -3,7 +3,7 @@
 // Seeded items carry no touchedAt, like production items written before the snapshot change.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { Timestamp, doc, setDoc } from 'firebase/firestore';
-import { addDays, isoDay, weekId } from '../src/time.js';
+import { addDays, isoDay } from '../src/time.js';
 import { STAGE_WORD, feedPayload, hash } from '../src/feed.js';
 import { makeProposal } from '../src/event-model.js';
 
@@ -11,7 +11,7 @@ const P = 'demo-council', T = '2026-27', D = 'stjbs.sch.id', day = 86400e3, now 
 const iso = (n) => addDays(today, n);
 const people = [
   ['ariel', 'Ariel Santoso', 'advisor', 'Advisor', null], ['nadia', 'Nadia Putri', 'president', 'Exec', 'ariel'],
-  ['kevin', 'Kevin Wijaya', 'vp', 'Exec', 'nadia'], ['sarah', 'Sarah Lim', 'treasurer', 'Exec', 'nadia'], ['dimas', 'Dimas Pratama', 'secretary', 'Exec', 'nadia'],
+  ['kevin', 'Kevin Wijaya', 'vp', 'Exec', 'nadia'], ['sarah', 'Sarah Lim', 'treasurer', 'Exec', 'nadia'], ['dimas', 'Dimas Pratama', 'secretary', 'Exec', 'nadia'], ['brittany', 'Brittany Yap', 'treasurer', 'Exec', 'nadia'],
   ['michael', 'Michael Tan', 'officer', 'Events', 'kevin'], ['alya', 'Alya Rahman', 'officer', 'Events', 'kevin'],
   ['bryan', 'Bryan Hartono', 'officer', 'Sports', 'kevin'], ['clara', 'Clara Gunawan', 'officer', 'Arts', 'kevin'],
   ['raka', 'Raka Siregar', 'officer', 'Welfare', 'dimas'], ['budi', 'Budi Halim', 'teacher', 'Teachers', null],
@@ -96,9 +96,6 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   add('w2', { kind: 'task', title: 'Campus tour route', parentId: 'welcome', ancestors: ['welcome'], leadUids: [], assigneeUids: [email('bryan')], dueDate: iso(-52), status: 'done', completedAt: now - 52 * day });
   for (const { id, ...data } of items) await raw(`items/${id}`, data);
 
-  const w = (n) => weekId(isoDay(now + n * 7 * day));
-  for (const [k, blocked, weeks] of [['michael', 'Waiting on Pocari reply', [0, -1]], ['alya', '', [0, -1]], ['raka', '', [-1]], ['kevin', '', [0, -1]], ['nadia', '', [0, -1]]])
-    for (const n of weeks) await put(`checkins/${T}_${w(n)}_${email(k)}`, { weekId: w(n), uid: email(k), done: 'Price list done', doing: 'Follow up with partner', blocked: n === 0 ? blocked : '' });
   await put('activity/a1', { actorUid: email('michael'), type: 'completed', itemId: 't2', text: 'completed "Price list for drinks stall"', createdAt: now - day });
   await put('activity/a2', { actorUid: email('nadia'), type: 'created', itemId: 'carnival', text: 'added "STJBS Carnival"', createdAt: now - 5 * day });
   await put(`notifications/${email('raka')}/items/n1`, { toUid: email('raka'), fromUid: email('michael'), type: 'comment', itemId: 't0', text: 'commented on "Secure Pocari Sweat booth contract": can you call them Monday', read: false });
@@ -106,7 +103,7 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   // Announcements: two active (one public), one expired.
   const anns = [
     ['ann1', 'Carnival volunteer sign-ups are open', 'We need 40 volunteers across booths, safety and clean-up.\nSign up with your section officer by Friday.', 'everyone', -2, 15],
-    ['ann2', 'Weekly meeting moves to Friday', 'This week only, 15:30 in Meeting Room 2. Bring your check-in answers.', 'members', 0, 6],
+    ['ann2', 'Weekly meeting moves to Friday', 'This week only, 15:30 in Meeting Room 2. Bring your notes.', 'members', 0, 6],
     ['ann3', 'Exam timetable posted', 'The mid-term exam timetable is on the school site.', 'everyone', -20, -5],
   ].map(([id, title, body, audience, s, e]) => ({ id, title, body, audience, startDate: iso(s), endDate: iso(e), createdByUid: email('nadia'), archived: false }));
   for (const { id, ...a } of anns) await put(`announcements/${id}`, a);
@@ -130,7 +127,7 @@ await env.withSecurityRulesDisabled(async (ctx) => {
     ['e15', 'Sports day', 'other', 3, '00:00', '23:59', 'School field', true, null, { allDay: true }],
     ['e16', 'Mid-term exams', 'other', 7, '00:00', '23:59', 'Classrooms', false, null, { allDay: true, endDate: iso(11) }],
   ].map(([id, title, type, d, start, end, location, isPublic, itemId, extra = {}]) => ({
-    id, title, type, date: iso(d), start, end, location, notes: id === 'e1' ? 'Bring your check-in answers. We decide the carnival stall map.' : '', public: isPublic, ...(itemId ? { itemId } : {}),
+    id, title, type, date: iso(d), start, end, location, notes: id === 'e1' ? 'Bring your notes. We decide the carnival stall map.' : '', public: isPublic, ...(itemId ? { itemId } : {}),
     createdByUid: email('kevin'), archived: false, updatedAt: now, allDay: false, ...extra,
     participantUids: { e1: ['nadia', 'kevin', 'sarah', 'dimas', 'michael', 'alya', 'raka', 'bryan', 'clara'], e8: ['bryan', 'aaron', 'carlos', 'ivan'], e13: ['michael', 'alya', 'josef'] }[id]?.map(email) || [] }));
   for (const { id, ...e } of events) await put(`events/${id}`, e);
@@ -161,6 +158,33 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   for (const [id, type, name, url, by, status, extra] of subs)
     await raw(`submissions/${id}`, { type, name, url, note: '', byUid: email(by), status, archived: false, createdAt: now, ...extra });
 
+  // The backbone: tasks, two budgets, purchases at every stage. Photos are one tiny grey JPEG.
+  const JPEG = '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=';
+  const task = (id, title, owner, by, due, o = {}) => put(`tasks/${id}`, { title, ownerUid: email(owner), assignerUid: email(by), dueDate: due == null ? null : iso(due), status: 'todo',
+    blockedReason: '', waitingOnUid: null, budgetId: null, assignedAt: now - 10 * day, doneAt: null, updatedAt: now, ...o });
+  await task('k1', 'Confirm tent supplier', 'raka', 'nadia', -3, { budgetId: 'carnival' });
+  await task('k2', 'Send volunteer shift list', 'raka', 'raka', -1);
+  await task('k3', 'Book the hall for rehearsal', 'raka', 'kevin', 1);
+  await task('k4', 'Draft the welfare survey', 'raka', 'raka', 3, { status: 'doing' });
+  await task('k5', 'Collect class photos', 'raka', 'dimas', 20);
+  await task('k6', 'Print stall signs', 'hana', 'raka', -2);
+  await task('k7', 'Order lanyards', 'jessica', 'raka', 2, { status: 'blocked', blockedReason: 'Need the final headcount', waitingOnUid: email('raka') });
+  await task('k8', 'Count first-aid kits', 'earlene', 'raka', -4, { status: 'done', doneAt: now - day });
+  await task('k9', 'Sponsor thank-you letters', 'josef', 'michael', -5);
+  await task('k10', 'Update the price list', 'sarah', 'nadia', 0);
+  await task('k11', 'Stage layout sketch', 'michael', 'kevin', -1, { assignedAt: now - day });
+  await put('budgets/carnival', { name: 'Carnival 2026', amountIdr: 12000000, active: true, createdByUid: email('sarah'), updatedAt: now });
+  await put('budgets/teachers', { name: "Teachers' Day", amountIdr: 2500000, active: true, createdByUid: email('sarah'), updatedAt: now });
+  const buy = async (id, budgetId, who, item, qty, unit, o = {}) => {
+    await put(`photos/${id}-a`, { ownerUid: email(who), purchaseId: id, kind: 'item', data: JPEG, deleteAfter: null });
+    if (o.receiptPhotoId) await put(`photos/${o.receiptPhotoId}`, { ownerUid: email(who), purchaseId: id, kind: 'receipt', data: JPEG, deleteAfter: null });
+    await put(`purchases/${id}`, { budgetId, requesterUid: email(who), item, specs: '', qty, unitIdr: unit, totalIdr: qty * unit, photoIds: [`${id}-a`], status: 'pending', updatedAt: now, ...o });
+  };
+  await buy('b1', 'carnival', 'raka', 'Folding tables', 6, 150000);
+  await buy('b2', 'carnival', 'sarah', 'Cash box', 1, 220000);
+  await buy('b3', 'carnival', 'raka', 'Banner printing', 2, 350000, { status: 'approved', approverUid: email('sarah'), decidedAt: now - day });
+  await buy('b4', 'carnival', 'michael', 'Extension cables', 4, 85000, { status: 'bought', approverUid: email('brittany'), decidedAt: now - 3 * day, paidIdr: 420000, changeNote: 'Longer cables', receiptPhotoId: 'b4-r', batchId: `${today.slice(0, 7)}-${Number(today.slice(8)) <= 15 ? 1 : 2}`, boughtAt: now - day });
+  await buy('b5', 'teachers', 'josef', 'Flowers', 10, 40000, { status: 'bought', approverUid: email('sarah'), decidedAt: now - 3 * day, paidIdr: 400000, changeNote: '', receiptPhotoId: 'b5-r', batchId: `${today.slice(0, 7)}-${Number(today.slice(8)) <= 15 ? 1 : 2}`, boughtAt: now - day });
   // The item snapshot and public feed an admin session would have written, with exactly the keys the rules allow.
   await raw(`cache/${T}`, { json: JSON.stringify(items.map((x) => ({ ...x, touchedAt: null }))), at: Timestamp.fromMillis(0), count: items.length, updatedAt: now });
   const tasksUnder = (id) => items.filter((x) => x.kind === 'task' && (x.ancestors.includes(id) || x.id === id));

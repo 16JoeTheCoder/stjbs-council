@@ -4,14 +4,13 @@ import { useEffect, useState } from 'preact/hooks';
 import { collection, limit, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { db } from '../firebase.js';
 import { S, memberName, toast } from '../store.js';
-import { activeMembers, checksIn, googleUrl, roleName, tree } from '../model.js';
+import { googleUrl, roleName, tree } from '../model.js';
 import { addTemplate, archiveAnnouncement, archiveTemplate, decide, saveAnnouncement, updateItem } from '../actions.js';
 import { localFeedHash, publish } from '../publish.js';
-import { addDays, fmtDay, isoDay, week } from '../time.js';
+import { addDays, fmtDay, isoDay } from '../time.js';
 import { ago, dateRange } from '../feed.js';
 import { Icon, PublicProject, Sheet } from '../shared.jsx';
 import { Chip, Empty, Panel, Title, useAutofocus } from '../ui.jsx';
-import { wa } from './projects.jsx';
 import { SUB_STATUS, SUB_TYPE } from './resources.jsx';
 
 const rows = (s) => s.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -28,25 +27,15 @@ const Attention = ({ icon, title, children, link }) => (
 );
 
 export function Overview({ nav }) {
-  const pending = usePending(), today = isoDay(), w = week();
+  const pending = usePending(), today = isoDay();
   const ending = S.announcements.filter((a) => !a.archived && a.startDate <= today && a.endDate <= addDays(today, 3));
-  const missing = activeMembers().filter(checksIn).filter((m) => !S.checkins.some((c) => c.uid === m.id && c.weekId === w.id));
-  const reminder = `Hi ${missing.map((m) => m.name.split(' ')[0]).join(', ')}: this week's council check-in is due ${fmtDay(w.due)}, 23:59. Three answers, under a minute: ${location.origin}/app/#/checkin`;
   const unpublished = S.ready.feed && localFeedHash() !== S.feed?.hash;
   const admins = S.members.filter((m) => m.active && ['advisor', 'president', 'vp'].includes(m.role));
-  const copy = () => navigator.clipboard.writeText(reminder).then(() => toast('Reminder copied. Paste it into the chat.'), () => toast('Copy failed. Use Share to WhatsApp instead.'));
   return (
     <>
       <Title light="Admin." bold="Needs attention." title="Admin overview" />
       <nav class="fl-more fl-phone-only" aria-label="Admin sections">{nav.slice(1).map(([k, label, icon]) => <a key={k} href={`#/${k}`}><Icon n={icon} />{label}</a>)}</nav>
       <section class="fl-panel" aria-label="Needs attention">
-        {missing.length > 0 && (
-          <Attention icon="check" title={`${missing.length} missing this week's check-in`} link={<span class="fl-actions">
-            <button class="fl-btn fl-btn--red fl-btn--sm" onClick={copy}><Icon n="copy" />Copy reminder</button>
-            <a class="fl-btn fl-btn--ghost fl-btn--sm" href={wa(reminder)} target="_blank" rel="noopener noreferrer"><Icon n="share" />WhatsApp</a></span>}>
-            <p class="fl-small fl-muted">{missing.map((m) => m.name).join(', ')} · due {fmtDay(w.due)}, 23:59</p>
-          </Attention>
-        )}
         {pending === false ? <p class="fl-error" role="alert">Pending submissions did not load.</p> : pending?.length > 0 && (
           <Attention icon="inbox" title={`${pending.length} ${pending.length === 1 ? 'submission waits' : 'submissions wait'} for approval`}
             link={<a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/admin/approvals">Review</a>}>

@@ -2,10 +2,10 @@
 // chart of teams) and the org chart built from department data. A person's page shows their week and tasks.
 import { useState } from 'preact/hooks';
 import { S, memberName } from '../store.js';
-import { activeMembers, checksIn, isAdmin, personStatus, roleName } from '../model.js';
+import { activeMembers, isAdmin, personStatus, roleName } from '../model.js';
 import { board, committees, deptMembers, departments, deptOf, placeOf, positionName } from '../org.js';
 import { newTeam, saveCommittee, saveDepartment } from '../org-actions.js';
-import { fmtDay, isoDay, week } from '../time.js';
+import { fmtDay, isoDay } from '../time.js';
 import { Sheet } from '../shared.jsx';
 import { Badge, Chip, Empty, Panel, TaskList, Title } from '../ui.jsx';
 import { DateField, Menu } from '../pickers.jsx';
@@ -18,30 +18,15 @@ const go = (patch) => {
   location.hash = `#/committees${p.size ? `?${p}` : ''}`;
 };
 const first = (uid) => memberName(uid).split(' ')[0];
-// A badge only when it matters: blocked, or two check-ins missed in a row.
-function concern(uid) {
-  const m = S.members.find((x) => x.id === uid);
-  if (!checksIn(m)) return null;
-  const s = personStatus(uid), late = isoDay() > week().due;
-  if (s.blocked) return { cls: 'bad', word: 'Blocked' };
-  if (s.word === 'Missed check-in' && !s.ci && late) return { cls: 'bad', word: 'Missed two check-ins' };
-  return null;
-}
 const PersonLink = ({ uid, label, lead }) => {
-  const m = S.members.find((x) => x.id === uid), c = concern(uid);
+  const m = S.members.find((x) => x.id === uid);
   if (!m) return null;
   return (
     <li class="fl-member">
       <a class="fl-person" href={`#/people/${encodeURIComponent(uid)}`}><Chip email={uid} lead={lead} /><span>{m.name}{label && <small> · {label}</small>}</span></a>
-      {c && <Badge s={c} />}
     </li>
   );
 };
-const checkedIn = (uids) => {
-  const w = week(), list = uids.filter((u) => checksIn(S.members.find((m) => m.id === u)));
-  return { n: list.filter((u) => S.checkins.some((c) => c.uid === u && c.weekId === w.id)).length, of: list.length };
-};
-
 // Search the roster, tick people, confirm. Shows each person's current department.
 export function PeoplePicker({ title, pool, onPick, onClose, note, target = null, action = 'Add' }) {
   const [q, setQ] = useState(''), [pick, setPick] = useState([]), [busy, setBusy] = useState(false);
@@ -107,12 +92,10 @@ function LeadsSheet({ d, onClose }) {
 }
 
 function DeptCard({ d, admin, act }) {
-  const ci = checkedIn(deptMembers(d));
   return (
     <section class="fl-panel fl-deptcard" aria-labelledby={`d-${d.id}`}>
       <div class="fl-panel__head">
         <h2 id={`d-${d.id}`} class="fl-h3"><a href={`#/department/${d.id}`}>{d.name}</a></h2>
-        <span class="fl-small fl-muted">{ci.of ? `${ci.n} of ${ci.of} checked in` : 'Nobody yet'}</span>
         {admin && <Menu label={`Actions for ${d.name}`} items={[['Rename', () => act('rename', d)], ['Change leads', () => act('leads', d)], ['Add members', () => act('add', d)]]} />}
       </div>
       <ul class="fl-list">
@@ -399,15 +382,9 @@ function Person({ email }) {
       <Title light={`${roleName(m.role)}.`} bold={m.name} title={m.name} />
       <div class="fl-stats"><Chip email={email} big />
         {place.dept && <a class="fl-link" href={`#/department/${place.dept.id}`}>{positionName(place.position)}, {place.dept.name}</a>}
-        {m.section && <span>{m.section}</span>}{m.reportsTo && <span class="fl-muted">Reports to {memberName(m.reportsTo)}</span>}{checksIn(m) && <Badge s={s} />}</div>
+        {m.section && <span>{m.section}</span>}{m.reportsTo && <span class="fl-muted">Reports to {memberName(m.reportsTo)}</span>}<Badge s={s} /></div>
       {teams.length > 0 && <p class="fl-small fl-muted">Special committees: {teams.join(', ')}.</p>}
-      {checksIn(m) && (
-        <Panel title="This week" id="week-h">
-          <p>{s.line}</p>
-          {s.ci ? <dl class="fl-dl">{['done', 'doing', 'blocked'].map((k) => s.ci[k] && <div key={k}><dt class="fl-eyebrow">{k}</dt><dd class="fl-pre">"{s.ci[k]}"</dd></div>)}</dl>
-            : <p class="fl-muted">No check-in yet this week.</p>}
-        </Panel>
-      )}
+      <Panel title="This week" id="week-h"><p>{s.line}</p></Panel>
       <Panel title="Open tasks" id="open-h"><TaskList list={open} path empty="No open tasks." /></Panel>
       <Panel title="Done" id="done-h"><TaskList list={done} path empty="Nothing done yet this term." /></Panel>
     </>

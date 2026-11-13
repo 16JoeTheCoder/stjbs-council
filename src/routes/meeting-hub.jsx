@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { rsvp, updateItem } from "../actions.js";
 import { S, memberName, plain } from "../store.js";
 import { isAdmin, canWork, googleUrl } from "../model.js";
-import { isoDay, week } from "../time.js";
+import { isoDay } from "../time.js";
 import { Title, TaskRow } from "../ui.jsx";
 import { useMeeting, useMeetingBuffer } from "../meeting-sync.js";
 import {
@@ -1719,27 +1719,8 @@ export function MeetingHub({ id, room = false }) {
         <>
           <h2 class="fl-h2">Member updates</h2>
           <p>
-            Reuse this week’s check-in, or submit an update with attribution
-            below.
+            Submit an update with attribution below.
           </p>
-          {meeting.participantUids.map((uid) => {
-            const checkin = S.checkins.find(
-              (c) => c.uid === uid && c.weekId === week().id,
-            );
-            return (
-              <section class="fl-section" key={uid}>
-                <h3>{memberName(uid)}</h3>
-                {checkin ? (
-                  <p>
-                    Week {checkin.weekId}: Done: {checkin.done} · Next:{" "}
-                    {checkin.doing} · Blocked: {checkin.blocked}
-                  </p>
-                ) : (
-                  <p>No check-in this week.</p>
-                )}
-              </section>
-            );
-          })}
           <Contribution meeting={meeting} type="update" />
         </>
       )}

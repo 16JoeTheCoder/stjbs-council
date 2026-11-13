@@ -151,11 +151,11 @@ function CloseTerm() {
     setBusy(true); setMsg('Collecting data, step 1 of 2.');
     try {
       const out = {};
-      for (const c of ['members', 'items', 'comments', 'checkins', 'activity', 'templates', 'announcements', 'events', 'rsvps', 'ideas', 'docTemplates', 'submissions', 'cache'])
+      for (const c of ['members', 'items', 'comments', 'checkins', 'activity', 'templates', 'announcements', 'events', 'rsvps', 'ideas', 'docTemplates', 'submissions', 'cache', 'tasks', 'budgets', 'purchases'])
         out[c] = (await getDocs(collection(db, c))).docs.map((d) => ({ id: d.id, ...d.data() }));
       const feed = await getDoc(doc(db, 'public', 'feed'));
       out.public = feed.exists() ? [{ id: 'feed', ...feed.data() }] : [];
-      out.settings = [{ id: 'current', ...S.term }, { id: 'digest', ...S.digest }];
+      out.settings = [{ id: 'current', ...S.term }];
       setMsg('Saving files, step 2 of 2.');
       const day = isoDay();
       download(`council-backup-${day}.json`, JSON.stringify(out, null, 1));

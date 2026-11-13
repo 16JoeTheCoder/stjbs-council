@@ -19,10 +19,10 @@ Install: copy the folder to `design/fiatlux/` and import `design/fiatlux/tokens.
 ## The look in five rules
 
 1. **Dark first.** Near-black ground `--surface`, raised cards `--surface-raised`, hairline borders `--line`, radius 20 on panels. Light theme exists (`[data-theme="light"]`) and every screen must work in it, but dark is the default.
-2. **Red is the light.** `--red` fills the primary button, the active nav item, the active tab bar tile, red panels and progress. Red as text uses `--red-text`, never `--red`. White on red only.
-3. **Gradients and patterns are allowed only inside these components** (all already written in `components.css`): `.fl-hero` (photo fading into dark red), `.fl-panel--red` (red gradient + sunburst rays), `.fl-mission` (diagonal slabs), `.fl-ann--one` (single announcement banner), `.fl-sheet__card` (faint red tint at the top), `.fl-cal__bg` (grid lines). App code never writes a gradient.
-4. **At most two red-filled surfaces per screen.** Red-filled means `.fl-panel--red`, `.fl-mission` and the `.fl-ann--one` banner. If a single announcement banner shows on Home while the check-in is due, hide the mission card. One `fl-btn--red` per section.
-5. **Status is colour + shape + word**, never colour alone: `fl-badge--ok` (green circle), `--warn` (amber triangle), `--bad` (rose diamond). Brand red never means "bad".
+2. **Red means overdue or flagged, nothing else.** `--red-text` marks an overdue task, a days-late count, a flagged purchase, an overspent budget and a veto. The primary button (`fl-btn--red`, the name is historical), the active nav item, the active tab, checked boxes and pressed filters are ink (`--ink` on `--surface`). Links are ink with an underline. Red keeps its signal value only if nothing else uses it.
+3. **Gradients are allowed only inside these components** (already written in `components.css`): `.fl-hero` (public site and sign-in only), `.fl-mission` (public site only), `.fl-ann--one`, `.fl-sheet__card`, `.fl-cal__bg`. App code never writes a gradient. **No rays or sunburst motifs anywhere**: the old red sunburst panel is deleted.
+4. **No red-filled surfaces inside the app.** Hierarchy comes from size and weight: overdue rows are larger and bolder, routine rows smaller and quieter. Anything without an action or a decision behind it is removed.
+5. **Status is colour + word**, never colour alone: an overdue row says "3d late", a flagged purchase says "Flagged". `fl-badge--ok/warn/bad` remain for the older screens.
 
 ## Colour tokens (dark / light)
 
@@ -49,25 +49,28 @@ Plus Jakarta Sans for everything; JetBrains Mono only for times, dates in lists,
 ## Layout
 
 - **Laptop (900 px and up):** `.fl-app` grid = left `.fl-rail` (232 px: crest lockup, `.fl-nav`, photo card at the bottom) + `.fl-col` (sticky `.fl-top` bar, then `.fl-main`). Top bar: search on the left, bell and `.fl-user` avatar menu on the right.
-- **Phone (below 900 px):** the rail disappears. `.fl-top` shows the crest, bell and avatar on one row and search on the next. Navigation is the floating `.fl-tabbar`: Home, Calendar, Projects, Ideas, More (5 icon tiles, active tile solid red, 24 px radius, floats 12 px off the edges). More opens a sheet with every destination the tiles do not cover, so nothing is laptop-only. Copy `reference/phone-tabbar.png`.
+- **Phone (below 900 px), designed first at 375 px:** the rail disappears. `.fl-top` is one slim row: date and first name on the left ("Fri 13 Nov · Josef"), bell and avatar on the right. No crest, no search, no hero. Navigation is `.fl-tabbar`, fixed to the bottom edge, four labelled tabs: Home, Tasks, Budgets, More. More opens a sheet with everything else (calendar, projects, ideas, committees, resources, admin). A persistent "+" (`.fl-fab`) sits above the tab bar: it adds a task, or on Budgets starts a purchase request.
 - `.fl-main` max 1320 px, 32 to 48 px padding, 32 px between sections. Two-column body is `.fl-split` (1.5 : 1), collapsing below 1100 px.
 - Every tap target is at least 44 px.
 
 ## Length budget (the most important layout rule)
 
-A screen earns scroll only with things people act on. Home must fit in about **1.5 laptop screens** and **5 phone screens**. No stat rows on Home. Each list shows at most 5 rows, then a link ("All my tasks"). Decorative parts (`fl-mission`, idea notes) get `fl-desk-only` and disappear on phones, where Ideas has its own tab.
+A screen earns scroll only with things people act on. Flat lists with dividers (`.fl-sec`, `.fl-t`, `.fl-line`), not nested cards. An empty section collapses to one muted line (`.fl-quiet`), never an empty-state card. No stat rows, no percentages, no decoration on Home.
 
-**Home order:**
-- **Phone:** hero (greeting + one line) → check-in panel (only while due) → announcements (only if any, swipe row) → Needs you (max 5) → Today's agenda (events only, max 5) → My projects (max 3).
-- **Laptop:** hero → announcements (if any) → `.fl-split`: left Needs you, Today's agenda; right check-in panel (only while due), My projects, mission card → Top ideas (3 notes + "Open idea board").
+**Home order (phone and laptop):** Overdue (red, days late, largest) → This week → Waiting on you (approvals, receipts to upload, tasks blocked on you) → Budgets (one row per active event, amount remaining) → Copy WhatsApp summary.
+
+**Friction budget:** every core action (add task, mark done, submit purchase, approve) takes at most 3 taps from opening the app. One primary action per screen. Defaults over choices: owner is me, the budget is the one you came from. Short forms open as a low sheet (`<Sheet low>`), never a full page. No confirmation dialogs except veto and delete; everything else is immediate with Undo in the toast.
 
 ## Components
 
 | Component | Class | Notes |
 |---|---|---|
-| Buttons | `fl-btn` + `--red` / `--white` (on red) / `--ghost`, `--sm`, `--block` | Verb first: "Start check-in", "Pin idea". |
+| Buttons | `fl-btn` + `--red` (primary, ink coloured) / `--ghost`, `--sm`, `--block` | Verb first: "Start check-in", "Pin idea". |
 | Panel | `fl-panel`, `fl-panel__head` | Default container for every section. |
-| Red panel | `fl-panel--red` | The one call to action of the screen (check-in, publish). Contains a `fl-btn--white`. |
+| Section | `fl-sec`, `fl-sec__h` (`is-late` for overdue) | Flat section: small uppercase label, rows below. |
+| Task row | `fl-t` + `fl-t--overdue/week/later/blocked/done` | 44 px checkbox, title, one meta line. |
+| Line | `fl-line` (`fl-line--flag`) | Label left, amount right: budgets, purchases, who to pay. |
+| Quick sheet | `Sheet low` > `fl-quick`, `fl-pick` chips | Bottom sheet for add task, purchase, receipt, veto. |
 | Hero | `fl-hero fl-stage` + `fl-hero__img` + `fl-hero__body` | Members' Home: `campus-sunset.webp`. Public site: `building.webp` with `fl-hero--tall`. Sign-in: `campus-sky.webp`. |
 | Mission card | `fl-mission fl-stage` | Three `<i>` slabs, ghost `building.webp`, rotating message on the arrow button, dots show position. Messages: "Ad maiorem Dei gloriam.", "Small steps create big change.", "Lead. Serve. Build." |
 | Row | `fl-row` (time / title / tag), `fl-row--task` (checkbox / title / badge / date) | `is-mine` = red left edge; `is-done` = struck through. |

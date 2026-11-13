@@ -51,7 +51,6 @@
   --grad-stage: linear-gradient(115deg, #0A0A0C 0%, #1C0709 52%, #4A0C0E 100%);
   --grad-mission: linear-gradient(135deg, #7A0F0F 0%, #A8171A 52%, #6B0E0E 100%);
   --grad-slab: linear-gradient(180deg, #FF3B30 0%, #E0261D 55%, #B01A16 100%);
-  --pattern-sunburst: repeating-conic-gradient(from 195deg at 100% 100%, rgb(255 255 255 / .13) 0 5deg, transparent 5deg 10deg);
   --scrim-left: linear-gradient(90deg, rgb(10 10 12 / .85) 0%, rgb(10 10 12 / 0) 58%);
   --scrim-bottom: linear-gradient(0deg, rgb(10 10 12 / .7) 0%, rgb(10 10 12 / 0) 45%);
 

@@ -149,9 +149,9 @@ test('notifications readable only by their owner, sent only as yourself', async 
   await assertFails(getDoc(doc(as(people.lead), `notifications/${people.officer}/items/n1`)));
   await assertSucceeds(updateDoc(doc(as(people.officer), `notifications/${people.officer}/items/n1`), { read: true }));
 });
-test('check-ins: own document only', async () => {
+test('check-ins: every write is refused, including the owner\'s own', async () => {
   const c = { termId: T, weekId: '2026-W44', uid: people.officer, done: '', doing: '', blocked: '' };
-  await assertSucceeds(setDoc(doc(as(people.officer), `checkins/${T}_2026-W44_${people.officer}`), c));
+  await assertFails(setDoc(doc(as(people.officer), `checkins/${T}_2026-W44_${people.officer}`), c));
   await assertFails(setDoc(doc(as(people.vp), `checkins/${T}_2026-W44_${people.officer}`), c));
 });
 test('naming yourself lead does not grant create rights (G1-01)', async () => {
@@ -429,8 +429,9 @@ test('member fields are typed so a bad section cannot break screens', async () =
   await assertSucceeds(updateDoc(doc(as(people.president), `members/${people.officer}`), { section: 'Welfare', termId: T }));
 });
 
-test('teachers and the advisor do not write check-ins; new documents need a numeric createdAt', async () => {
+test('no role writes check-ins; new documents need a numeric createdAt', async () => {
   const c = (who) => ({ termId: T, weekId: '2026-W44', uid: who, done: 'x', doing: '', blocked: '' });
+  await assertFails(setDoc(doc(as(people.officer), `checkins/${T}_2026-W44_${people.officer}`), c(people.officer)));
   await assertFails(setDoc(doc(as(people.teacher), `checkins/${T}_2026-W44_${people.teacher}`), c(people.teacher)));
   await assertFails(setDoc(doc(as(people.advisor), `checkins/${T}_2026-W44_${people.advisor}`), c(people.advisor)));
   await assertFails(setDoc(doc(as(people.officer), 'events/nodate'), { ...event({}), createdAt: 'now' }));

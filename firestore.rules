@@ -152,10 +152,106 @@ service cloud.firestore {
       allow delete: if active() && resource.data.authorUid == me();
     }
 
+    // Check-ins were removed from the app. Old documents stay readable; nothing writes them any more.
     match /checkins/{id} {
       allow read: if active();
-      allow create, update: if active() && termOk() && request.resource.data.uid == me() && !(role() in ['teacher', 'advisor'])
-        && id == request.resource.data.termId + '_' + request.resource.data.weekId + '_' + me();
+    }
+
+    // ---- Tasks: flat, one owner, one assigner. Executives give a task to anyone, officers to their own department,
+    // everyone to themselves. The owner moves its status; the assigner or an executive edits the rest.
+    function isOfficer() { return role() == 'officer' || member().get('position', null) in ['jc_officer', 'sec_officer']; }
+    function sameDept(uid) {
+      let mine = member().get('departmentId', null);
+      return mine != null && get(/databases/$(db)/documents/members/$(uid)).data.get('departmentId', null) == mine;
+    }
+    function mayAssign(uid) { return uid == me() || isBoss() || (isOfficer() && sameDept(uid)); }
+    function taskOk(d) {
+      return d.keys().hasOnly(['termId', 'title', 'ownerUid', 'assignerUid', 'dueDate', 'status', 'blockedReason', 'waitingOnUid', 'budgetId',
+          'assignedAt', 'doneAt', 'createdAt', 'updatedAt', 'legacyItemId'])
+        && text(d.title, 1, 120) && d.ownerUid is string && d.assignerUid is string && (d.dueDate == null || day(d.dueDate))
+        && d.status in ['todo', 'doing', 'blocked', 'done']
+        && (d.status == 'blocked' ? text(d.blockedReason, 1, 140) : d.blockedReason == '')
+        && optString(d, 'waitingOnUid') && optString(d, 'budgetId') && d.assignedAt is number && d.createdAt is number;
+    }
+    match /tasks/{id} {
+      allow read: if active();
+      allow create: if active() && termOk() && notTeacher() && taskOk(request.resource.data) && mayAssign(request.resource.data.ownerUid)
+        && (request.resource.data.assignerUid == me() || (isAdmin() && request.resource.data.get('legacyItemId', null) is string));
+      allow update: if active() && termOk() && notTeacher() && taskOk(request.resource.data) && fixed(['termId', 'createdAt', 'legacyItemId'])
+        && ((resource.data.ownerUid == me() && changed().hasOnly(['status', 'blockedReason', 'waitingOnUid', 'doneAt', 'updatedAt']))
+          || ((resource.data.assignerUid == me() || isBoss())
+            && (fixed(['ownerUid']) || mayAssign(request.resource.data.ownerUid))
+            && (fixed(['assignerUid']) || request.resource.data.assignerUid == me())));
+      allow delete: if active() && notTeacher() && (resource.data.assignerUid == me() || isBoss());
+    }
+
+    // ---- Budgets: one pot per event. Treasurers and admins create and edit; never deleted (active: false hides one).
+    function isTreasurer() { return role() == 'treasurer'; }
+    match /budgets/{id} {
+      allow read: if active();
+      allow create, update: if active() && termOk() && (isTreasurer() || isAdmin())
+        && request.resource.data.keys().hasOnly(['termId', 'name', 'amountIdr', 'active', 'createdByUid', 'createdAt', 'updatedAt'])
+        && text(request.resource.data.name, 1, 60) && request.resource.data.amountIdr is number && request.resource.data.amountIdr >= 0
+        && request.resource.data.active is bool && request.resource.data.createdAt is number
+        && (resource == null ? request.resource.data.createdByUid == me() : fixed(['termId', 'createdByUid', 'createdAt']));
+    }
+
+    // ---- Purchases: the permanent text record. pending -> approved or rejected (a treasurer, never the requester)
+    // -> bought (requester, with a receipt photo) -> paid (a treasurer closes the batch). The advisor vetoes at any stage.
+    function purchaseOk(d) {
+      return d.keys().hasOnly(['termId', 'budgetId', 'requesterUid', 'item', 'specs', 'qty', 'unitIdr', 'totalIdr', 'photoIds', 'status', 'createdAt', 'updatedAt',
+          'approverUid', 'decidedAt', 'paidIdr', 'changeNote', 'receiptPhotoId', 'batchId', 'boughtAt', 'paidByUid', 'paidAt', 'vetoUid', 'vetoReason', 'vetoAt'])
+        && text(d.item, 1, 80) && text(d.get('specs', ''), 0, 300) && d.qty is int && d.qty >= 1 && d.qty <= 9999
+        && d.unitIdr is number && d.unitIdr >= 0 && d.totalIdr is number && d.totalIdr > 0
+        && d.photoIds is list && d.photoIds.size() >= 1 && d.photoIds.size() <= 3
+        && d.status in ['pending', 'approved', 'rejected', 'bought', 'paid', 'vetoed'] && d.createdAt is number;
+    }
+    function photoAfter(id) { return getAfter(/databases/$(db)/documents/photos/$(id)).data; }
+    match /purchases/{id} {
+      allow read: if active();
+      allow create: if active() && termOk() && notTeacher() && purchaseOk(request.resource.data)
+        && request.resource.data.keys().hasOnly(['termId', 'budgetId', 'requesterUid', 'item', 'specs', 'qty', 'unitIdr', 'totalIdr', 'photoIds', 'status', 'createdAt', 'updatedAt'])
+        && request.resource.data.requesterUid == me() && request.resource.data.status == 'pending'
+        && get(/databases/$(db)/documents/budgets/$(request.resource.data.budgetId)).data.active == true
+        && photoAfter(request.resource.data.photoIds[0]).purchaseId == id;
+      allow update: if active() && termOk() && purchaseOk(request.resource.data)
+        && fixed(['termId', 'budgetId', 'requesterUid', 'item', 'specs', 'qty', 'unitIdr', 'totalIdr', 'photoIds', 'createdAt'])
+        && (
+          // A treasurer decides someone else's request, or takes their own decision back.
+          (isTreasurer() && resource.data.requesterUid != me() && changed().hasOnly(['status', 'approverUid', 'decidedAt', 'updatedAt'])
+            && ((resource.data.status == 'pending' && request.resource.data.status in ['approved', 'rejected'] && request.resource.data.approverUid == me())
+              || (resource.data.status in ['approved', 'rejected'] && resource.data.approverUid == me() && request.resource.data.status == 'pending')))
+          // The requester bought it: amount paid and a receipt photo.
+          || (resource.data.requesterUid == me() && resource.data.status == 'approved' && request.resource.data.status == 'bought'
+            && changed().hasOnly(['status', 'paidIdr', 'changeNote', 'receiptPhotoId', 'batchId', 'boughtAt', 'updatedAt'])
+            && request.resource.data.paidIdr is number && request.resource.data.paidIdr >= 0 && text(request.resource.data.get('changeNote', ''), 0, 140)
+            && request.resource.data.batchId.matches('^[0-9]{4}-[0-9]{2}-[12]$')
+            && photoAfter(request.resource.data.receiptPhotoId).purchaseId == id)
+          // A treasurer closes the batch, or reopens it.
+          || (isTreasurer() && changed().hasOnly(['status', 'paidByUid', 'paidAt', 'updatedAt'])
+            && ((resource.data.status == 'bought' && request.resource.data.status == 'paid' && request.resource.data.paidByUid == me())
+              || (resource.data.status == 'paid' && request.resource.data.status == 'bought')))
+          // The advisor's veto: any stage, with a reason, kept on the record.
+          || (isAdvisor() && resource.data.status != 'vetoed' && request.resource.data.status == 'vetoed'
+            && changed().hasOnly(['status', 'vetoReason', 'vetoUid', 'vetoAt', 'updatedAt'])
+            && text(request.resource.data.vetoReason, 1, 300) && request.resource.data.vetoUid == me() && request.resource.data.vetoAt is number)
+        );
+      allow delete: if active() && resource.data.requesterUid == me() && resource.data.status == 'pending';
+    }
+
+    // ---- Photos: one shrunk JPEG per document (no Cloud Storage on the free plan). deleteAfter is set when the
+    // request closes; after that date any member's app may delete the photo. The owner may delete one whose request is gone.
+    match /photos/{id} {
+      allow read: if active();
+      allow create: if active() && termOk() && notTeacher()
+        && request.resource.data.keys().hasOnly(['termId', 'ownerUid', 'purchaseId', 'kind', 'data', 'createdAt', 'deleteAfter'])
+        && request.resource.data.ownerUid == me() && request.resource.data.purchaseId is string && request.resource.data.kind in ['item', 'receipt']
+        && request.resource.data.data is string && request.resource.data.data.size() <= 900000
+        && request.resource.data.createdAt is number && request.resource.data.deleteAfter == null;
+      allow update: if active() && (isTreasurer() || isAdvisor()) && changed().hasOnly(['deleteAfter'])
+        && (request.resource.data.deleteAfter == null || request.resource.data.deleteAfter is number);
+      allow delete: if active() && ((resource.data.deleteAfter is number && resource.data.deleteAfter <= request.time.toMillis())
+        || (resource.data.ownerUid == me() && !existsAfter(/databases/$(db)/documents/purchases/$(resource.data.purchaseId))));
     }
 
     match /activity/{id} {
