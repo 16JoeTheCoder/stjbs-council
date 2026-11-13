@@ -8,7 +8,7 @@ export const ROLE_INFO = {
   treasurer: ['Treasurer', 'Board: starts projects, edits the digest and project templates.'],
   secretary: ['Secretary', 'Board: starts projects, edits the digest and project templates.'],
   officer: ['Officer', 'Works on tasks, leads teams they are given, adds events, pins ideas.'],
-  member: ['Member', 'The same as an officer: tasks, events, ideas and check-ins.'],
+  member: ['Member', 'The same as an officer: tasks, events and ideas.'],
   teacher: ['Teacher', 'Reads everything and comments. Changes nothing.'],
 };
 export const ROLE_ORDER = ['member', 'officer', 'secretary', 'treasurer', 'vp', 'president', 'teacher', 'advisor'];

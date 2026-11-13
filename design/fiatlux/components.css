@@ -43,9 +43,9 @@ img { display: block; max-width: 100%; }
 .fl-nav { display: flex; flex-direction: column; gap: var(--s-1); }
 .fl-nav a { display: flex; align-items: center; gap: var(--s-3); min-height: var(--hit); padding: 0 var(--s-3); border-radius: var(--r-md); color: var(--ink-muted); font: 500 14px/20px var(--font-sans); transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
 .fl-nav a:hover { background: var(--surface-high); color: var(--ink); }
-.fl-nav a[aria-current="page"] { background: var(--red); color: var(--on-red); font-weight: 700; }
+.fl-nav a[aria-current="page"] { background: var(--surface-high); color: var(--ink); font-weight: 700; }
 .fl-nav .fl-count { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill); background: var(--red); color: var(--on-red); font: 700 12px/22px var(--font-mono); text-align: center; }
-.fl-nav a[aria-current="page"] .fl-count { background: var(--on-red); color: var(--red); }
+.fl-nav a[aria-current="page"] .fl-count { background: var(--ink); color: var(--surface); }
 .fl-rail__photo { position: relative; margin-top: auto; height: 112px; border-radius: var(--r-md); overflow: hidden; border: var(--border) solid var(--line); }
 .fl-rail__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .fl-rail__photo::after { content: ""; position: absolute; inset: 0; background: var(--scrim-bottom); }
@@ -94,15 +94,16 @@ img { display: block; max-width: 100%; }
   .fl-main { padding: var(--s-5) var(--s-4) var(--s-8); gap: var(--s-6); }
   .fl-tabbar { position: fixed; z-index: 70; left: var(--s-3); right: var(--s-3); bottom: calc(var(--s-3) + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; align-items: center; height: var(--tabbar-h); padding: 0 var(--s-2); border: var(--border) solid var(--line-strong); border-radius: 24px; background: var(--surface-sunken); box-shadow: var(--shadow-pop); }
   .fl-tabbar a { position: relative; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; color: var(--ink-muted); }
-  .fl-tabbar a[aria-current="page"] { background: var(--red); color: var(--on-red); }
+  .fl-tabbar a[aria-current="page"] { background: var(--ink); color: var(--surface); }
   .fl-tabbar .fl-icon { width: 24px; height: 24px; }
 }
 
 /* ---------- Buttons */
 .fl-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); min-height: 48px; padding: 0 var(--s-6); border: 2px solid transparent; border-radius: var(--r-md); font: 700 15px/20px var(--font-sans); cursor: pointer; white-space: nowrap; transition: background-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
-.fl-btn--red { background: var(--red); color: var(--on-red); }
-.fl-btn--red:hover { background: var(--red-hover); box-shadow: var(--glow-red); }
-.fl-btn--red:active { background: var(--red-press); box-shadow: none; }
+/* The primary button. The class keeps its old name; it is ink, not red: red means overdue or flagged only. */
+.fl-btn--red { background: var(--ink); color: var(--surface); }
+.fl-btn--red:hover { background: var(--ink-muted); }
+.fl-btn--red:active { background: var(--ink-subtle); }
 .fl-btn--white { background: var(--on-red); color: var(--red-deep); }
 .fl-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
 .fl-btn--ghost:hover { border-color: var(--ink); background: var(--surface-high); }
@@ -113,10 +114,6 @@ img { display: block; max-width: 100%; }
 /* ---------- Surfaces */
 .fl-panel { position: relative; padding: var(--s-6); border: var(--border) solid var(--line); border-radius: var(--r-lg); background: var(--surface-raised); min-width: 0; }
 .fl-panel__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); padding-bottom: var(--s-3); }
-.fl-panel--red { overflow: hidden; border: 0; background: var(--grad-red); color: var(--on-red); }
-.fl-panel--red::before { content: ""; position: absolute; inset: 0; background: var(--pattern-sunburst); pointer-events: none; }
-.fl-panel--red > * { position: relative; }
-.fl-panel--red .fl-eyebrow, .fl-panel--red .fl-muted { color: rgb(255 255 255 / .8); }
 .fl-grid { display: grid; gap: var(--s-6); grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); align-items: start; }
 .fl-split { display: grid; gap: var(--s-6); grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; }
 @media (max-width: 1099px) { .fl-split { grid-template-columns: minmax(0, 1fr); } }
@@ -159,7 +156,6 @@ img { display: block; max-width: 100%; }
 .fl-row__time { font: 700 15px/24px var(--font-mono); }
 .fl-row--task { grid-template-columns: 24px minmax(0, 1fr) auto auto; }
 .fl-row.is-done .fl-h3 { color: var(--ink-subtle); text-decoration: line-through; }
-.fl-row.is-mine { box-shadow: inset 3px 0 0 var(--red); padding-left: var(--s-3); }
 @media (max-width: 599px) { .fl-row { grid-template-columns: 56px minmax(0, 1fr); } .fl-row > .fl-tag { display: none; } .fl-row--task { grid-template-columns: 24px minmax(0, 1fr) auto; } .fl-row--task > :nth-child(4) { display: none; } }
 
 .fl-tag { display: inline-flex; align-items: center; padding: 3px 10px; border: var(--border) solid var(--line-strong); border-radius: var(--r-sm); font: 700 12px/16px var(--font-sans); color: var(--ink-muted); white-space: nowrap; }
@@ -194,7 +190,7 @@ img { display: block; max-width: 100%; }
 /* ---------- Segmented tabs, switch, forms */
 .fl-seg { display: inline-flex; gap: var(--s-1); padding: var(--s-1); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface-raised); }
 .fl-seg button, .fl-seg a { min-height: 36px; padding: 0 var(--s-4); border: 0; border-radius: 8px; background: none; color: var(--ink-muted); font: 700 13px/36px var(--font-sans); cursor: pointer; }
-.fl-seg [aria-pressed="true"], .fl-seg [aria-current="page"] { background: var(--red); color: var(--on-red); }
+.fl-seg [aria-pressed="true"], .fl-seg [aria-current="page"] { background: var(--ink); color: var(--surface); }
 
 .fl-switch { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 48px; height: 28px; margin: 0; border-radius: var(--r-pill); background: var(--line-strong); cursor: pointer; transition: background-color var(--dur-fast) var(--ease); }
 .fl-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--on-red); transition: transform var(--dur-fast) var(--ease); }
@@ -202,8 +198,8 @@ img { display: block; max-width: 100%; }
 .fl-switch:checked::after { transform: translateX(20px); }
 
 .fl-check { appearance: none; -webkit-appearance: none; display: grid; place-items: center; width: 24px; height: 24px; margin: 0; border: 2px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface-sunken); cursor: pointer; }
-.fl-check:checked { background: var(--red); border-color: var(--red); }
-.fl-check:checked::after { content: ""; width: 6px; height: 11px; margin-top: -2px; border: solid var(--on-red); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+.fl-check:checked { background: var(--ink); border-color: var(--ink); }
+.fl-check:checked::after { content: ""; width: 6px; height: 11px; margin-top: -2px; border: solid var(--surface); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
 
 .fl-form { display: flex; flex-direction: column; gap: var(--s-4); }
 .fl-field { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
@@ -211,7 +207,7 @@ img { display: block; max-width: 100%; }
 .fl-input { width: 100%; min-height: var(--hit); padding: 0 var(--s-4); border: var(--border) solid var(--line-strong); border-radius: var(--r-md); background: var(--surface-sunken); color: var(--ink); font: 500 15px/22px var(--font-sans); }
 textarea.fl-input { min-height: 112px; padding: var(--s-3) var(--s-4); resize: vertical; }
 .fl-input::placeholder { color: var(--ink-subtle); }
-.fl-input:focus { border-color: var(--red); outline: 0; box-shadow: 0 0 0 3px var(--red-glow); }
+.fl-input:focus { border-color: var(--ink); outline: 0; box-shadow: 0 0 0 1px var(--ink); }
 .fl-help { font: 400 13px/20px var(--font-sans); color: var(--ink-subtle); }
 .fl-error { font: 700 13px/20px var(--font-sans); color: var(--bad); }
 

@@ -76,7 +76,6 @@ export function Projects({ q }) {
   return (
     <>
       <Title light="All projects." bold={`${roots.filter((r) => r.status !== 'done').length} running.`} title="Projects">
-        {isExec() && <a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/digest"><Icon n="digest" />Digest</a>}
         {isExec() && <a class="fl-btn fl-btn--ghost fl-btn--sm" href="#/templates">Start from template</a>}
         {isExec() && !adding && <span ref={back}><button class="fl-btn fl-btn--red fl-btn--sm" onClick={() => setAdding(true)}><Icon n="plus" />New project</button></span>}
       </Title>

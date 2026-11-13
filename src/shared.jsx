@@ -40,7 +40,8 @@ const PATHS = {
   keyboard: 'M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8',
   panel: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3v18',
   undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
-  checkin: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9',
+  tasks: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9',
+  wallet: 'M3 7a2 2 0 0 1 2-2h13v4M3 7v10a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H5a2 2 0 0 1-2-2zM17 14h.01',
   dots: 'M12 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM19 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM5 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
   sort: 'M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4',
   department: 'M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 10h.01M15 10h.01',
@@ -51,12 +52,12 @@ export const Icon = ({ n, label }) => (
 );
 
 // Full-screen detail. Focus moves in, Tab stays inside, Esc and the backdrop close it, focus returns to the trigger.
-export function Sheet({ label, onClose, children }) {
+export function Sheet({ label, onClose, children, low }) {
   const ref = useRef(), close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
     const back = document.activeElement, card = ref.current;
-    card.querySelector('.fl-sheet__close').focus();
+    (card.querySelector('[autofocus]') || card.querySelector('.fl-sheet__close')).focus();
     const key = (e) => {
       if (!document.querySelectorAll('.fl-sheet').item(document.querySelectorAll('.fl-sheet').length - 1)?.contains(card)) return;
       if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); close.current(); }
@@ -72,7 +73,7 @@ export function Sheet({ label, onClose, children }) {
     return () => { removeEventListener('keydown', key, true); if (document.querySelectorAll('.fl-sheet').length <= 1) document.body.classList.remove('fl-locked'); if (back?.isConnected) back.focus?.(); };
   }, []);
   return (
-    <div class="fl-sheet" role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div class={`fl-sheet${low ? ' fl-sheet--low' : ''}`} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div class="fl-sheet__card" ref={ref}>
         <button class="fl-iconbtn fl-sheet__close" aria-label="Close" onClick={onClose}><Icon n="x" /></button>
         {children}

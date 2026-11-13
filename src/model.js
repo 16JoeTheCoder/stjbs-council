@@ -1,6 +1,6 @@
 // Pure logic over store data: tree indexes, rollups, task state, filters, person status, permissions.
 import { S, memberName } from './store.js';
-import { addDays, dayStartMs, isoDay, monday, week, weekId } from './time.js';
+import { addDays, dayStartMs, isoDay, week } from './time.js';
 
 export const EXEC = ['president', 'vp', 'treasurer', 'secretary'];
 export const STAGES = ['Lead', 'Contacted', 'Negotiating', 'Signed'];
@@ -56,20 +56,12 @@ export function applyFilter(list, f) {
   return { out, counts, doneHidden };
 }
 
-// Rule-based weekly status per person. No paraphrasing: their own blocked words are quoted.
+// Rule-based weekly status per person, from tasks only.
 export function personStatus(email, w = week()) {
-  const ci = S.checkins.find((c) => c.uid === email && c.weekId === w.id);
-  const last = S.checkins.find((c) => c.uid === email && c.weekId === w.lastId);
   const mine = S.items.filter((t) => t.kind === 'task' && t.assigneeUids?.includes(email));
   const overdue = mine.filter((t) => taskState(t).word === 'Overdue').length;
   const done = mine.filter((t) => t.status === 'done' && t.completedAt >= dayStartMs(w.start)).length;
-  const startWeek = S.term?.startWeekId || (S.term?.startDate && weekId(monday(S.term.startDate)));
-  const missedLast = !last && !!startWeek && startWeek <= w.lastId;
-  const blocked = ci?.blocked?.trim();
-  const cls = blocked || missedLast ? 'bad' : overdue || !ci ? 'warn' : 'ok';
-  const word = blocked ? 'Blocked' : missedLast ? 'Missed check-in' : overdue ? 'Overdue' : !ci ? 'No check-in' : 'On track';
-  const line = `${memberName(email)}: ${done} done, ${overdue} overdue.${blocked ? ` Blocked: "${blocked}"` : ''}`;
-  return { cls, word, line, ci, blocked, overdue, done };
+  return { cls: overdue > 0 ? 'warn' : 'ok', word: overdue > 0 ? 'Overdue' : 'On track', line: `${memberName(email)}: ${done} done, ${overdue} overdue.`, overdue, done };
 }
 
 // Exec in the roles table: may start root projects, edit the digest and project templates (the advisor too).
@@ -77,7 +69,6 @@ export const isExec = (m = S.me) => isBoss(m) && m?.role !== 'teacher';
 const ROLE = { advisor: 'Advisor', president: 'President', vp: 'Vice president', treasurer: 'Treasurer', secretary: 'Secretary', officer: 'Officer', member: 'Member', teacher: 'Teacher' };
 export const roleName = (r) => ROLE[r] || r;
 export const firstName = (email) => (S.members.find((m) => m.id === email)?.name || email || '').split(' ')[0];
-export const checksIn = (m) => !['teacher', 'advisor'].includes(m?.role);
 export const activeMembers = () => S.members.filter((m) => m.active).sort((a, b) => a.name.localeCompare(b.name));
 export const initials = (name = '') => (name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2) || '?').toUpperCase();
 export const safeUrl = (u) => (/^https?:\/\/\S+$/i.test(u || '') ? u : '');

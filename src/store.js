@@ -1,5 +1,5 @@
 // One store for the session: auth phase, the live listeners and derived indexes.
-// Core listeners (settings, members, items, check-ins, notifications) block the app until loaded and raise the global
+// Core listeners (settings, members, items, tasks, notifications) block the app until loaded and raise the global
 // error banner. Optional ones (events, announcements, templates, feed) keep their own error in S.fail and never block.
 import { useEffect, useReducer } from 'preact/hooks';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -9,7 +9,7 @@ import { isoDay, week } from './time.js';
 import { announcementsQuery, eventsQuery } from './queries.js';
 
 export const S = {
-  phase: 'loading', user: null, me: null, term: null, digest: null, members: [], items: [], checkins: [], notes: [],
+  phase: 'loading', user: null, me: null, term: null, members: [], items: [], tasks: [], budgets: [], purchases: [], notes: [],
   events: [], announcements: [], departments: [], committees: [], docTemplates: [], feed: null, cacheInfo: null, cacheFull: false, publishError: '',
   ready: {}, fail: {}, cached: {}, weekId: null, day: null, toast: '', error: '', undo: null,
 };
@@ -69,7 +69,7 @@ function listen(list, q, key, map = rows, optional = false) {
   }), (e) => (optional && e.code !== 'resource-exhausted' ? set({ fail: { ...S.fail, [key]: e.code || 'error' } }) : lost(e))));
 }
 // True once the data every screen depends on has arrived, so no form starts from an empty copy.
-export const loaded = () => S.ready.items && S.ready.checkins && S.ready.members;
+export const loaded = () => S.ready.items && S.ready.tasks && S.ready.members;
 
 // Items: one read for the term's snapshot document, then only the items changed since it was built.
 // Without a snapshot (first deploy, new term) or if the change query fails, fall back to every item.
@@ -108,12 +108,13 @@ function startDay(termId) {
 function startTerm(termId) {
   stopAll(termStops);
   const w = week(), my = ++gen;
-  set({ weekId: w.id, ready: { ...S.ready, items: false, checkins: false } });
+  set({ weekId: w.id, ready: { ...S.ready, items: false, tasks: false } });
   startItems(termId, my);
   // Organisation: one small listener each (six departments, a handful of committees).
   listen(termStops, query(collection(db, 'departments'), where('termId', '==', termId)), 'departments', rows, true);
   listen(termStops, query(collection(db, 'committees'), where('termId', '==', termId)), 'committees', rows, true);
-  listen(termStops, query(collection(db, 'checkins'), where('termId', '==', termId), where('weekId', 'in', [w.id, w.lastId])), 'checkins');
+  // The backbone: every task, budget and purchase of the term. Text only; photos are read one at a time when opened.
+  for (const k of ['tasks', 'budgets', 'purchases']) listen(termStops, query(collection(db, k), where('termId', '==', termId)), k, rows, k !== 'tasks');
   startDay(termId);
 }
 // An installed app stays open across midnight and Monday 00:00 Jakarta; follow the new day and week.
@@ -130,7 +131,6 @@ function start(email) {
     if (term?.termId !== S.term?.termId && term) startTerm(term.termId);
     set({ term });
   }, lost));
-  stops.push(onSnapshot(doc(db, 'settings/digest'), (s) => set({ digest: s.data() || null }), lost));
   listen(stops, collection(db, 'members'), 'members');
   listen(stops, query(collection(db, 'notifications', email, 'items'), orderBy('createdAt', 'desc'), limit(50)), 'notes');
   listen(stops, query(collection(db, 'docTemplates'), where('archived', '==', false)), 'docTemplates', rows, true);
