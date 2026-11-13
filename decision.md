@@ -116,6 +116,13 @@ The old read-only `teacher` role (other teachers) stays read-only.
 - **F20. Removed:** check-ins (screen, writes, the admin reminder, the "missed check-in" badges; old check-in documents stay in the database, read-only), the hero banner, the onboarding checklist, project percentages on Home, the sunburst card, the old Digest page (replaced by the WhatsApp summary).
 - **F21. WhatsApp summary is one pure function** of tasks, budgets and purchases, sorted by fixed keys, so every role gets byte-identical text. It contains names and numbers only.
 
+- **F22. Announcements, today's agenda and "My projects" left Home.** None has an action behind it. They are still on Calendar, Projects and the public site, under More.
+- **F23. Approve and reject are one tap with Undo, like everything else.** The rules let the treasurer who decided take the decision back to pending; nobody else can. The same goes for "Mark batch paid" (Undo reopens it). Only veto and delete ask first.
+- **F24. The phone top bar lost the search box and the crest.** Search only covers the old project tree, and it cost a full row on every screen. It is still on laptop.
+- **F25. The "+" follows the tab.** One primary action per screen: on Budgets it requests a purchase, everywhere else it adds a task. Read-only teachers do not see it.
+- **F26. The treasurer view is the top of the Budgets tab**, not a separate page: pending approvals, flagged, then each open batch with who to pay. The Teacher sees the same list, with Veto instead of Approve.
+- **F27. Notifications reuse the existing bell.** Assigned, done, reopened, waiting on you, approved, rejected, vetoed, paid back. Each carries a `link`, an optional new field on the old notification documents.
+
 ## Migration of existing data
 
 1. **Deploy rules first** (Firebase console is not needed; `npm run deploy` in the VS Code terminal in the repo root does hosting and rules together, only when Josef says so). New collections start empty; old ones are untouched.
