@@ -112,3 +112,21 @@ export function summary({ tasks, budgets, purchases, members }, today = isoDay()
   out.push('', `Pending approvals: ${pending.length}${pending.length ? ` (${idr(pending.reduce((s, p) => s + p.totalIdr, 0))})` : ''}`);
   return out.join('\n');
 }
+
+// ---- The Tasks list: Overdue, Today, Upcoming, No date. Blocked tasks stay in their date group with a "waiting on"
+// line. Inside a group: date (and time) first, then the hand-dragged order, then age.
+export const rank = (t) => t.order ?? t.createdAt ?? 0;
+const byDay = (a, b) => (a.dueDate || '').localeCompare(b.dueDate || '') || (a.dueTime || '99').localeCompare(b.dueTime || '99') || rank(a) - rank(b) || a.id.localeCompare(b.id);
+export function groupDays(list, today = isoDay()) {
+  const g = { overdue: [], today: [], upcoming: [], nodate: [], done: [] };
+  for (const t of list) {
+    const k = t.status === 'done' ? 'done' : !t.dueDate ? 'nodate' : daysLate(t, today) ? 'overdue' : t.dueDate <= today ? 'today' : 'upcoming';
+    g[k].push(t);
+  }
+  for (const k of ['overdue', 'today', 'upcoming']) g[k].sort(byDay);
+  g.nodate.sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id));
+  g.done.sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  return g;
+}
+// The order value that drops a task between two neighbours (either may be missing).
+export const between = (a, b) => (a == null && b == null ? Date.now() : a == null ? b - 1024 : b == null ? a + 1024 : (a + b) / 2);

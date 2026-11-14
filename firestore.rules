@@ -36,7 +36,8 @@ service cloud.firestore {
     function memberOk(d) {
       return d.role in roles() && d.active is bool && text(d.get('name', 'x'), 1, 60) && text(d.get('section', ''), 0, 60)
         && (d.get('reportsTo', null) == null || d.get('reportsTo', null) is string)
-        && optString(d, 'departmentId') && d.get('position', null) in [null, 'jc_officer', 'sec_officer', 'member'];
+        && optString(d, 'departmentId') && d.get('position', null) in [null, 'jc_officer', 'sec_officer', 'member']
+        && (d.get('aliases', []) is list && d.get('aliases', []).size() <= 5);
     }
     // A department's JC officer or Sec officer, read from the stored department.
     function leadOf(id) {
@@ -64,7 +65,7 @@ service cloud.firestore {
         && (isAdvisor() || deptLeadMemberEdit(email)
           || (role() == 'vp' && resource.data.role != 'advisor' && request.resource.data.role != 'advisor')
           || (role() == 'president' && resource.data.role != 'advisor'
-            && changed().hasOnly(['name', 'section', 'reportsTo', 'initials', 'termId', 'updatedAt', 'departmentId', 'position'])));
+            && changed().hasOnly(['name', 'section', 'reportsTo', 'initials', 'termId', 'updatedAt', 'departmentId', 'position', 'aliases'])));
     }
 
     // Standing departments. Admins create and edit them; a department's two officers change only its general members.
@@ -167,8 +168,10 @@ service cloud.firestore {
     function mayAssign(uid) { return uid == me() || isBoss() || (isOfficer() && sameDept(uid)); }
     function taskOk(d) {
       return d.keys().hasOnly(['termId', 'title', 'ownerUid', 'assignerUid', 'dueDate', 'status', 'blockedReason', 'waitingOnUid', 'budgetId',
-          'assignedAt', 'doneAt', 'createdAt', 'updatedAt', 'legacyItemId'])
-        && text(d.title, 1, 120) && d.ownerUid is string && d.assignerUid is string && (d.dueDate == null || day(d.dueDate))
+          'assignedAt', 'doneAt', 'createdAt', 'updatedAt', 'legacyItemId', 'priority', 'dueTime', 'order'])
+        && text(d.title, 1, 120)
+        && d.get('priority', 4) in [1, 2, 3, 4] && (d.get('dueTime', null) == null || (d.dueTime is string && d.dueTime.matches('^[0-2][0-9]:[0-5][0-9]$')))
+        && d.get('order', 0) is number && d.ownerUid is string && d.assignerUid is string && (d.dueDate == null || day(d.dueDate))
         && d.status in ['todo', 'doing', 'blocked', 'done']
         && (d.status == 'blocked' ? text(d.blockedReason, 1, 140) : d.blockedReason == '')
         && optString(d, 'waitingOnUid') && optString(d, 'budgetId') && d.assignedAt is number && d.createdAt is number;
@@ -178,7 +181,7 @@ service cloud.firestore {
       allow create: if active() && termOk() && notTeacher() && taskOk(request.resource.data) && mayAssign(request.resource.data.ownerUid)
         && (request.resource.data.assignerUid == me() || (isAdmin() && request.resource.data.get('legacyItemId', null) is string));
       allow update: if active() && termOk() && notTeacher() && taskOk(request.resource.data) && fixed(['termId', 'createdAt', 'legacyItemId'])
-        && ((resource.data.ownerUid == me() && changed().hasOnly(['status', 'blockedReason', 'waitingOnUid', 'doneAt', 'updatedAt']))
+        && ((resource.data.ownerUid == me() && changed().hasOnly(['status', 'blockedReason', 'waitingOnUid', 'doneAt', 'updatedAt', 'order']))
           || ((resource.data.assignerUid == me() || isBoss())
             && (fixed(['ownerUid']) || mayAssign(request.resource.data.ownerUid))
             && (fixed(['assignerUid']) || request.resource.data.assignerUid == me())));

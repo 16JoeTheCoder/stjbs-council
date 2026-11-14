@@ -10,7 +10,7 @@ import { announcementsQuery, eventsQuery } from './queries.js';
 
 export const S = {
   phase: 'loading', user: null, me: null, term: null, members: [], items: [], tasks: [], budgets: [], purchases: [], notes: [],
-  events: [], announcements: [], departments: [], committees: [], docTemplates: [], feed: null, cacheInfo: null, cacheFull: false, publishError: '',
+  panel: null, quick: null, events: [], announcements: [], departments: [], committees: [], docTemplates: [], feed: null, cacheInfo: null, cacheFull: false, publishError: '',
   ready: {}, fail: {}, cached: {}, weekId: null, day: null, toast: '', error: '', undo: null,
 };
 const subs = new Set();
@@ -25,7 +25,7 @@ let toastTimer;
 export function toast(msg, undo = null) {
   set({ toast: msg, undo });
   clearTimeout(toastTimer);
-  if (!undo) toastTimer = setTimeout(() => set({ toast: '', undo: null }), 4000); // an undo stays until used or dismissed
+  toastTimer = setTimeout(() => set({ toast: '', undo: null }), undo ? 5000 : 4000); // Undo is offered for 5 seconds
 }
 // Plain words for every error. Raw codes never reach the screen.
 export function plain(e) {

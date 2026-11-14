@@ -11,7 +11,8 @@ import { Chip, Title } from './ui.jsx';
 import { Search } from './search.jsx';
 import { Login, Verify } from './routes/auth.jsx';
 import { Home, copySummary } from './routes/home.jsx';
-import { QuickAdd, Tasks } from './routes/tasks.jsx';
+import { TaskPanel, Tasks } from './routes/tasks.jsx';
+import { QuickAdd } from './quick-add.jsx';
 import { Budgets, PurchaseForm } from './routes/budgets.jsx';
 import { sweepPhotos } from './work-actions.js';
 import { fmtDay, isoDay } from './time.js';
@@ -43,6 +44,9 @@ const parse = () => {
   return { name, id, q: new URLSearchParams(qs) };
 };
 
+// Where quick add opens decides its defaults: inside a budget it pre-fills that event, on a profile that person.
+const quickCtx = (r) => (r.name === 'budgets' && r.id ? { eventId: r.id }
+  : r.name === 'people' && r.id ? { ownerUid: r.id } : {});
 const Missing = () => <><Title light="Not here." bold="Page not found" /><p><a class="fl-link" href="#/home">Go to Home</a></p></>;
 const NotForYou = () => <><Title light="Not for you." bold="Admin" /><p>Only the advisor, the president and the vice president open the admin view.</p></>;
 const ADMIN_PAGES = { overview: Overview, announcements: Announcements, members: Admin, workload: Workload, public: PublicSite, approvals: Approvals };
@@ -56,10 +60,12 @@ const ROUTES = {
   ideas: Ideas, calendar: Calendar, resources: Resources, activity: Feed, feed: Feed, templates: Templates, workload: Workload, settings: Settings, about: Settings, admin: AdminRoute,
 };
 
-const MEMBER_NAV = [['home', 'Home', 'home'], ['tasks', 'Tasks', 'tasks'], ['budgets', 'Budgets', 'wallet'], ['calendar', 'Calendar', 'calendar'], ['projects', 'Projects', 'projects'], ['attention', 'For you', 'bell'], ['ideas', 'Ideas', 'ideas'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];
+const MEMBER_NAV = [['home', 'Home', 'home'], ['tasks', 'Tasks', 'tasks'], ['budgets', 'Budgets', 'wallet'], ['projects', 'Projects', 'projects']];
+const MORE_NAV = [['calendar', 'Calendar', 'calendar'], ['attention', 'For you', 'bell'], ['ideas', 'Ideas', 'ideas'], ['committees', 'Committees', 'committees'], ['resources', 'Resources', 'resources']];
+const readMore = () => { try { return localStorage.getItem('council-more') === 'open'; } catch { return false; } };
 export const ADMIN_NAV = [['admin', 'Overview', 'shield'], ['admin/announcements', 'Announcements', 'megaphone'], ['admin/members', 'Members and roles', 'committees'],
   ['admin/workload', 'Workload', 'chart'], ['admin/public', 'Public site', 'globe'], ['admin/approvals', 'Approvals and archive', 'inbox'], ['event-settings', 'Event templates and defaults', 'calendar']];
-const TABS = [['home', 'Home', 'home'], ['tasks', 'Tasks', 'tasks'], ['budgets', 'Budgets', 'wallet']];
+const TABS = MEMBER_NAV;
 // Which nav entry a route lights up.
 const ALIAS = { week: 'home', p: 'projects', meeting: 'projects', people: 'committees', feed: 'activity', about: 'settings' };
 const navKey = (r) => (r.name === 'admin' ? `admin${r.id ? `/${r.id}` : ''}` : ALIAS[r.name] || r.name);
@@ -133,10 +139,7 @@ function More({ close, adminView, switchView }) {
       <nav class="fl-more" aria-label="More">
         <h2 class="fl-eyebrow">Council</h2>
         <button onClick={() => { close(); copySummary(); }}><Icon n="copy" />Copy WhatsApp summary</button>
-        {link('#/calendar', 'Calendar', 'calendar')}
-        {link('#/projects', 'Projects', 'projects')}
-        {link('#/ideas', 'Ideas', 'ideas')}
-        {link('#/committees', 'Committees', 'committees')}
+        {MORE_NAV.filter(([k]) => k !== 'attention').map(([k, l, i]) => link(`#/${k}`, l, i))}
         {placeOf(S.me.id).dept && link('#/department', 'My department', 'department')}
         {link('#/resources', 'Resources', 'resources')}
         {link('#/activity', 'All activity', 'activity')}
@@ -169,7 +172,18 @@ const readView = () => { try { return localStorage.getItem('council-view') || 'm
 export function App() {
   useStore();
   useAttention(!location.hash.startsWith('#/meeting-room/'));
-  const [route, setRoute] = useState(parse), [more, setMore] = useState(false), [add, setAdd] = useState(false);
+  const [route, setRoute] = useState(parse), [more, setMore] = useState(false), [railMore, setRailMore] = useState(readMore);
+  const add = S.quick, setAdd = (on) => set({ quick: on ? quickCtx(route) : null });
+  // Q opens quick add anywhere, / jumps to search; neither fires while typing.
+  useEffect(() => {
+    const k = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || S.phase !== 'ready' || e.target.closest?.('input, textarea, select, [contenteditable="true"], .fl-sheet, [role="dialog"]')) return;
+      if (e.key === 'q' || e.key === 'Q') { if (S.me?.role !== 'teacher') { e.preventDefault(); set({ quick: quickCtx(parse()) }); } }
+      else if (e.key === '/') { const box = document.querySelector('.fl-top .fl-search input'); if (box) { e.preventDefault(); box.focus(); } }
+    };
+    addEventListener('keydown', k);
+    return () => removeEventListener('keydown', k);
+  }, []);
   useEffect(() => { const f = () => setRoute(parse()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   const admin = S.phase === 'ready' && isAdmin();
   useEffect(() => (admin ? startAdminJobs() : undefined), [admin]);
@@ -192,7 +206,13 @@ export function App() {
       <aside class="fl-rail">
         <a class="fl-brand" href="#/home"><img src={crest} alt="" width="44" height="44" /><div><b>Student Council</b><span>St. Johannes Berchmans</span></div></a>
         {adminView && <span class="fl-badge-admin">Admin view</span>}
-        <nav class="fl-nav" aria-label="Main">{(adminView ? ADMIN_NAV : MEMBER_NAV).map(navLink)}</nav>
+        <nav class="fl-nav" aria-label="Main">{(adminView ? ADMIN_NAV : MEMBER_NAV).map(navLink)}
+          {!adminView && <>
+            <button class="fl-nav__more" aria-expanded={railMore} onClick={() => { const o = !railMore; setRailMore(o); try { localStorage.setItem('council-more', o ? 'open' : 'closed'); } catch {} }}>
+              <Icon n="more" />More<Icon n={railMore ? 'down' : 'right'} /></button>
+            {(railMore || MORE_NAV.some(([k]) => k === key)) && <div class="fl-nav__sub">{MORE_NAV.map(navLink)}</div>}
+          </>}
+        </nav>
         {isAdmin() && <nav class="fl-nav fl-nav--foot" aria-label="Admin">{adminView ? navLink(['home', 'Member view', 'home']) : navLink(['admin', 'Admin', 'shield'])}</nav>}
       </aside>
       <div class="fl-col">
@@ -208,8 +228,9 @@ export function App() {
         {TABS.map(([k, label, icon]) => <a key={k} href={`#/${k}`} aria-current={key === k ? 'page' : undefined}><Icon n={icon} /><span>{label}</span></a>)}
         <button aria-expanded={more} onClick={() => setMore(true)}><Icon n="more" /><span>More</span></button>
       </nav>
-      {S.me.role !== 'teacher' && !add && <button class="fl-fab" aria-label={money ? 'Request a purchase' : 'Add a task'} onClick={() => setAdd(true)}><Icon n="plus" /></button>}
-      {add && (money ? <PurchaseForm close={() => setAdd(false)} budgetId={route.id} /> : <QuickAdd close={() => setAdd(false)} />)}
+      {S.me.role !== 'teacher' && !add && <button class="fl-fab" aria-label={money ? 'Request a purchase' : 'Add a task'} onClick={() => (money ? set({ quick: { purchase: true } }) : setAdd(true))}><Icon n="plus" /></button>}
+      {add && (add.purchase ? <PurchaseForm close={() => setAdd(false)} budgetId={route.id} /> : <QuickAdd close={() => setAdd(false)} eventId={add.eventId} ownerUid={add.ownerUid} />)}
+      {S.panel && <TaskPanel />}
       {more && <More close={() => setMore(false)} adminView={adminView} switchView={switchView} />}
       <div class={S.toast ? 'fl-toast' : 'fl-sr'} role="status" aria-live="polite">{S.toast}{S.undo && <>
         <button class="fl-btn fl-btn--sm fl-btn--ghost" onClick={() => { S.undo.fn(); set({ undo: null, toast: '' }); }}>{S.undo.label}</button>

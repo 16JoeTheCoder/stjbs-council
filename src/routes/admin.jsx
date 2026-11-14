@@ -92,7 +92,7 @@ function placePlan(moves) {
 
 function MemberForm({ m, done }) {
   const can = rosterPowers(m), place = m ? placeOf(m.id) : { dept: null, position: null };
-  const [v, setV] = useState(m ? { ...m, section: m.section || '', deptId: place.dept?.id || '', position: place.position || 'member' } : { id: '', name: '', role: 'member', section: '', deptId: '', position: 'member' });
+  const [v, setV] = useState(m ? { ...m, section: m.section || '', aliasText: (m.aliases || []).join(', '), deptId: place.dept?.id || '', position: place.position || 'member' } : { id: '', name: '', role: 'member', section: '', deptId: '', position: 'member' });
   const [err, setErr] = useState({}), [busy, setBusy] = useState(false), ref = useAutofocus();
   const bad = (field, msg) => { setErr({ field, msg }); ref.current.querySelector(`[name=${field}]`)?.focus(); };
   const submit = async (e) => {
@@ -101,7 +101,7 @@ function MemberForm({ m, done }) {
     if (!SCHOOL.test(email)) return bad('id', 'Use a school email ending in @stjbs.sch.id.');
     if (!m && S.members.some((x) => x.id === email)) return bad('id', 'This email is already on the roster. Find them in the table and edit them instead.');
     if (!v.name.trim()) return bad('name', 'Add a name, then save.');
-    const data = { name: v.name.trim(), initials: initials(v.name), section: v.section, ...(can.role ? { role: v.role } : {}) };
+    const data = { name: v.name.trim(), initials: initials(v.name), section: v.section, aliases: (v.aliasText || '').split(',').map((a) => a.trim()).filter(Boolean).slice(0, 5), ...(can.role ? { role: v.role } : {}) };
     if (!m) Object.assign(data, { active: true, createdAt: Date.now(), reportsTo: null });
     setBusy(true);
     let ok = await putDoc(`members/${email}`, data, `${data.name} saved.`);
@@ -122,6 +122,7 @@ function MemberForm({ m, done }) {
         {lab('name', 'Name', <input id="mf-name" class="fl-input" name="name" maxLength={60} value={v.name} onInput={(e) => setV({ ...v, name: e.target.value })} />)}
         {lab('id', 'School email', <input id="mf-id" class="fl-input" name="id" type="email" disabled={!!m} value={v.id} placeholder="name@stjbs.sch.id" onInput={(e) => setV({ ...v, id: e.target.value })} />)}
       </div>
+      {lab('alias', 'Nicknames for @ in quick add', <input id="mf-alias" class="fl-input" name="alias" maxLength={80} placeholder="Mike, Mikey" value={v.aliasText || ''} onInput={(e) => setV({ ...v, aliasText: e.target.value })} />)}
       <div class="fl-fields">
         {lab('role', 'Role', <RoleSelect id="mf-role" value={v.role} roles={can.role ? can.roles : [v.role]} disabled={!can.role} onChange={(r) => setV({ ...v, role: r })} />)}
         {lab('section', 'Year level', <SectionSelect id="mf-section" value={v.section} onChange={(x) => setV({ ...v, section: x })} />)}
