@@ -4,7 +4,7 @@ import { collection, deleteDoc, doc, getDoc, getDocs, limit, query, where, write
 import { db } from './firebase.js';
 import { S, fail, toast } from './store.js';
 import { batchName, batchOf } from './work-model.js';
-import { idr } from './time.js';
+import { fmtDay, idr } from './time.js';
 
 const T = () => S.term.termId, now = () => Date.now(), TWO_WEEKS = 14 * 86400e3;
 const newRef = (path) => doc(collection(db, path));
@@ -22,11 +22,11 @@ function go(fn, msg, undo) {
 const patchTask = (b, t, patch) => b.update(doc(db, 'tasks', t.id), { ...patch, updatedAt: now() });
 
 // ---- Tasks
-export function addTask({ title, ownerUid = S.me.id, dueDate = null, budgetId = null }) {
+export function addTask({ title, ownerUid = S.me.id, dueDate = null, dueTime = null, budgetId = null, priority = 4 }) {
   const ref = newRef('tasks');
   go((b) => {
     b.set(ref, { termId: T(), title: title.trim().slice(0, 120), ownerUid, assignerUid: S.me.id, dueDate, status: 'todo', blockedReason: '',
-      waitingOnUid: null, budgetId, assignedAt: now(), doneAt: null, createdAt: now(), updatedAt: now() });
+      waitingOnUid: null, budgetId, ...(priority < 4 ? { priority } : {}), ...(dueDate && dueTime ? { dueTime } : {}), assignedAt: now(), doneAt: null, createdAt: now(), updatedAt: now() });
     note(b, ownerUid, `gave you a task: "${title.trim().slice(0, 80)}"${dueDate ? `, due ${dueDate}` : ''}`, '#/tasks');
   }, ownerUid === S.me.id ? 'Task added.' : `Task given to ${first(ownerUid)}.`, () => deleteDoc(ref).catch(fail));
 }
@@ -44,12 +44,15 @@ export function setStatus(t, status, reason, waitingOnUid) {
   () => go((b) => patchTask(b, t, back), 'Put back.'));
 }
 // The assigner or an executive edits title, date, owner or budget. A new owner restarts the 48-hour clock.
-export function editTask(t, patch) {
+export function editTask(t, patch, quiet = false) {
   const moved = patch.ownerUid && patch.ownerUid !== t.ownerUid;
+  if (quiet) { const b = writeBatch(db); patchTask(b, t, patch); b.commit().catch(fail); return; }
+  const back = Object.fromEntries(Object.keys(patch).map((k) => [k, t[k] ?? null]));
+  const msg = moved ? `Given to ${first(patch.ownerUid)}.` : 'dueDate' in patch ? (patch.dueDate ? `Moved to ${fmtDay(patch.dueDate)}.` : 'Date removed.') : 'Saved.';
   go((b) => {
     patchTask(b, t, { ...patch, ...(moved ? { assignerUid: S.me.id, assignedAt: now() } : {}) });
     if (moved) note(b, patch.ownerUid, `gave you a task: "${t.title.slice(0, 80)}"`, '#/tasks');
-  }, moved ? `Given to ${first(patch.ownerUid)}.` : 'Saved.');
+  }, msg, moved ? null : () => editTask(t, back, true));
 }
 export function removeTask(t) {
   if (!confirm(`Delete "${t.title}"? This cannot be undone.`)) return false;

@@ -19,7 +19,7 @@ Install: copy the folder to `design/fiatlux/` and import `design/fiatlux/tokens.
 ## The look in five rules
 
 1. **Dark first.** Near-black ground `--surface`, raised cards `--surface-raised`, hairline borders `--line`, radius 20 on panels. Light theme exists (`[data-theme="light"]`) and every screen must work in it, but dark is the default.
-2. **Red means overdue or flagged, nothing else.** `--red-text` marks an overdue task, a days-late count, a flagged purchase, an overspent budget and a veto. The primary button (`fl-btn--red`, the name is historical), the active nav item, the active tab, checked boxes and pressed filters are ink (`--ink` on `--surface`). Links are ink with an underline. Red keeps its signal value only if nothing else uses it.
+2. **One red accent, used with purpose.** Red marks: primary buttons (`fl-btn--red`), the active nav item and tab, the `+` button, parsed date tokens in quick add, overdue dates and days-late counts, checkbox hover and priority 1, plus flagged purchases, overspent budgets and vetoes. Nothing else is red: no red panels or fills beyond a button. Pressed filters and checked boxes in older screens stay ink.
 3. **Gradients are allowed only inside these components** (already written in `components.css`): `.fl-hero` (public site and sign-in only), `.fl-mission` (public site only), `.fl-ann--one`, `.fl-sheet__card`, `.fl-cal__bg`. App code never writes a gradient. **No rays or sunburst motifs anywhere**: the old red sunburst panel is deleted.
 4. **No red-filled surfaces inside the app.** Hierarchy comes from size and weight: overdue rows are larger and bolder, routine rows smaller and quieter. Anything without an action or a decision behind it is removed.
 5. **Status is colour + word**, never colour alone: an overdue row says "3d late", a flagged purchase says "Flagged". `fl-badge--ok/warn/bad` remain for the older screens.
@@ -49,7 +49,7 @@ Plus Jakarta Sans for everything; JetBrains Mono only for times, dates in lists,
 ## Layout
 
 - **Laptop (900 px and up):** `.fl-app` grid = left `.fl-rail` (232 px: crest lockup, `.fl-nav`, photo card at the bottom) + `.fl-col` (sticky `.fl-top` bar, then `.fl-main`). Top bar: search on the left, bell and `.fl-user` avatar menu on the right.
-- **Phone (below 900 px), designed first at 375 px:** the rail disappears. `.fl-top` is one slim row: date and first name on the left ("Fri 13 Nov · Josef"), bell and avatar on the right. No crest, no search, no hero. Navigation is `.fl-tabbar`, fixed to the bottom edge, four labelled tabs: Home, Tasks, Budgets, More. More opens a sheet with everything else (calendar, projects, ideas, committees, resources, admin). A persistent "+" (`.fl-fab`) sits above the tab bar: it adds a task, or on Budgets starts a purchase request.
+- **Phone (below 900 px), designed first at 375 px:** the rail disappears. `.fl-top` is one slim row: date and first name on the left ("Fri 13 Nov · Josef"), bell and avatar on the right. No crest, no search, no hero. Navigation is `.fl-tabbar`, the floating pill above the bottom edge, five labelled tabs: Home, Tasks, Budgets, Projects, More. More opens a sheet with everything else (calendar, ideas, committees, resources, admin). On laptop the rail shows the same four, then a More group that stays collapsed until opened (remembered). A persistent "+" (`.fl-fab`) sits above the tab bar: it adds a task, or on Budgets starts a purchase request.
 - `.fl-main` max 1320 px, 32 to 48 px padding, 32 px between sections. Two-column body is `.fl-split` (1.5 : 1), collapsing below 1100 px.
 - Every tap target is at least 44 px.
 
@@ -57,7 +57,7 @@ Plus Jakarta Sans for everything; JetBrains Mono only for times, dates in lists,
 
 A screen earns scroll only with things people act on. Flat lists with dividers (`.fl-sec`, `.fl-t`, `.fl-line`), not nested cards. An empty section collapses to one muted line (`.fl-quiet`), never an empty-state card. No stat rows, no percentages, no decoration on Home.
 
-**Home order (phone and laptop):** Overdue (red, days late, largest) → This week → Waiting on you (approvals, receipts to upload, tasks blocked on you) → Budgets (one row per active event, amount remaining) → Copy WhatsApp summary.
+**Home order (phone and laptop):** My tasks (overdue first, then today and the next 7 days) → Waiting on me (approvals, receipts to upload, tasks blocked on you) → Next 7 days of events → Budgets (one row per active event, amount remaining). Copy WhatsApp summary is a quiet link at the end.
 
 **Friction budget:** every core action (add task, mark done, submit purchase, approve) takes at most 3 taps from opening the app. One primary action per screen. Defaults over choices: owner is me, the budget is the one you came from. Short forms open as a low sheet (`<Sheet low>`), never a full page. No confirmation dialogs except veto and delete; everything else is immediate with Undo in the toast.
 

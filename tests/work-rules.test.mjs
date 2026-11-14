@@ -322,6 +322,37 @@ test('photos delete: after deleteAfter any member; an owner may clear an orphan;
   await assertSucceeds(del(P.memE));
 });
 
+// ---- Task priority, dueTime, order; member aliases
+test('tasks: priority, dueTime and order fields', async () => {
+  for (const [i, o] of [[1, { priority: 1 }], [2, { priority: 4 }], [3, { dueTime: '15:00' }], [4, { dueTime: null }], [5, { order: 3.5 }], [6, { priority: 2, dueTime: '09:30', order: 0 }]])
+    await assertSucceeds(create(P.memE, `f${i}`, task({ ownerUid: P.memE, assignerUid: P.memE, ...o })));
+  for (const [i, o] of [[1, { priority: 5 }], [2, { priority: 0 }], [3, { priority: '1' }], [4, { dueTime: '25:99' }], [5, { dueTime: '9:00' }], [6, { dueTime: 900 }], [7, { order: '1' }]])
+    await assertFails(create(P.memE, `x${i}`, task({ ownerUid: P.memE, assignerUid: P.memE, ...o })));
+});
+
+test('tasks update: owner may change order, not dueDate; assigner may change priority and dueTime', async () => {
+  await admin((db) => setDoc(doc(db, 'tasks/t1'), task({ order: 1 })));        // owner memE, assigner officer
+  await assertSucceeds(patch(P.memE, 'tasks', 't1', { order: 2.5, updatedAt: 5 }));
+  await assertFails(patch(P.memE, 'tasks', 't1', { dueDate: '2026-12-09', updatedAt: 5 }));
+  await assertFails(patch(P.memE, 'tasks', 't1', { priority: 1, updatedAt: 5 }));
+  await assertFails(patch(P.memE, 'tasks', 't1', { dueTime: '10:00', updatedAt: 5 }));
+  await assertFails(patch(P.memE, 'tasks', 't1', { order: 'x', updatedAt: 5 }));
+  await assertFails(patch(P.memS, 'tasks', 't1', { order: 2, updatedAt: 5 }));
+  await assertSucceeds(patch(P.officer, 'tasks', 't1', { priority: 2, dueTime: '14:15', dueDate: '2026-12-09', updatedAt: 5 }));
+  await assertFails(patch(P.officer, 'tasks', 't1', { priority: 5, updatedAt: 6 }));
+  await assertFails(patch(P.officer, 'tasks', 't1', { dueTime: '25:99', updatedAt: 6 }));
+});
+
+test('members: aliases list of at most 5', async () => {
+  await assertSucceeds(patch(P.advisor, 'members', P.memE, { aliases: ['Mike'] }));
+  await assertSucceeds(patch(P.advisor, 'members', P.memE, { aliases: ['a', 'b', 'c', 'd', 'e'] }));
+  await assertSucceeds(patch(P.advisor, 'members', P.memE, { aliases: [] }));
+  await assertFails(patch(P.advisor, 'members', P.memE, { aliases: ['a', 'b', 'c', 'd', 'e', 'f'] }));
+  await assertFails(patch(P.advisor, 'members', P.memE, { aliases: 'Mike' }));
+  await assertSucceeds(patch(P.president, 'members', P.memE, { aliases: ['Mike'] }));
+  await assertFails(patch(P.memE, 'members', P.memS, { aliases: ['x'] }));
+});
+
 // ---- Check-ins
 test('checkins: readable by members, never writable', async () => {
   const db = as(P.memE);

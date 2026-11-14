@@ -20,6 +20,7 @@ const PATHS = {
   arrow: 'M5 12h14M13 6l6 6-6 6',
   left: 'M15 18l-6-6 6-6',
   right: 'M9 18l6-6-6-6',
+  down: 'M6 9l6 6 6-6',
   plus: 'M12 5v14M5 12h14',
   check: 'M20 6 9 17l-5-5',
   share: 'M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13',
@@ -40,6 +41,8 @@ const PATHS = {
   keyboard: 'M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8',
   panel: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3v18',
   undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
+  flag: 'M4 22V4a1 1 0 0 1 1-1h12l-2 5 2 5H5',
+  grip: 'M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01',
   tasks: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9',
   wallet: 'M3 7a2 2 0 0 1 2-2h13v4M3 7v10a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H5a2 2 0 0 1-2-2zM17 14h.01',
   dots: 'M12 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM19 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM5 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
@@ -52,7 +55,7 @@ export const Icon = ({ n, label }) => (
 );
 
 // Full-screen detail. Focus moves in, Tab stays inside, Esc and the backdrop close it, focus returns to the trigger.
-export function Sheet({ label, onClose, children, low }) {
+export function Sheet({ label, onClose, children, low, side }) {
   const ref = useRef(), close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
@@ -73,7 +76,7 @@ export function Sheet({ label, onClose, children, low }) {
     return () => { removeEventListener('keydown', key, true); if (document.querySelectorAll('.fl-sheet').length <= 1) document.body.classList.remove('fl-locked'); if (back?.isConnected) back.focus?.(); };
   }, []);
   return (
-    <div class={`fl-sheet${low ? ' fl-sheet--low' : ''}`} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div class={`fl-sheet${low ? ' fl-sheet--low' : ''}${side ? ' fl-sheet--side' : ''}`} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div class="fl-sheet__card" ref={ref}>
         <button class="fl-iconbtn fl-sheet__close" aria-label="Close" onClick={onClose}><Icon n="x" /></button>
         {children}

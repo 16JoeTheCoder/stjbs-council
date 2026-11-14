@@ -11,7 +11,7 @@
     "test:rules": "firebase emulators:exec --only firestore --project demo-council \"node --test tests/rules.test.mjs tests/bulk-roster.test.mjs tests/work-rules.test.mjs\"",
     "check": "bash design/fiatlux/design-check.sh && vite build --logLevel error && node scripts/check-site-bundle.mjs",
     "deploy": "vite build && firebase deploy --only hosting,firestore",
-    "test:models": "node tests/event-model.test.mjs && node tests/meeting-model.test.mjs && node tests/attention-model.test.mjs && node tests/meeting-export.test.mjs && node tests/work-model.test.mjs",
+    "test:models": "node tests/event-model.test.mjs && node tests/meeting-model.test.mjs && node tests/attention-model.test.mjs && node tests/meeting-export.test.mjs && node tests/work-model.test.mjs && node tests/quickadd.test.mjs",
     "test:upgrade": "npm run test:models && firebase emulators:exec --only firestore --project demo-council-upgrade \"node tests/meeting-concurrency.test.mjs\""
   },
   "dependencies": {

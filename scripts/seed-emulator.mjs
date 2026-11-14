@@ -22,6 +22,12 @@ const people = [
   ['gilang', 'Gilang Saputra', 'member', 'JC 2', null], ['hana', 'Hana Wijaya', 'member', 'Sec 2', null], ['ivan', 'Ivan Setiadi', 'member', 'JC 1', null],
   ['jessica', 'Jessica Lim', 'member', 'Sec 1', null], ['lukas', 'Lukas Hartanto', 'member', 'Sec 3', null], ['maya', 'Maya Santika', 'member', 'JC 2', null],
   ['nico', 'Nico Pranata', 'member', 'Sec 2', null], ['olivia', 'Olivia Gunadi', 'member', 'Sec 1', null],
+  // QA roster padding (40+ members): long names and a late-alphabet name.
+  ['zacharias', 'Zacharias Wirawan-Kusumaningrat', 'member', 'Sec 3', null], ['yusuf', 'Yusuf Zulkarnain', 'member', 'JC 1', null],
+  ['abigail', 'Abigail Tjahjadi', 'member', 'Sec 1', null], ['benedict', 'Benedict Mulyadi', 'member', 'Sec 2', null], ['cynthia', 'Cynthia Anggraini', 'member', 'JC 2', null],
+  ['darren', 'Darren Kurniawan', 'member', 'Sec 4', null], ['evelyn', 'Evelyn Chandra', 'member', 'Sec 3', null], ['felix', 'Felix Budiman', 'member', 'JC 1', null],
+  ['grace', 'Grace Oktaviani Pangaribuan', 'member', 'Sec 2', null], ['hendra', 'Hendra Suryadinata', 'member', 'Sec 1', null], ['inez', 'Inez Permatasari', 'member', 'JC 2', null],
+  ['wulan', 'Wulan Sekar Ayu', 'member', 'Sec 4', null],
 ];
 // Six standing departments: id, name, JC officer (head), Sec officer (second), general members. Olivia is unassigned.
 const depts = [
@@ -52,7 +58,7 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   for (const [k, name, role, section, boss] of people) {
     const place = placeOfSeed(k), sec = ['Exec', 'Teachers', 'Advisor', 'Events', 'Sports', 'Arts', 'Welfare'].includes(section) ? ['JC 2', 'JC 1', 'Sec 4', 'Sec 3'][k.length % 4] : section;
     await put(`members/${email(k)}`, { name, initials: name.split(' ').map((p) => p[0]).join(''), role, section: role === 'teacher' || role === 'advisor' ? '' : sec,
-      reportsTo: place ? email(place[2]) : boss && email(boss), active: true, ...(place ? { departmentId: place[0], position: place[1] } : {}) });
+      reportsTo: place ? email(place[2]) : boss && email(boss), active: true, ...(k === 'michael' ? { aliases: ['Mike'] } : {}), ...(place ? { departmentId: place[0], position: place[1] } : {}) });
   }
   for (const [i, [id, name, jc, sec, list]] of depts.entries())
     await put(`departments/${id}`, { name, order: i, jcLeadUid: email(jc), secLeadUid: sec && email(sec), memberUids: list.map(email), active: true, updatedAt: now });
@@ -173,6 +179,10 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   await task('k9', 'Sponsor thank-you letters', 'josef', 'michael', -5);
   await task('k10', 'Update the price list', 'sarah', 'nadia', 0);
   await task('k11', 'Stage layout sketch', 'michael', 'kevin', -1, { assignedAt: now - day });
+  await task('k12', 'Review poster draft', 'nadia', 'nadia', 0);
+  await task('k13', 'Email the sponsors', 'nadia', 'kevin', 1);
+  await task('k14', 'Prepare agenda', 'nadia', 'nadia', 3);
+  await task('k15', 'Sign budget forms', 'nadia', 'sarah', -1);
   await put('budgets/carnival', { name: 'Carnival 2026', amountIdr: 12000000, active: true, createdByUid: email('sarah'), updatedAt: now });
   await put('budgets/teachers', { name: "Teachers' Day", amountIdr: 2500000, active: true, createdByUid: email('sarah'), updatedAt: now });
   const buy = async (id, budgetId, who, item, qty, unit, o = {}) => {
