@@ -190,8 +190,11 @@ function useDrag(list) {
       const rest = list.current.filter((x) => x.id !== t.id), i = rest.findIndex((x) => x.id === over.id) + (over.after ? 1 : 0);
       editTask(t, { order: between(rest[i - 1] && rank(rest[i - 1]), rest[i] && rank(rest[i])) }, true);
     };
+    // Once a finger drag is live, stop the page scrolling, or the browser cancels the pointer.
+    const hold = (e) => { if (st.current?.on) e.preventDefault(); };
+    addEventListener('touchmove', hold, { passive: false });
     addEventListener('pointermove', move, { passive: false }); addEventListener('pointerup', up); addEventListener('pointercancel', up);
-    return () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
+    return () => { removeEventListener('touchmove', hold); removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
   }, []);
   const onPointerDown = (e) => {
     const row = e.target.closest('.fl-t[data-id]');
