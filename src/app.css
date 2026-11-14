@@ -883,6 +883,7 @@ div.fl-line { cursor: default; }
 .fl-toast .fl-btn--ghost { border-color: var(--line-strong); background: none; color: var(--surface); }
 .fl-toast .fl-btn--ghost:first-of-type { border-color: var(--red-deep); color: var(--red-deep); }
 .fl-tp .fl-person { min-width: 0; } .fl-tp .fl-person .fl-chip { width: 26px; height: 26px; font-size: 10px; }
+.fl-evline { justify-content: flex-start; }
 .fl-evline > .fl-mono { flex: none; width: 92px; color: var(--ink-subtle); font-size: 13px; }
 
 @media (prefers-reduced-motion: reduce) {
