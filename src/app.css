@@ -890,3 +890,4 @@ div.fl-line { cursor: default; }
   .fl-tok, .fl-qpop, .fl-t.is-completing .fl-tick svg, .fl-sheet--side .fl-sheet__card { animation: none; }
   .fl-tick path, .fl-tick circle, .fl-t, .fl-t__main { transition: none; }
 }
+.fl-sheet--side .fl-sheet__card p { margin: 0; font-size: 13px; line-height: 18px; }
