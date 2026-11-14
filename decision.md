@@ -130,3 +130,32 @@ The old read-only `teacher` role (other teachers) stays read-only.
 3. **Check-ins:** nothing to migrate. The rules stop new writes; old documents remain.
 4. **Roles:** confirm F8 in Admin.
 5. **Budgets:** a treasurer creates the first budget in Budgets; there is no old budget data.
+
+---
+
+# Quick add and the Todoist-grade task list (Nov 2026)
+
+## Parser grammar (`src/quickadd.js`, tests in `tests/quickadd.test.mjs`)
+- **Q1. Pure and single-pass.** `parse(input, ctx)` takes text and data, returns `{ title, assignee, due, event, priority, ambiguous, warnings, spans }`. No DOM, no store. ~0.04 ms per parse with 40 members. The UI renders only what it returns; `spans` carry a `key` the input uses to un-highlight a token.
+- **Q2. Order of reading:** priority (`p1`–`p4`, `!1`–`!4`, whole word, last wins) → `@` and `#` triggers → date phrase. Each consumed span is skipped by later readers, so `@aaron besok` is Aaron plus a date.
+- **Q3. `@` matching** follows the spec tiers (exact first or alias → first prefix → full-name prefix → last prefix → edit distance 1 from 4 characters). The best tier wins; ties at that tier go to `ambiguous` with every option and no assignee. A second word counts only if it narrows to a full-name match (`@mike w`). Picking from the dropdown inserts `@First` and *pins* that text to the chosen id for this input, so two Aarons stay resolvable without typing surnames.
+- **Q4. `#` is an event budget.** Tasks already link to `budgetId`, and every budget is one event, so `#` resolves budgets by exact name, name prefix, initials (`#eoy`) or word prefix; `#"end of year"` for spaces. No new task field.
+- **Q5. Dates: clusters, last one wins.** Adjacent date/time words form a cluster (`tmr 3pm`, `jam 3 sore`, `fri at 3`). Clusters are checked from the end; the first acceptable one is used and earlier ones stay in the title.
+- **Q6. When a date counts.** *Strong* phrases always count: numerals (`15 nov`, `2/12`, `3pm`, `jam 3`), `in N d/w`, `next fri`, `this week`, multi-word phrases. A *bare* word (`fri`, `besok`) counts only at the end, before another token, or after a preposition (`by fri`). *Weak* words that are also ordinary English or names (`tom`, `sun`, `sat`, `wed`, `may`, `mar`, `lunch`, `morning`, `minggu`, `sore`…) need that context strictly. Rejected always: after an article (`the sunday paper`) or before a known noun (`sunday school`, `friday prayers`, `marching band` never had a date). A missed date costs a tap; a wrong one costs trust.
+- **Q7. Prepositions leave with the date** (`submit by fri` → "submit"): on, by, due, before, until, at, for, sampai, tgl, pada.
+- **Q8. Resolution in Asia/Jakarta (UTC+7)** from `ctx.now`, never device time. Bare weekday = next occurrence including today; `next X` = X in next Mon–Sun week; `this week`/`eow` = Friday (next Friday once passed); `next week`/`minggu depan` = next Monday; `weekend` = Saturday (today if Sunday). Day-first numerics only; a yearless date already past rolls to next year; `15th` rolls to next month. `15.00` is a time (Indonesian clock).
+- **Q9. Hours without am/pm** are read as a school day: 1–6 → afternoon, 7–12 as written. `pagi/siang/sore/malam` bend a `jam N` hour. Time-only means today, or tomorrow once passed. Named: noon 12:00, midnight 23:59, morning 07:00, lunch 12:00, after school 15:00, tonight/nanti malam today 19:00.
+- **Q10. Escapes:** text in quotes is never parsed and keeps its quotes; `\word` stays literal (backslash removed). A token un-highlighted with Backspace is added to `rejected` for this input and never comes back while typing; the set clears on submit.
+- **Q11. Typos:** an explicit list (tommorow, wensday, firday…) plus edit distance 1 against full weekday names and tomorrow/yesterday/tonight, only for words of 6+ letters.
+- **Q12. Role limits are a warning, not a drop.** The assignee stays visible, the preview line turns amber, Add is disabled. The same `assignable()` the rules mirror decides.
+
+## Data (all optional; readers default)
+- **Q13.** Tasks gain `priority` (1–4, absent = 4), `dueTime` ('HH:mm', only with a date) and `order` (number, absent = createdAt). The owner may change `order` (reordering their own list); dates still belong to the assigner. Members gain `aliases` (≤5 strings), edited by admins in the member form.
+
+## UX calls
+- **Q14. One source of truth is the text.** Typed tokens win over toolbar picks, which win over context defaults (event from the budget page, person from a profile). The toolbar buttons show what will be saved.
+- **Q15. Inline chips via a mirror.** A transparent textarea sits over a styled mirror of the same text, so tokens highlight in place with no contenteditable. Backspace right after a token un-highlights it (one atomic step) rather than deleting.
+- **Q16. Groups are Overdue, Today, Upcoming, No date.** Blocked tasks stay in their date group with "Waiting on …"; the 48-hour grace still keeps a short-notice task out of Overdue on its first day.
+- **Q17. Drag** uses pointer events: a mouse drags after 6 px, a finger after a 280 ms hold so scrolling still works. Drop on a row reorders (midpoint `order`), drop on the 7-day strip in Upcoming reschedules (assigner only, with Undo).
+- **Q18. Red accent, revised.** The spec makes red the single accent: primary buttons, active nav, the + button, date tokens, overdue dates, checkbox hover and priority 1. DESIGN.md rule 2 is updated to match. No red surfaces beyond buttons and the + tile.
+- **Q19. Nav:** Home, Tasks, Budgets, Projects, then More (collapsed by default, state remembered in localStorage) on the rail; on phone the floating five-tile tab bar from the original Fiat Lux concept is restored, More as the fifth tab.
